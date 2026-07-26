@@ -3723,6 +3723,17 @@ class Component extends DCLogic {
       "#jobs-root .jb-card .jc-r2{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:#c7c9e5;min-width:0}",
       "#jobs-root .jb-card .jc-repo{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#7f86ad;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}",
       "#jobs-root .jb-card .jc-r3{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#5a6088}",
+      "#jobs-root .jb-older{border-top:1px solid rgba(160,168,220,.1)}",
+      "#jobs-root .jb-older>summary{list-style:none;display:flex;align-items:center;gap:9px;padding:11px 16px;cursor:pointer;background:#0a0b16;color:#8b90b8;font-family:'JetBrains Mono',monospace;font-size:10.5px;user-select:none}",
+      "#jobs-root .jb-older>summary::-webkit-details-marker{display:none}",
+      "#jobs-root .jb-older>summary:hover{background:#0f1120;color:#c7c9e5}",
+      "#jobs-root .jb-older-chev{width:10px;color:#5a6088;transition:transform .14s}",
+      "#jobs-root .jb-older[open] .jb-older-chev{transform:rotate(90deg)}",
+      "#jobs-root .jb-older-count b{color:#a8aecf;font-weight:600}",
+      "#jobs-root .jb-older-age{margin-left:auto;color:#5a6088}",
+      "#jobs-root .jb-older .jb-table thead th{position:static;background:#0d0f1c}",
+      "#jobs-root .jb-older .jb-cards{padding-top:4px}",
+      "#jobs-root .jb-older-cap{padding:8px 16px;color:#e0af68;font-family:'JetBrains Mono',monospace;font-size:10px}",
       // Mobile: stack the filter bar (search full width; facets in one scrollable row)
       // and turn the detail into a full-screen sheet.
       "@media (max-width:768px){#jobs-root .jb-filters{flex-wrap:nowrap;flex-direction:column;align-items:stretch;gap:8px}#jobs-root .jb-search{max-width:none;min-width:0;width:100%}#jobs-root .jb-facets{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}#jobs-root .jb-fl{flex:none}#jobs-root .jb-clear{margin-left:0;align-self:flex-start}#jobs-root #jobs-detail{width:100%;left:0;border-left:none}}",
@@ -3778,14 +3789,18 @@ class Component extends DCLogic {
       this._navRoute('jobs', { agent: this._jobsFacetAgent || undefined }, true);
     });
     // Row open + background close: one delegated listener on the scroll area. A
-    // click on a data-id row opens its detail; anywhere else closes it. The detail
-    // panel is a sibling of the table wrap, so clicks inside it never reach here.
+    // click on a data-id row opens its detail; disclosure controls are not
+    // background. The detail panel is a sibling, so clicks inside it never reach here.
     root.querySelector('#jb-tablewrap').addEventListener('click', (e) => {
       // Matches both the desktop table rows (tr[data-id]) and the mobile cards
-      // (.jb-card[data-id]); a click landing outside any data-id element closes.
+      // (.jb-card[data-id]); rows inside the older disclosure still open normally.
       const tr = (e.target.closest && e.target.closest('[data-id]')) || null;
-      if (tr) this.openJobsDetail(tr.getAttribute('data-id'));
-      else this.closeJobsDetail();
+      if (tr) {
+        this.openJobsDetail(tr.getAttribute('data-id'));
+        return;
+      }
+      const disclosure = (e.target.closest && e.target.closest('.jb-older')) || null;
+      if (!disclosure) this.closeJobsDetail();
     });
     this._jobsKeydown = (e) => { if (e.key === 'Escape' && this.state.view === 'jobs' && this._jobsSelected) this.closeJobsDetail(); };
     document.addEventListener('keydown', this._jobsKeydown);
@@ -3849,30 +3864,51 @@ class Component extends DCLogic {
       }
       return true;
     });
-    const CAP = 400;
-    const shown = filtered.slice(0, CAP); // server already sorts Updated desc; slice is stable
+    const CAP = 400, RECENT_MS = 2 * 60 * 60 * 1000;
+    // Default view demotes only settled successes. Failed/blocked/in-flight jobs,
+    // cancellations, unknown states, and rows without a trustworthy timestamp stay
+    // visible regardless of age. An explicit State facet requests unsplit history.
+    const splitDefault = !fs;
+    const cutoff = Date.now() - RECENT_MS;
+    const older = splitDefault ? filtered.filter(j => {
+      const t = Number(j.updated || j.started);
+      return (j.state || '') === 'succeeded' && Number.isFinite(t) && t > 0 && t < cutoff;
+    }) : [];
+    const olderIDs = new Set(older.map(j => j.id));
+    const primary = splitDefault ? filtered.filter(j => !olderIDs.has(j.id)) : filtered;
+    const shown = primary.slice(0, CAP); // server already sorts Updated desc; slice is stable
+    const olderShown = older.slice(0, CAP);
     const shownEl = this._jobsRoot.querySelector('#jb-shown'); if (shownEl) shownEl.textContent = shown.length;
     const totalEl = this._jobsRoot.querySelector('#jb-total'); if (totalEl) totalEl.textContent = data.length;
     const wrap = this._jobsRoot.querySelector('#jb-tablewrap');
     const tbl = this._jobsRoot.querySelector('#jb-table');
     const prevScroll = wrap ? wrap.scrollTop : 0; // preserve scroll across refreshes
     if (tbl) {
-      if (!shown.length) {
-        tbl.innerHTML = '<div class="jb-empty">' + (this._jobsLoaded ? (data.length ? 'No jobs match the filters' : 'No jobs yet') : 'loading…') + '</div>';
-      } else if (this.state.isMobile) {
-        // Mobile: a card list instead of the wide table (same data-id click -> detail,
-        // same 400 cap + footer note handled below).
-        tbl.innerHTML = '<div class="jb-cards">' + shown.map(j => this._jobsCardHtml(j, esc)).join('') + '</div>';
-      } else {
+      const listHTML = (jobs) => {
+        if (this.state.isMobile) return '<div class="jb-cards">' + jobs.map(j => this._jobsCardHtml(j, esc)).join('') + '</div>';
         const headCols = ['', 'Title', 'Agent', 'Repo', 'Kind', 'Depth', 'Tokens', 'Started', 'Duration'];
-        tbl.innerHTML = '<table class="jb-table"><thead><tr>' +
+        return '<table class="jb-table"><thead><tr>' +
           headCols.map(h => '<th>' + esc(h) + '</th>').join('') +
-          '</tr></thead><tbody>' + shown.map(j => this._jobsRowHtml(j, esc)).join('') + '</tbody></table>';
+          '</tr></thead><tbody>' + jobs.map(j => this._jobsRowHtml(j, esc)).join('') + '</tbody></table>';
+      };
+      let html = shown.length
+        ? listHTML(shown)
+        : '<div class="jb-empty">' + (this._jobsLoaded ? (data.length ? (older.length ? 'No active or recently completed jobs' : 'No jobs match the filters') : 'No jobs yet') : 'loading…') + '</div>';
+      if (older.length) {
+        const countLabel = older.length + ' older completed job' + (older.length === 1 ? '' : 's');
+        html += '<details class="jb-older"' + (this._jobsOlderOpen ? ' open' : '') + '>' +
+          '<summary><span class="jb-older-chev">▸</span><span class="jb-older-count"><b>' + older.length + '</b> older completed job' + (older.length === 1 ? '' : 's') + '</span><span class="jb-older-age">more than 2h ago</span></summary>' +
+          listHTML(olderShown) +
+          (older.length > CAP ? '<div class="jb-older-cap">showing first ' + CAP + ' of ' + esc(countLabel) + '</div>' : '') +
+        '</details>';
       }
+      tbl.innerHTML = html;
+      const disclosure = tbl.querySelector('.jb-older');
+      if (disclosure) disclosure.addEventListener('toggle', () => { this._jobsOlderOpen = disclosure.open; });
     }
     if (wrap) wrap.scrollTop = prevScroll;
     const foot = this._jobsRoot.querySelector('#jb-foot');
-    if (foot) foot.textContent = filtered.length > CAP ? ('showing ' + CAP + ' of ' + filtered.length + ' - refine filters') : '';
+    if (foot) foot.textContent = primary.length > CAP ? ('showing ' + CAP + ' of ' + primary.length + ' active and recent jobs - refine filters') : '';
   }
 
   _jobsRowHtml(j, esc) {
