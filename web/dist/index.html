@@ -3789,14 +3789,18 @@ class Component extends DCLogic {
       this._navRoute('jobs', { agent: this._jobsFacetAgent || undefined }, true);
     });
     // Row open + background close: one delegated listener on the scroll area. A
-    // click on a data-id row opens its detail; anywhere else closes it. The detail
-    // panel is a sibling of the table wrap, so clicks inside it never reach here.
+    // click on a data-id row opens its detail; disclosure controls are not
+    // background. The detail panel is a sibling, so clicks inside it never reach here.
     root.querySelector('#jb-tablewrap').addEventListener('click', (e) => {
       // Matches both the desktop table rows (tr[data-id]) and the mobile cards
-      // (.jb-card[data-id]); a click landing outside any data-id element closes.
+      // (.jb-card[data-id]); rows inside the older disclosure still open normally.
       const tr = (e.target.closest && e.target.closest('[data-id]')) || null;
-      if (tr) this.openJobsDetail(tr.getAttribute('data-id'));
-      else this.closeJobsDetail();
+      if (tr) {
+        this.openJobsDetail(tr.getAttribute('data-id'));
+        return;
+      }
+      const disclosure = (e.target.closest && e.target.closest('.jb-older')) || null;
+      if (!disclosure) this.closeJobsDetail();
     });
     this._jobsKeydown = (e) => { if (e.key === 'Escape' && this.state.view === 'jobs' && this._jobsSelected) this.closeJobsDetail(); };
     document.addEventListener('keydown', this._jobsKeydown);
