@@ -724,7 +724,7 @@ class Component extends DCLogic {
           this._queuePullToRefreshSync();
           if (this.state.view === 'jobs') this.renderJobsTable();
           if (this.state.view === 'agents') { this._agApplyMobileClass(); this.renderAgentsPane(true); }
-          if (this.state.view === 'org' && this._orgData) { this._orgCenterAfterRender = true; this.renderOrg(this._orgData); }
+          if (this.state.view === 'org' && this._orgData) { this._orgForceFitToken = (this._orgForceFitToken || 0) + 1; this.renderOrg(this._orgData); }
           if (this.state.view === 'pipelines' && this._plDetailName) { this._plLayout(); this._plUpdateScrollCue(); }
           if (this.state.view === 'chat') this._chatRerender();
           if (this.state.view === 'charts' && this._chartsLoaded) this.renderCharts(false);
@@ -830,8 +830,7 @@ class Component extends DCLogic {
     try { document.removeEventListener('keydown', this._workflowKeydown); } catch (e) {}
     try { document.removeEventListener('keydown', this._tasksKeydown); } catch (e) {}
     try { window.removeEventListener('resize', this._knowResize); } catch (e) {}
-    try { window.removeEventListener('resize', this._orgResize); } catch (e) {}
-    try { if (this._orgTreeRO) this._orgTreeRO.disconnect(); } catch (e) {}
+    try { if (this._orgReactRoot) this._orgReactRoot.unmount(); } catch (e) {}
     try { if (this._galaxyRoot) this._galaxyRoot.remove(); } catch (e) {}
     try { if (this._jobsRoot) this._jobsRoot.remove(); } catch (e) {}
     try { if (this._agentsRoot) this._agentsRoot.remove(); } catch (e) {}
@@ -1021,7 +1020,7 @@ class Component extends DCLogic {
       workflows: ['#workflow-root .wfi-scroll', '#workflow-root .wfd-scroll'],
       jobs: ['#jobs-root .jb-tablewrap'],
       agents: ['#agents-root .ag-list', '#agents-root .ag-pane'],
-      org: ['#org-root .org-content', '#org-root .org-chart-scroll', '#org-root .org-col-body'],
+      org: ['#org-root .org-content', '#org-root .org-col-body'],
       charts: ['#charts-root .ch-scroll'],
       attention: ['#attention-root .at-scroll'],
       health: ['#health-root .hl-body'],
@@ -1079,7 +1078,7 @@ class Component extends DCLogic {
       if (state.refreshing) return;
       if (e.touches.length !== 1) { reset(); return; }
       if (scroller.scrollTop > 2) return;
-      const interactive = e.target && e.target.closest && e.target.closest('input,textarea,select,button,[contenteditable="true"]');
+      const interactive = e.target && e.target.closest && e.target.closest('input,textarea,select,button,[contenteditable="true"],.org-canvas-viewport');
       if (interactive) return;
       let nested = e.target;
       while (nested && nested !== scroller) {
@@ -1265,9 +1264,9 @@ class Component extends DCLogic {
     if (v === 'org') {
       const root = this.ensureOrgDom();
       root.style.display = 'flex';
+      this._orgForceFitToken = (this._orgForceFitToken || 0) + 1;
       this.startOrgPoll();
       this.fetchOrg(false);
-      setTimeout(() => this._orgComputeEdges(), 0);
     } else {
       this.stopOrgPoll();
       if (this._orgRoot) this._orgRoot.style.display = 'none';
@@ -2917,9 +2916,9 @@ class Component extends DCLogic {
   stopOrgPoll() { try { clearInterval(this._orgPoll); } catch (e) {} this._orgPoll = null; }
 
   // ============================================================
-  // Org page (#1097): store-backed fleet hierarchy + presence.
-  // The tree is derived entirely from name/parent relationships and
-  // its connectors are measured after each render.
+  // Org page (#1097/#130): store-backed fleet hierarchy + presence.
+  // Explicit tree geometry feeds a transform camera and SVG world;
+  // content refreshes reconcile without touching camera state.
   // ============================================================
   ensureOrgDom() {
     if (this._orgRoot) return this._orgRoot;
@@ -2937,7 +2936,7 @@ class Component extends DCLogic {
       "#org-root .org-chart-region{flex:1.3;min-height:250px;display:flex;flex-direction:column;position:relative;overflow:hidden;border-bottom:1px solid rgba(160,168,220,.08)}",
       "#org-root .org-sec-head{height:40px;flex:none;display:flex;align-items:center;gap:9px;padding:0 18px;color:#8b90b8;font:600 10px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}.org-sec-head .org-hint{color:#5a6088;font-size:10px;font-weight:400;letter-spacing:0;text-transform:none}.org-sec-head .org-count{padding:1px 8px;border-radius:10px;background:rgba(160,168,220,.1);color:#c7c9e5;font-size:9.5px;letter-spacing:0}.org-sec-head .org-right{margin-left:auto;color:#5a6088;font-size:9.5px;font-weight:400;letter-spacing:0;text-transform:none}",
       "#org-root .org-title-dot{width:8px;height:8px;border-radius:50%;background:#bb9af7;box-shadow:0 0 8px rgba(187,154,247,.55);flex:none}",
-      "#org-root .org-chart-scroll{flex:1;min-height:0;overflow-x:auto;overflow-y:auto;position:relative;cursor:grab;touch-action:none}.org-chart-scroll.org-panning{cursor:grabbing;user-select:none}.org-tree-wrap{position:relative;box-sizing:border-box;min-width:100%;width:max-content;display:flex;justify-content:center;padding:34px 54px 52px}.org-tree-svg{position:absolute;inset:0;overflow:visible;pointer-events:none;z-index:0}.org-tree{position:relative;z-index:1;display:flex;justify-content:center}.org-tree-layout{display:flex;flex-direction:column;align-items:center}.org-roots,.org-children{display:flex;align-items:flex-start;justify-content:center;gap:22px}.org-children{margin-top:42px}.org-branch{display:flex;flex-direction:column;align-items:center}.org-unlinked{display:flex;flex-direction:column;align-items:center;gap:9px;margin-top:42px;padding-top:12px;border-top:1px dashed rgba(160,168,220,.12)}.org-unlinked-head{color:#5a6088;font:9px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase}.org-unlinked-row{display:flex;align-items:flex-start;justify-content:center;gap:12px}",
+      "#org-root .org-canvas-host{flex:1;min-height:0;position:relative;overflow:hidden}.org-canvas-frame{position:absolute;inset:0;overflow:hidden}.org-canvas-viewport{position:absolute;inset:0;overflow:hidden;cursor:grab;background:#050609;background-image:radial-gradient(rgba(160,168,220,.09) 1px,transparent 1px);background-size:26px 26px;touch-action:none}.org-canvas-viewport.org-panning{cursor:grabbing;user-select:none}.org-canvas-world{position:absolute;left:0;top:0;width:4200px;height:2600px;transform-origin:0 0;will-change:transform}.org-canvas-svg{position:absolute;left:0;top:0;overflow:visible}.org-canvas-zoom{position:absolute;right:14px;bottom:14px;z-index:6;display:flex;flex-direction:column;gap:6px}.org-canvas-zoom button{width:34px;height:34px;padding:0;border:1px solid rgba(160,168,220,.14);border-radius:8px;background:rgba(15,17,32,.85);color:#a8aecf;cursor:pointer;backdrop-filter:blur(6px)}.org-unlinked-label{fill:#5a6088;font:9px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase}",
       "#org-root .org-node{appearance:none;display:flex;flex-direction:column;gap:5px;min-width:152px;max-width:196px;padding:9px 12px 10px;border:1px solid rgba(160,168,220,.13);border-radius:10px;background:rgba(13,15,28,.72);color:inherit;text-align:left;cursor:pointer;position:relative;box-shadow:0 1px 2px rgba(0,0,0,.28);transition:border-color .16s,transform .16s,background .16s;z-index:2}.org-node:hover{border-color:rgba(187,154,247,.42);transform:translateY(-1px)}.org-node.sel{border-color:rgba(187,154,247,.5);background:rgba(187,154,247,.1);box-shadow:0 0 0 1px rgba(187,154,247,.18),0 12px 32px rgba(0,0,0,.35)}.org-node.root{background:rgba(187,154,247,.045);border-color:rgba(187,154,247,.25)}",
       "#org-root .org-node-main{display:flex;align-items:center;gap:9px;min-width:0}.org-node-name{color:#eef0ff;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.org-node-sub{color:#5a6088;font:9.5px 'JetBrains Mono',monospace;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.org-presence{width:9px;height:9px;border-radius:50%;flex:none}.org-presence.working{background:#9ece6a;box-shadow:0 0 8px rgba(158,206,106,.55)}.org-presence.blocked{background:#ff9e64;box-shadow:0 0 8px rgba(255,158,100,.5)}.org-presence.idle{background:#6b7199}.org-presence.never-seen{background:transparent;border:1.5px solid rgba(139,144,184,.75)}",
       "#org-root .org-rootmark{width:21px;height:21px;border:1px solid rgba(187,154,247,.38);border-radius:6px;display:grid;place-items:center;color:#bb9af7;flex:none}.org-rootmark:after{content:'';width:6px;height:6px;border:1px solid currentColor;transform:rotate(45deg)}",
@@ -2947,7 +2946,7 @@ class Component extends DCLogic {
       "#org-root .org-feed-row{padding:7px 11px 8px;border-radius:8px;margin-bottom:1px}.org-feed-line{display:grid;grid-template-columns:42px max-content 110px minmax(0,1fr);align-items:baseline;gap:9px}.org-feed-time,.org-feed-kind,.org-feed-role,.org-feed-detail,.org-feed-since{font:11px 'JetBrains Mono',monospace}.org-feed-time{color:#5a6088}.org-feed-kind{font-weight:600}.org-feed-role{color:#a8aecf;overflow:hidden;text-overflow:ellipsis}.org-feed-detail{color:#8b90b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.org-feed-since{padding-left:51px;margin-top:2px;color:#5a6088;font-size:10px}",
       "#org-root .org-panel{position:absolute;top:0;right:0;bottom:0;width:368px;z-index:20;display:flex;flex-direction:column;overflow:hidden;border-left:1px solid rgba(160,168,220,.12);background:rgba(9,10,20,.97);backdrop-filter:blur(12px);box-shadow:-24px 0 48px rgba(0,0,0,.45);animation:panelin .22s cubic-bezier(.2,.7,.3,1)}.org-panel-head{flex:none;padding:16px 16px 13px;border-bottom:1px solid rgba(160,168,220,.1)}.org-panel-titleline{display:flex;align-items:flex-start;gap:10px}.org-panel-title{flex:1;min-width:0}.org-panel-name{color:#eef0ff;font-size:17px;font-weight:600;line-height:1.2;overflow-wrap:anywhere}.org-panel-sub{margin-top:3px;color:#868db5;font:10.5px 'JetBrains Mono',monospace}.org-panel-close{width:26px;height:26px;flex:none;border:1px solid rgba(160,168,220,.12);border-radius:7px;background:rgba(160,168,220,.08);color:#868db5;cursor:pointer}.org-panel-state{display:inline-flex;margin-top:12px;padding:4px 10px;border-radius:7px;font:600 10.5px 'JetBrains Mono',monospace;letter-spacing:.04em}.org-panel-body{flex:1;min-height:0;overflow:auto;padding:17px 16px 26px;display:flex;flex-direction:column;gap:19px}.org-panel-sec h3{margin:0 0 10px;color:#5a6088;font:500 9.5px 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase}.org-kv{display:flex;align-items:baseline;gap:12px;margin-bottom:8px}.org-kv-k{width:82px;flex:none;color:#5a6088;font-size:12px}.org-kv-v{flex:1;color:#c7c9e5;font:11.5px 'JetBrains Mono',monospace;text-align:right;overflow-wrap:anywhere}.org-panel-note{color:#8b90b8;font-size:12.5px;line-height:1.6}.org-panel-row{margin-bottom:7px;color:#a8aecf;font:11.5px 'JetBrains Mono',monospace;line-height:1.45}.org-panel-esc{padding:7px 10px;border:1px solid rgba(160,168,220,.08);border-radius:7px;background:rgba(160,168,220,.05);color:#8b90b8;font:11px 'JetBrains Mono',monospace;margin-top:6px}",
       "#org-root .org-loading,#org-root .org-failure,#org-root .org-empty{height:100%;display:grid;place-items:center;padding:36px 24px}.org-loading-card,.org-failure-card,.org-empty-card{width:min(560px,100%)}.org-loading-line{height:12px;border-radius:5px;background:rgba(160,168,220,.08);margin:12px 0;animation:orgShimmer 1.5s ease-in-out infinite}.org-loading-line.short{width:55%}.org-empty-kicker{display:flex;align-items:center;gap:9px;margin-bottom:20px;color:#8b90b8;font:10px 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase}.org-empty h1,.org-failure h1{margin:0 0 12px;color:#eef0ff;font-size:26px;font-weight:600}.org-empty p,.org-failure p{margin:0;color:#8b90b8;font-size:14.5px;line-height:1.65}.org-empty pre{margin:22px 0 0;padding:14px 16px;border:1px solid rgba(160,168,220,.12);border-radius:10px;background:#0a0b16;color:#c7c9e5;font:12px/1.65 'JetBrains Mono',monospace;overflow:auto}.org-empty pre b{color:#bb9af7}.org-empty pre em{color:#7aa2f7;font-style:normal}.org-empty pre i{color:#c5f882;font-style:normal}@keyframes orgShimmer{50%{opacity:.42}}",
-      "@media(max-width:768px){#org-root .org-content{overflow-y:auto;-webkit-overflow-scrolling:touch}.org-health{align-items:flex-start!important;flex-direction:column;padding:10px 14px!important}.org-tiles{flex-wrap:nowrap!important;width:100%;overflow-x:auto;padding-bottom:2px}.org-tile{flex:none}.org-chart-region{flex:none!important;height:450px;min-height:450px}.org-split{flex:none!important;display:flex!important;flex-direction:column}.org-col{min-height:250px}.org-col:first-child{border-right:0!important;border-bottom:1px solid rgba(160,168,220,.08)}.org-col-body{overflow:visible!important}.org-panel{left:0;width:auto!important;border-left:0!important}.org-sec-head .org-hint{display:none}.org-tree-wrap{padding:32px 32px 48px}.org-feed-line{grid-template-columns:38px max-content minmax(70px,110px) minmax(130px,1fr)}}",
+      "@media(max-width:768px){#org-root .org-content{overflow-y:auto;-webkit-overflow-scrolling:touch}.org-health{align-items:flex-start!important;flex-direction:column;padding:10px 14px!important}.org-tiles{flex-wrap:nowrap!important;width:100%;overflow-x:auto;padding-bottom:2px}.org-tile{flex:none}.org-chart-region{flex:none!important;height:450px;min-height:450px}.org-split{flex:none!important;display:flex!important;flex-direction:column}.org-col{min-height:250px}.org-col:first-child{border-right:0!important;border-bottom:1px solid rgba(160,168,220,.08)}.org-col-body{overflow:visible!important}.org-panel{left:0;width:auto!important;border-left:0!important}.org-sec-head .org-hint{display:none}.org-feed-line{grid-template-columns:38px max-content minmax(70px,110px) minmax(130px,1fr)}}",
       "@media(pointer:coarse){#org-root .org-panel-close{width:44px;height:44px;font-size:17px}#org-root .org-node{min-height:56px}}"
     ].join('\n');
     document.head.appendChild(st);
@@ -2967,14 +2966,11 @@ class Component extends DCLogic {
       if (node) { e.stopPropagation(); this.openOrgRole(node.getAttribute('data-org-node')); return; }
       const wf = e.target.closest && e.target.closest('[data-org-workflow]');
       if (wf) { e.preventDefault(); this.showWorkflow(wf.getAttribute('data-org-workflow')); return; }
-      if (e.target.classList && e.target.classList.contains('org-chart-scroll')) this.closeOrgRole();
     });
     this._orgKeydown = (e) => {
       if (e.key === 'Escape' && this.state.view === 'org' && this._orgSelected) this.closeOrgRole();
     };
     document.addEventListener('keydown', this._orgKeydown);
-    this._orgResize = () => { if (this.state.view === 'org') this._orgComputeEdges(); };
-    window.addEventListener('resize', this._orgResize);
     return root;
   }
 
@@ -3017,56 +3013,73 @@ class Component extends DCLogic {
     if (node.merge_rule) return 'merge · ' + node.merge_rule;
     return '';
   }
-  _orgBadgesHTML(node) {
-    const b = node.badges || {};
-    const out = [];
-    if (b.blocked_since) out.push('<span class="org-badge blocked" data-org-age="' + this._orgEsc(b.blocked_since) + '" data-org-age-tmpl="blocked {a}">blocked ' + this._orgEsc(this._orgCompactAge(b.blocked_since)) + '</span>');
-    if (b.overdue) {
-      const overdueAt = this._orgDurationStart(b.overdue);
-      out.push('<span class="org-badge overdue"' + (overdueAt ? ' data-org-age="' + this._orgEsc(overdueAt) + '" data-org-age-tmpl="⟳ overdue {a}"' : '') + '>⟳ overdue ' + this._orgEsc(overdueAt ? this._orgCompactAge(overdueAt) : b.overdue) + '</span>');
-    }
-    if ((Number(b.missed_wakes) || 0) > 0) out.push('<span class="org-badge wakes">⚠ ' + Number(b.missed_wakes) + ' missed wakes</span>');
-    return out.length ? '<div class="org-badges">' + out.join('') + '</div>' : '';
+  _orgStructureKey(roles) {
+    return (Array.isArray(roles) ? roles : [])
+      .filter(r => r && r.name)
+      .map(r => String(r.name) + '\u0000' + String(r.parent || ''))
+      .sort()
+      .join('\u0001');
   }
-  _orgTreeHTML(roles) {
-    const byName = {};
-    const children = {};
-    const emitted = new Set();
+  _orgBadgeRows(node) {
+    const b = (node && node.badges) || {};
+    const count = (b.blocked_since ? 1 : 0) + (b.overdue ? 1 : 0) + ((Number(b.missed_wakes) || 0) > 0 ? 1 : 0);
+    return Math.ceil(count / 2);
+  }
+  _orgGeometryKey(roles) {
+    return (Array.isArray(roles) ? roles : [])
+      .filter(r => r && r.name)
+      .map(r => String(r.name) + '\u0000' + this._orgBadgeRows(r))
+      .sort()
+      .join('\u0001');
+  }
+  _orgLayoutRoles(roles) {
+    const W = 196, GAP_X = 24, GAP_Y = 148, PAD = 120;
+    const byName = {}, children = {}, included = new Set();
     roles.forEach(r => { if (r && r.name) byName[r.name] = r; });
     roles.forEach(r => {
       if (!r || !r.name) return;
-      const p = r.parent && byName[r.parent] ? r.parent : '';
-      (children[p] = children[p] || []).push(r);
+      const parent = r.parent && byName[r.parent] ? r.parent : '';
+      (children[parent] = children[parent] || []).push(r);
     });
-    const nodeHTML = (node, isRoot) => {
-      const selected = this._orgSelected === node.name;
-      const presence = String(node.presence_state || 'idle').toLowerCase();
-      const displayName = node.display_name || node.name;
-      const marker = isRoot ? '<span class="org-rootmark" aria-hidden="true"></span>' : '<span class="org-presence ' + this._orgEsc(presence) + '" aria-hidden="true"></span>';
-      return '<button type="button" class="org-node' + (selected ? ' sel' : '') + (isRoot ? ' root' : '') + '" data-org-node="' + this._orgEsc(node.name) + '" title="' + this._orgEsc(displayName + ' · ' + (isRoot ? 'org root' : presence)) + '">' +
-        '<span class="org-node-main">' + marker + '<span class="org-node-name">' + this._orgEsc(displayName) + '</span></span>' +
-        '<span class="org-node-sub">' + this._orgEsc(this._orgNodeSub(node, isRoot)) + '</span>' +
-        this._orgBadgesHTML(node) +
-      '</button>';
+    const treeFor = (node, lineage) => {
+      if (!node || included.has(node.name) || lineage.has(node.name)) return null;
+      included.add(node.name);
+      const next = new Set(lineage); next.add(node.name);
+      const kids = (children[node.name] || []).map(k => treeFor(k, next)).filter(Boolean);
+      const childWidth = kids.reduce((sum, k) => sum + k.width, 0) + Math.max(0, kids.length - 1) * GAP_X;
+      return { node, kids, width: Math.max(W, childWidth) };
     };
-    const branch = (node, lineage) => {
-      if (!node || lineage[node.name] || emitted.has(node.name)) return '';
-      emitted.add(node.name);
-      const next = Object.assign({}, lineage); next[node.name] = true;
-      const isRoot = !node.parent || !byName[node.parent];
-      const kids = (children[node.name] || []).map(k => branch(k, next)).join('');
-      return '<div class="org-branch">' +
-        nodeHTML(node, isRoot) +
-        (kids ? '<div class="org-children">' + kids + '</div>' : '') +
-      '</div>';
+    const roots = (children[''] || []).map(r => treeFor(r, new Set())).filter(Boolean);
+    const positions = {}, edges = [];
+    let maxDepth = 0;
+    const nodeHeight = (node) => 66 + this._orgBadgeRows(node) * 20;
+    const place = (tree, left, depth, parentName) => {
+      const x = left + (tree.width - W) / 2;
+      const h = nodeHeight(tree.node);
+      positions[tree.node.name] = { x, y: PAD + depth * GAP_Y, w: W, h, root: !parentName, unlinked: false };
+      maxDepth = Math.max(maxDepth, depth);
+      if (parentName) edges.push({ s: parentName, t: tree.node.name });
+      const kidsWidth = tree.kids.reduce((sum, k) => sum + k.width, 0) + Math.max(0, tree.kids.length - 1) * GAP_X;
+      let cursor = left + (tree.width - kidsWidth) / 2;
+      tree.kids.forEach(k => { place(k, cursor, depth + 1, tree.node.name); cursor += k.width + GAP_X; });
     };
-    const roots = children[''] || [];
-    const rooted = roots.map(r => branch(r, {})).join('');
-    const unlinked = roles.filter(r => r && r.name && !emitted.has(r.name));
-    const unlinkedHTML = unlinked.length
-      ? '<div class="org-unlinked"><div class="org-unlinked-head">unlinked roles</div><div class="org-unlinked-row">' + unlinked.map(r => nodeHTML(r, false)).join('') + '</div></div>'
-      : '';
-    return '<div class="org-tree-layout"><div class="org-roots">' + rooted + '</div>' + unlinkedHTML + '</div>';
+    let rootCursor = PAD;
+    roots.forEach(r => { place(r, rootCursor, 0, ''); rootCursor += r.width + GAP_X; });
+    const unlinked = roles.filter(r => r && r.name && !included.has(r.name));
+    const unlinkedY = PAD + (maxDepth + 1) * GAP_Y + (unlinked.length ? 58 : 0);
+    unlinked.forEach((node, i) => {
+      positions[node.name] = { x: PAD + i * (W + GAP_X), y: unlinkedY, w: W, h: nodeHeight(node), root: false, unlinked: true };
+    });
+    const placed = Object.values(positions);
+    const minX = placed.length ? Math.min(...placed.map(p => p.x)) : 0;
+    const minY = placed.length ? Math.min(...placed.map(p => p.y)) : 0;
+    const maxX = placed.length ? Math.max(...placed.map(p => p.x + p.w)) : W;
+    const maxY = placed.length ? Math.max(...placed.map(p => p.y + p.h)) : 80;
+    return {
+      positions, edges, unlinkedY: unlinked.length ? unlinkedY : 0,
+      bounds: { minX, minY, maxX, maxY },
+      worldW: Math.max(4200, maxX + PAD), worldH: Math.max(2600, maxY + PAD),
+    };
   }
   _orgEdgeStyle(node) {
     const b = node.badges || {};
@@ -3075,96 +3088,263 @@ class Component extends DCLogic {
     if (node.presence_state === 'never-seen') return { stroke: 'rgba(139,144,184,.22)', width: 1.2 };
     return { stroke: 'rgba(160,168,220,.16)', width: 1.4 };
   }
-  _orgComputeEdges() {
-    const root = this._orgRoot;
-    const wrap = root && root.querySelector('.org-tree-wrap');
-    const svg = wrap && wrap.querySelector('.org-tree-svg');
-    if (!wrap || !svg || !this._orgData) return;
-    const wr = wrap.getBoundingClientRect();
-    const els = {};
-    wrap.querySelectorAll('[data-org-node]').forEach(el => { els[el.getAttribute('data-org-node')] = el; });
-    const paths = [];
-    (this._orgData.roles || []).forEach(node => {
-      if (!node || !node.parent || !els[node.parent] || !els[node.name]) return;
-      if (els[node.name].closest('.org-unlinked') || els[node.parent].closest('.org-unlinked')) return;
-      const pr = els[node.parent].getBoundingClientRect();
-      const cr = els[node.name].getBoundingClientRect();
-      const x1 = pr.left + pr.width / 2 - wr.left, y1 = pr.bottom - wr.top - 1;
-      const x2 = cr.left + cr.width / 2 - wr.left, y2 = cr.top - wr.top + 1;
-      const my = (y1 + y2) / 2;
-      const tone = this._orgEdgeStyle(node);
-      paths.push('<path d="M' + x1.toFixed(1) + ',' + y1.toFixed(1) + ' C' + x1.toFixed(1) + ',' + my.toFixed(1) + ' ' + x2.toFixed(1) + ',' + my.toFixed(1) + ' ' + x2.toFixed(1) + ',' + y2.toFixed(1) + '" stroke="' + tone.stroke + '" stroke-width="' + tone.width + '" fill="none" stroke-linecap="round"></path>');
-    });
-    const width = Math.max(wrap.scrollWidth, Math.ceil(wr.width));
-    const height = Math.max(wrap.scrollHeight, Math.ceil(wr.height));
-    svg.setAttribute('width', width);
-    svg.setAttribute('height', height);
-    svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-    svg.innerHTML = paths.join('');
-  }
-  _orgCenterTree() {
-    const scroll = this._orgRoot && this._orgRoot.querySelector('.org-chart-scroll');
-    const roles = (this._orgData && this._orgData.roles) || [];
-    const names = new Set(roles.map(r => r && r.name).filter(Boolean));
-    const rootRole = roles.find(r => r && (!r.parent || !names.has(r.parent))) || roles.find(r => r && r.name);
-    if (!scroll || !rootRole) return;
-    const node = Array.from(scroll.querySelectorAll('[data-org-node]')).find(el => el.getAttribute('data-org-node') === rootRole.name);
-    if (!node) return;
-    const sr = scroll.getBoundingClientRect(), nr = node.getBoundingClientRect();
-    scroll.scrollLeft += (nr.left + nr.width / 2) - (sr.left + sr.width / 2);
-  }
-  _orgBindChartPan(scroll) {
-    if (!scroll) return;
-    let drag = null;
-    let suppressClick = false;
-    const end = (e, cancelled) => {
-      if (!drag || e.pointerId !== drag.pointerId) return;
-      const moved = drag.moved;
-      const captureTarget = drag.captureTarget;
-      try { if (captureTarget && captureTarget.hasPointerCapture(e.pointerId)) captureTarget.releasePointerCapture(e.pointerId); } catch (_) {}
-      scroll.classList.remove('org-panning');
-      drag = null;
-      if (moved && !cancelled) {
-        suppressClick = true;
-        setTimeout(() => { suppressClick = false; }, 0);
+  _orgCanvasType() {
+    if (this._OrgCanvasType) return this._OrgCanvasType;
+    const owner = this;
+    this._OrgCanvasType = class OrgCanvas extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { panX: 0, panY: 0, zoom: 1, vw: 900, vh: 420, panning: false };
+        this._pointers = new Map();
+        this._drag = null;
+        this._pinch = null;
+        this._gesture = null;
+        this._suppressClick = false;
+      }
+      componentDidMount() {
+        owner._orgCanvasInstance = this;
+        this._wheelListener = (e) => this.onWheel(e);
+        if (this._canvas) this._canvas.addEventListener('wheel', this._wheelListener, { passive: false });
+        this._measure(true);
+        if (typeof ResizeObserver !== 'undefined') {
+          this._ro = new ResizeObserver(() => this._measure(false));
+          if (this._canvas) this._ro.observe(this._canvas);
+        }
+      }
+      componentDidUpdate(prev) {
+        if (prev.structuralKey !== this.props.structuralKey || prev.fitToken !== this.props.fitToken) {
+          requestAnimationFrame(() => this.fit());
+        }
+      }
+      componentWillUnmount() {
+        if (this._ro) this._ro.disconnect();
+        if (this._canvas && this._wheelListener) this._canvas.removeEventListener('wheel', this._wheelListener);
+        if (owner._orgCanvasInstance === this) owner._orgCanvasInstance = null;
+      }
+      _canvasRef = (el) => { this._canvas = el; };
+      _measure(forceFit) {
+        if (!this._canvas) return;
+        const r = this._canvas.getBoundingClientRect();
+        if (!r.width || !r.height) return;
+        this.setState({ vw: r.width, vh: r.height }, () => { if (forceFit) this.fit(); });
+      }
+      _zoomAround(cx, cy, factor) {
+        const z = this.state.zoom;
+        const nz = Math.min(2.4, Math.max(0.3, z * factor));
+        const wx = (cx - this.state.panX) / z, wy = (cy - this.state.panY) / z;
+        this.setState({ zoom: nz, panX: cx - wx * nz, panY: cy - wy * nz });
+      }
+      fit = () => {
+        const r = this._canvas && this._canvas.getBoundingClientRect();
+        const vw = r && r.width ? r.width : this.state.vw;
+        const vh = r && r.height ? r.height : this.state.vh;
+        const b = this.props.layout.bounds;
+        const cw = Math.max(1, b.maxX - b.minX), ch = Math.max(1, b.maxY - b.minY);
+        const rightRoom = this.props.panelOpen && vw > 768 ? 368 : 0;
+        const aw = Math.max(180, vw - rightRoom);
+        let z = Math.min((aw - 140) / cw, (vh - 100) / ch);
+        z = Math.min(1.05, Math.max(0.3, z));
+        this.setState({
+          vw, vh,
+          zoom: z,
+          panX: (aw - cw * z) / 2 - b.minX * z,
+          panY: (vh - ch * z) / 2 - b.minY * z
+        });
+      };
+      _beginPinch() {
+        const pts = Array.from(this._pointers.values()).slice(0, 2);
+        if (pts.length !== 2 || !this._canvas) return;
+        const r = this._canvas.getBoundingClientRect();
+        const mx = (pts[0].x + pts[1].x) / 2 - r.left;
+        const my = (pts[0].y + pts[1].y) / 2 - r.top;
+        const distance = Math.max(1, Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y));
+        this._pinch = {
+          distance, zoom: this.state.zoom,
+          worldX: (mx - this.state.panX) / this.state.zoom,
+          worldY: (my - this.state.panY) / this.state.zoom
+        };
+        if (this._gesture) this._gesture.moved = true;
+        if (!this.state.panning) this.setState({ panning: true });
+      }
+      _suppressNextClick() {
+        this._suppressClick = true;
+        setTimeout(() => { this._suppressClick = false; }, 0);
+      }
+      onDown = (e) => {
+        if (e.pointerType === 'mouse' && (e.button !== 0 || e.isPrimary === false)) return;
+        const card = e.target.closest && e.target.closest('[data-org-node]');
+        const control = e.target.closest && e.target.closest('button,a');
+        if (control && control !== card) return;
+        this._pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+        if (this._pointers.size === 1) {
+          this._drag = { pointerId: e.pointerId, x: e.clientX, y: e.clientY, px: this.state.panX, py: this.state.panY };
+          this._gesture = { moved: false, node: card ? card.getAttribute('data-org-node') : '', background: !card };
+        } else if (this._pointers.size === 2) {
+          this._beginPinch();
+        }
+      };
+      onMove = (e) => {
+        if (!this._pointers.has(e.pointerId)) return;
+        if (e.pointerType === 'mouse' && (e.buttons & 1) === 0) { this._finish(e, true); return; }
+        this._pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        if (this._pointers.size >= 2) {
+          if (!this._pinch) this._beginPinch();
+          const pts = Array.from(this._pointers.values()).slice(0, 2);
+          if (!this._pinch || pts.length !== 2 || !this._canvas) return;
+          const r = this._canvas.getBoundingClientRect();
+          const mx = (pts[0].x + pts[1].x) / 2 - r.left;
+          const my = (pts[0].y + pts[1].y) / 2 - r.top;
+          const distance = Math.max(1, Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y));
+          const nz = Math.min(2.4, Math.max(0.3, this._pinch.zoom * distance / this._pinch.distance));
+          this.setState({ zoom: nz, panX: mx - this._pinch.worldX * nz, panY: my - this._pinch.worldY * nz, panning: true });
+          e.preventDefault();
+          return;
+        }
+        if (!this._drag || this._drag.pointerId !== e.pointerId) return;
+        const dx = e.clientX - this._drag.x, dy = e.clientY - this._drag.y;
+        if (this._gesture && !this._gesture.moved && Math.abs(dx) <= 4 && Math.abs(dy) <= 4) return;
+        if (this._gesture) this._gesture.moved = true;
+        this.setState({ panX: this._drag.px + dx, panY: this._drag.py + dy, panning: true });
+        e.preventDefault();
+      };
+      _finish(e, cancelled) {
+        if (!this._pointers.has(e.pointerId)) return;
+        this._pointers.delete(e.pointerId);
+        try { if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+        if (this._pointers.size >= 2) {
+          this._beginPinch();
+          return;
+        }
+        this._pinch = null;
+        if (this._pointers.size === 1) {
+          const entry = Array.from(this._pointers.entries())[0];
+          this._drag = { pointerId: entry[0], x: entry[1].x, y: entry[1].y, px: this.state.panX, py: this.state.panY };
+          return;
+        }
+        const gesture = this._gesture;
+        this._drag = null;
+        this._gesture = null;
+        this.setState({ panning: false });
+        if (!gesture || cancelled) return;
+        this._suppressNextClick();
+        if (!gesture.moved) {
+          if (gesture.node) owner.openOrgRole(gesture.node);
+          else if (gesture.background) owner.closeOrgRole();
+        }
+      }
+      onUp = (e) => this._finish(e, false);
+      onCancel = (e) => this._finish(e, true);
+      onLostCapture = (e) => { if (this._pointers.has(e.pointerId)) this._finish(e, true); };
+      onClickCapture = (e) => {
+        if (!this._suppressClick) return;
+        e.preventDefault();
+        e.stopPropagation();
+      };
+      onWheel = (e) => {
+        e.preventDefault();
+        if (!this._canvas) return;
+        const r = this._canvas.getBoundingClientRect();
+        this._zoomAround(e.clientX - r.left, e.clientY - r.top, e.deltaY < 0 ? 1.1 : 0.9);
+      };
+      zoomBy = (factor) => this._zoomAround(this.state.vw / 2, this.state.vh / 2, factor);
+      render() {
+        const R = React.createElement;
+        const layout = this.props.layout;
+        const roleByName = Object.fromEntries(this.props.roles.map(r => [r.name, r]));
+        const edgeEls = layout.edges.map((edge, i) => {
+          const a = layout.positions[edge.s], b = layout.positions[edge.t], target = roleByName[edge.t];
+          if (!a || !b || !target) return null;
+          const sx = a.x + a.w / 2, sy = a.y + a.h;
+          const tx = b.x + b.w / 2, ty = b.y;
+          const my = (sy + ty) / 2, tone = owner._orgEdgeStyle(target);
+          return R('path', { key: i, d: `M${sx},${sy} C${sx},${my} ${tx},${my} ${tx},${ty}`, stroke: tone.stroke, strokeWidth: tone.width, fill: 'none', strokeLinecap: 'round' });
+        }).filter(Boolean);
+        const badgeEls = (node) => {
+          const b = node.badges || {}, out = [];
+          if (b.blocked_since) out.push(R('span', { key: 'blocked', className: 'org-badge blocked', 'data-org-age': b.blocked_since, 'data-org-age-tmpl': 'blocked {a}' }, 'blocked ' + owner._orgCompactAge(b.blocked_since)));
+          if (b.overdue) {
+            const overdueAt = owner._orgDurationStart(b.overdue);
+            const props = { key: 'overdue', className: 'org-badge overdue' };
+            if (overdueAt) { props['data-org-age'] = overdueAt; props['data-org-age-tmpl'] = '⟳ overdue {a}'; }
+            out.push(R('span', props, '⟳ overdue ' + (overdueAt ? owner._orgCompactAge(overdueAt) : b.overdue)));
+          }
+          if ((Number(b.missed_wakes) || 0) > 0) out.push(R('span', { key: 'wakes', className: 'org-badge wakes' }, '⚠ ' + Number(b.missed_wakes) + ' missed wakes'));
+          return out.length ? R('div', { key: 'badges', className: 'org-badges' }, out) : null;
+        };
+        const nodeEls = this.props.roles.map(node => {
+          const p = layout.positions[node.name];
+          if (!p) return null;
+          const isRoot = p.root, presence = String(node.presence_state || 'idle').toLowerCase();
+          const displayName = node.display_name || node.name;
+          const marker = isRoot
+            ? R('span', { key: 'marker', className: 'org-rootmark', 'aria-hidden': true })
+            : R('span', { key: 'marker', className: 'org-presence ' + presence, 'aria-hidden': true });
+          const card = R('button', {
+            type: 'button',
+            className: 'org-node' + (this.props.selected === node.name ? ' sel' : '') + (isRoot ? ' root' : ''),
+            'data-org-node': node.name,
+            title: displayName + ' · ' + (isRoot ? 'org root' : presence),
+            onClick: (e) => { e.stopPropagation(); if (!this._suppressClick) owner.openOrgRole(node.name); },
+            style: { width: '100%', height: '100%' }
+          }, [
+            R('span', { key: 'main', className: 'org-node-main' }, [marker, R('span', { key: 'name', className: 'org-node-name' }, displayName)]),
+            R('span', { key: 'sub', className: 'org-node-sub' }, owner._orgNodeSub(node, isRoot)),
+            badgeEls(node)
+          ]);
+          return R('foreignObject', { key: node.name, x: p.x, y: p.y, width: p.w, height: p.h, style: { overflow: 'visible' } },
+            R('div', { xmlns: 'http://www.w3.org/1999/xhtml', style: { width: '100%', height: '100%' } }, card));
+        }).filter(Boolean);
+        const unlinkedLabel = layout.unlinkedY
+          ? R('text', { key: 'unlinked', className: 'org-unlinked-label', x: 120, y: layout.unlinkedY - 22 }, 'UNLINKED ROLES')
+          : null;
+        const transform = `translate(${this.state.panX}px,${this.state.panY}px) scale(${this.state.zoom})`;
+        return R('div', { className: 'org-canvas-frame' }, [
+          R('div', {
+            key: 'viewport', ref: this._canvasRef,
+            className: 'org-canvas-viewport' + (this.state.panning ? ' org-panning' : ''),
+            'data-org-pan-x': String(this.state.panX), 'data-org-pan-y': String(this.state.panY), 'data-org-zoom': String(this.state.zoom),
+            onPointerDown: this.onDown, onPointerMove: this.onMove, onPointerUp: this.onUp,
+            onPointerCancel: this.onCancel, onLostPointerCapture: this.onLostCapture,
+            onClickCapture: this.onClickCapture
+          }, R('div', { className: 'org-canvas-world', style: { width: layout.worldW, height: layout.worldH, transform } }, [
+            R('svg', { key: 'edges', className: 'org-canvas-svg', width: layout.worldW, height: layout.worldH, style: { pointerEvents: 'none' } }, edgeEls),
+            R('svg', { key: 'nodes', className: 'org-canvas-svg', width: layout.worldW, height: layout.worldH }, [unlinkedLabel, ...nodeEls])
+          ])),
+          R('div', { key: 'zoom', className: 'org-canvas-zoom' }, [
+            R('button', { key: 'in', type: 'button', title: 'Zoom in', onClick: () => this.zoomBy(1.2) }, '+'),
+            R('button', { key: 'out', type: 'button', title: 'Zoom out', onClick: () => this.zoomBy(0.83) }, '−'),
+            R('button', { key: 'fit', type: 'button', title: 'Fit to view', onClick: this.fit }, '⤢')
+          ])
+        ]);
       }
     };
-    scroll.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0 || e.isPrimary === false) return;
-      const card = e.target.closest && e.target.closest('[data-org-node],[data-org-workflow]');
-      const control = e.target.closest && e.target.closest('button,a');
-      if (control && control !== card) return;
-      drag = {
-        pointerId: e.pointerId,
-        captureTarget: e.target,
-        x: e.clientX,
-        y: e.clientY,
-        left: scroll.scrollLeft,
-        top: scroll.scrollTop,
-        moved: false
+    return this._OrgCanvasType;
+  }
+  _orgUnmountCanvas() {
+    try { if (this._orgReactRoot) this._orgReactRoot.unmount(); } catch (e) {}
+    this._orgReactRoot = null;
+    this._orgCanvasHost = null;
+    this._orgCanvasInstance = null;
+  }
+  _orgRenderCanvas(host, roles, layout, structuralKey) {
+    if (!host) return;
+    if (!this._orgReactRoot || this._orgCanvasHost !== host) {
+      this._orgUnmountCanvas();
+      this._orgCanvasHost = host;
+      if (window.ReactDOM.createRoot) this._orgReactRoot = window.ReactDOM.createRoot(host);
+      else this._orgReactRoot = {
+        render: (el) => window.ReactDOM.render(el, host),
+        unmount: () => window.ReactDOM.unmountComponentAtNode(host)
       };
-      try { e.target.setPointerCapture(e.pointerId); } catch (_) {}
-    });
-    scroll.addEventListener('pointermove', (e) => {
-      if (!drag || e.pointerId !== drag.pointerId) return;
-      if ((e.buttons & 1) === 0) { end(e, true); return; }
-      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
-      if (!drag.moved && Math.abs(dx) <= 4 && Math.abs(dy) <= 4) return;
-      if (!drag.moved) {
-        drag.moved = true;
-        scroll.classList.add('org-panning');
-      }
-      e.preventDefault();
-      scroll.scrollLeft = drag.left - dx;
-      scroll.scrollTop = drag.top - dy;
-    });
-    scroll.addEventListener('pointerup', (e) => end(e, false));
-    scroll.addEventListener('pointercancel', (e) => end(e, true));
-    scroll.addEventListener('click', (e) => {
-      if (!suppressClick) return;
-      e.preventDefault();
-      e.stopPropagation();
-    }, true);
+    }
+    const Type = this._orgCanvasType();
+    this._orgReactRoot.render(React.createElement(Type, {
+      roles, layout, structuralKey,
+      fitToken: this._orgForceFitToken || 0,
+      selected: this._orgSelected || '',
+      panelOpen: !!this._orgSelected
+    }));
   }
   _orgHealthHTML(data) {
     const h = data.health || {};
@@ -3296,46 +3476,50 @@ class Component extends DCLogic {
     }
     const content = this._orgRoot.querySelector('.org-content');
     if (!content) return;
-    const previousChart = content.querySelector('.org-chart-scroll');
-    const previousScrollLeft = previousChart ? previousChart.scrollLeft : 0;
-    const previousScrollTop = previousChart ? previousChart.scrollTop : 0;
-    const centerAfterRender = !!this._orgCenterAfterRender || !previousChart;
-    this._orgCenterAfterRender = false;
     if (!roles.length) {
-      try { if (this._orgTreeRO) this._orgTreeRO.disconnect(); } catch (e) {}
+      this._orgUnmountCanvas();
+      this._orgShellMode = 'empty';
+      this._orgStructure = '';
+      this._orgGeometry = '';
+      this._orgLayout = null;
       content.innerHTML = (this._orgError ? '<div class="org-errorbar">' + this._orgEsc(this._orgError) + '</div>' : '') + this._orgEmptyHTML();
       return;
     }
     const escs = Array.isArray(data.escalations) ? data.escalations : [];
     const feed = Array.isArray(data.feed) ? data.feed : [];
-    content.innerHTML =
-      this._orgHealthHTML(data) +
-      (this._orgError ? '<div class="org-errorbar">' + this._orgEsc(this._orgError) + '</div>' : '') +
-      '<section class="org-chart-region"><div class="org-sec-head"><span class="org-title-dot"></span><span>The Org Chart</span><span class="org-hint">click a role for details</span></div>' +
-        '<div class="org-chart-scroll"><div class="org-tree-wrap"><svg class="org-tree-svg" aria-hidden="true"></svg><div class="org-tree">' + this._orgTreeHTML(roles) + '</div></div></div>' +
-      '</section>' +
-      '<div class="org-split">' +
-        '<section class="org-col"><div class="org-sec-head"><span class="org-title-dot" style="background:' + (escs.length ? '#e0af68;box-shadow:0 0 8px rgba(224,175,104,.5)' : '#9ece6a;box-shadow:0 0 8px rgba(158,206,106,.4)') + '"></span><span>Escalations</span><span class="org-count">' + escs.length + ' open</span><span class="org-right">oldest first</span></div><div class="org-col-body">' + this._orgEscalationsHTML(escs) + '</div></section>' +
-        '<section class="org-col"><div class="org-sec-head"><span class="org-title-dot" style="background:#9ece6a;box-shadow:0 0 8px rgba(158,206,106,.4)"></span><span>Event feed</span><span class="org-right">current signals</span></div><div class="org-col-body">' + this._orgFeedHTML(feed) + '</div></section>' +
-      '</div>' +
-      this._orgPanelHTML(this._orgSelected);
-    this._orgBindChartPan(content.querySelector('.org-chart-scroll'));
-    try { if (this._orgTreeRO) this._orgTreeRO.disconnect(); } catch (e) {}
-    const tree = content.querySelector('.org-tree');
-    if (tree && typeof ResizeObserver !== 'undefined') {
-      this._orgTreeRO = new ResizeObserver(() => this._orgComputeEdges());
-      this._orgTreeRO.observe(tree);
+    const structuralKey = this._orgStructureKey(roles);
+    const geometryKey = this._orgGeometryKey(roles);
+    if (structuralKey !== this._orgStructure || geometryKey !== this._orgGeometry || !this._orgLayout) {
+      this._orgStructure = structuralKey;
+      this._orgGeometry = geometryKey;
+      this._orgLayout = this._orgLayoutRoles(roles);
     }
-    requestAnimationFrame(() => {
-      this._orgComputeEdges();
-      const chart = content.querySelector('.org-chart-scroll');
-      if (centerAfterRender) this._orgCenterTree();
-      else if (chart) {
-        chart.scrollLeft = previousScrollLeft;
-        chart.scrollTop = previousScrollTop;
-      }
-    });
-    setTimeout(() => this._orgComputeEdges(), 120);
+    if (this._orgShellMode !== 'data') {
+      this._orgUnmountCanvas();
+      content.innerHTML =
+        '<div class="org-health-slot"></div><div class="org-error-slot"></div>' +
+        '<section class="org-chart-region"><div class="org-sec-head"><span class="org-title-dot"></span><span>The Org Chart</span><span class="org-hint">click a role for details</span></div><div class="org-canvas-host"></div></section>' +
+        '<div class="org-split">' +
+          '<section class="org-col"><div class="org-esc-head"></div><div class="org-col-body org-esc-body"></div></section>' +
+          '<section class="org-col"><div class="org-feed-head"></div><div class="org-col-body org-feed-body"></div></section>' +
+        '</div><div class="org-panel-slot"></div>';
+      this._orgShellMode = 'data';
+    }
+    const healthSlot = content.querySelector('.org-health-slot');
+    const errorSlot = content.querySelector('.org-error-slot');
+    const escHead = content.querySelector('.org-esc-head');
+    const escBody = content.querySelector('.org-esc-body');
+    const feedHead = content.querySelector('.org-feed-head');
+    const feedBody = content.querySelector('.org-feed-body');
+    const panelSlot = content.querySelector('.org-panel-slot');
+    if (healthSlot) healthSlot.innerHTML = this._orgHealthHTML(data);
+    if (errorSlot) errorSlot.innerHTML = this._orgError ? '<div class="org-errorbar">' + this._orgEsc(this._orgError) + '</div>' : '';
+    if (escHead) escHead.innerHTML = '<div class="org-sec-head"><span class="org-title-dot" style="background:' + (escs.length ? '#e0af68;box-shadow:0 0 8px rgba(224,175,104,.5)' : '#9ece6a;box-shadow:0 0 8px rgba(158,206,106,.4)') + '"></span><span>Escalations</span><span class="org-count">' + escs.length + ' open</span><span class="org-right">oldest first</span></div>';
+    if (escBody) escBody.innerHTML = this._orgEscalationsHTML(escs);
+    if (feedHead) feedHead.innerHTML = '<div class="org-sec-head"><span class="org-title-dot" style="background:#9ece6a;box-shadow:0 0 8px rgba(158,206,106,.4)"></span><span>Event feed</span><span class="org-right">current signals</span></div>';
+    if (feedBody) feedBody.innerHTML = this._orgFeedHTML(feed);
+    if (panelSlot) panelSlot.innerHTML = this._orgPanelHTML(this._orgSelected);
+    this._orgRenderCanvas(content.querySelector('.org-canvas-host'), roles, this._orgLayout, structuralKey);
     this._queuePullToRefreshSync();
   }
   _orgRefreshTimes() {
@@ -3352,7 +3536,11 @@ class Component extends DCLogic {
     this._orgFetching = true;
     if (!background && !this._orgData && this._orgRoot) {
       const c = this._orgRoot.querySelector('.org-content');
-      if (c) c.innerHTML = '<div class="org-loading"><div class="org-loading-card"><div class="org-loading-line short"></div><div class="org-loading-line"></div><div class="org-loading-line"></div></div></div>';
+      if (c) {
+        this._orgUnmountCanvas();
+        this._orgShellMode = 'loading';
+        c.innerHTML = '<div class="org-loading"><div class="org-loading-card"><div class="org-loading-line short"></div><div class="org-loading-line"></div><div class="org-loading-line"></div></div></div>';
+      }
     }
     try {
       const res = await fetch('/api/org', { cache: 'no-store' });
@@ -3382,7 +3570,11 @@ class Component extends DCLogic {
       if (this._orgData) this.renderOrg(this._orgData);
       else if (this._orgRoot) {
         const c = this._orgRoot.querySelector('.org-content');
-        if (c) c.innerHTML = '<div class="org-failure"><div class="org-failure-card"><h1>Org is unavailable</h1><p>' + this._orgEsc(this._orgError) + '</p></div></div>';
+        if (c) {
+          this._orgUnmountCanvas();
+          this._orgShellMode = 'failure';
+          c.innerHTML = '<div class="org-failure"><div class="org-failure-card"><h1>Org is unavailable</h1><p>' + this._orgEsc(this._orgError) + '</p></div></div>';
+        }
       }
     } finally {
       this._orgFetching = false;
