@@ -6007,7 +6007,10 @@ class Component extends DCLogic {
     this._learningRoot.classList.toggle('brain-changelog', changelog);
     if (chrome) chrome.classList.toggle('changelog', changelog);
     if (log) log.style.display = changelog ? 'flex' : 'none';
-    if (changelog) [graph, loading, legend, empty, mobile, detail].forEach(el => { if (el) el.style.display = 'none'; });
+    if (changelog) {
+      if (graph) graph.setAttribute('data-mobile-hidden', 'true');
+      [graph, loading, legend, empty, mobile, detail].forEach(el => { if (el) el.style.display = 'none'; });
+    }
     else {
       if (graph) graph.style.display = '';
       if (loading) loading.style.display = this._knowRaw ? 'none' : 'flex';
