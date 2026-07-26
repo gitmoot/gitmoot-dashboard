@@ -141,3 +141,42 @@ func TestWorkflowAdditiveJSONContracts(t *testing.T) {
 		}
 	})
 }
+
+func TestOrgBadgesActiveJobsAdditiveJSONContract(t *testing.T) {
+	t.Run("legacy payload omits active_jobs", func(t *testing.T) {
+		const payload = `{"blocked_since":"2026-07-23T01:31:00Z","overdue":"23m","missed_wakes":2}`
+		var badges OrgBadges
+		if err := json.Unmarshal([]byte(payload), &badges); err != nil {
+			t.Fatalf("unmarshal legacy OrgBadges: %v", err)
+		}
+		if badges.ActiveJobs != 0 {
+			t.Fatalf("legacy OrgBadges.ActiveJobs = %d, want 0", badges.ActiveJobs)
+		}
+		got, err := json.Marshal(badges)
+		if err != nil {
+			t.Fatalf("marshal legacy OrgBadges: %v", err)
+		}
+		if string(got) != payload {
+			t.Fatalf("legacy OrgBadges JSON = %s, want %s", got, payload)
+		}
+	})
+
+	t.Run("active jobs round trip", func(t *testing.T) {
+		badges := OrgBadges{ActiveJobs: 3}
+		got, err := json.Marshal(badges)
+		if err != nil {
+			t.Fatalf("marshal OrgBadges with ActiveJobs: %v", err)
+		}
+		const want = `{"missed_wakes":0,"active_jobs":3}`
+		if string(got) != want {
+			t.Fatalf("OrgBadges JSON = %s, want %s", got, want)
+		}
+		var roundTrip OrgBadges
+		if err := json.Unmarshal(got, &roundTrip); err != nil {
+			t.Fatalf("unmarshal OrgBadges: %v", err)
+		}
+		if roundTrip.ActiveJobs != 3 {
+			t.Fatalf("round-trip OrgBadges.ActiveJobs = %d, want 3", roundTrip.ActiveJobs)
+		}
+	})
+}

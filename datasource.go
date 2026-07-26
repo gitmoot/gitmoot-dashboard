@@ -524,11 +524,19 @@ type OrgNode struct {
 	LastSeenAt     string    `json:"last_seen_at,omitempty"` // labeled "last dispatch" by clients
 }
 
-// OrgBadges contains the blocked/recycle signals displayed on an org node.
+// OrgBadges contains the blocked/recycle/activity signals displayed on an org node.
 type OrgBadges struct {
 	BlockedSince string `json:"blocked_since,omitempty"` // RFC3339
 	Overdue      string `json:"overdue,omitempty"`       // Go duration text
 	MissedWakes  int    `json:"missed_wakes"`
+	// ActiveJobs is the LIVE count of jobs currently queued or running,
+	// attributed to this role via ActingOrgRole (gitmoot#1114). This is a
+	// different, finer-grained signal than OrgRoleActivity.JobsToday (a
+	// same-UTC-day outcome histogram) — do not collapse the two. ActiveJobs
+	// answers "is the lane busy right now"; JobsToday answers "what
+	// happened today". Lets a role whose seat has gone idle still show as
+	// active while its dispatched workers are mid-flight (gitmoot#1127).
+	ActiveJobs int `json:"active_jobs,omitempty"`
 }
 
 // OrgEscalation is one open read-only escalation.
