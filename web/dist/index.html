@@ -3020,6 +3020,18 @@ class Component extends DCLogic {
       .sort()
       .join('\u0001');
   }
+  _orgBadgeRows(node) {
+    const b = (node && node.badges) || {};
+    const count = (b.blocked_since ? 1 : 0) + (b.overdue ? 1 : 0) + ((Number(b.missed_wakes) || 0) > 0 ? 1 : 0);
+    return Math.ceil(count / 2);
+  }
+  _orgGeometryKey(roles) {
+    return (Array.isArray(roles) ? roles : [])
+      .filter(r => r && r.name)
+      .map(r => String(r.name) + '\u0000' + this._orgBadgeRows(r))
+      .sort()
+      .join('\u0001');
+  }
   _orgLayoutRoles(roles) {
     const W = 196, GAP_X = 24, GAP_Y = 148, PAD = 120;
     const byName = {}, children = {}, included = new Set();
@@ -3040,11 +3052,7 @@ class Component extends DCLogic {
     const roots = (children[''] || []).map(r => treeFor(r, new Set())).filter(Boolean);
     const positions = {}, edges = [];
     let maxDepth = 0;
-    const nodeHeight = (node) => {
-      const b = node.badges || {};
-      const count = (b.blocked_since ? 1 : 0) + (b.overdue ? 1 : 0) + ((Number(b.missed_wakes) || 0) > 0 ? 1 : 0);
-      return 66 + Math.ceil(count / 2) * 20;
-    };
+    const nodeHeight = (node) => 66 + this._orgBadgeRows(node) * 20;
     const place = (tree, left, depth, parentName) => {
       const x = left + (tree.width - W) / 2;
       const h = nodeHeight(tree.node);
@@ -3127,16 +3135,20 @@ class Component extends DCLogic {
         this.setState({ zoom: nz, panX: cx - wx * nz, panY: cy - wy * nz });
       }
       fit = () => {
+        const r = this._canvas && this._canvas.getBoundingClientRect();
+        const vw = r && r.width ? r.width : this.state.vw;
+        const vh = r && r.height ? r.height : this.state.vh;
         const b = this.props.layout.bounds;
         const cw = Math.max(1, b.maxX - b.minX), ch = Math.max(1, b.maxY - b.minY);
-        const rightRoom = this.props.panelOpen && this.state.vw > 768 ? 368 : 0;
-        const aw = Math.max(180, this.state.vw - rightRoom);
-        let z = Math.min((aw - 140) / cw, (this.state.vh - 100) / ch);
+        const rightRoom = this.props.panelOpen && vw > 768 ? 368 : 0;
+        const aw = Math.max(180, vw - rightRoom);
+        let z = Math.min((aw - 140) / cw, (vh - 100) / ch);
         z = Math.min(1.05, Math.max(0.3, z));
         this.setState({
+          vw, vh,
           zoom: z,
           panX: (aw - cw * z) / 2 - b.minX * z,
-          panY: (this.state.vh - ch * z) / 2 - b.minY * z
+          panY: (vh - ch * z) / 2 - b.minY * z
         });
       };
       _beginPinch() {
@@ -3468,6 +3480,7 @@ class Component extends DCLogic {
       this._orgUnmountCanvas();
       this._orgShellMode = 'empty';
       this._orgStructure = '';
+      this._orgGeometry = '';
       this._orgLayout = null;
       content.innerHTML = (this._orgError ? '<div class="org-errorbar">' + this._orgEsc(this._orgError) + '</div>' : '') + this._orgEmptyHTML();
       return;
@@ -3475,8 +3488,10 @@ class Component extends DCLogic {
     const escs = Array.isArray(data.escalations) ? data.escalations : [];
     const feed = Array.isArray(data.feed) ? data.feed : [];
     const structuralKey = this._orgStructureKey(roles);
-    if (structuralKey !== this._orgStructure || !this._orgLayout) {
+    const geometryKey = this._orgGeometryKey(roles);
+    if (structuralKey !== this._orgStructure || geometryKey !== this._orgGeometry || !this._orgLayout) {
       this._orgStructure = structuralKey;
+      this._orgGeometry = geometryKey;
       this._orgLayout = this._orgLayoutRoles(roles);
     }
     if (this._orgShellMode !== 'data') {
