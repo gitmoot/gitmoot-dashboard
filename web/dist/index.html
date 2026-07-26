@@ -741,14 +741,13 @@ class Component extends DCLogic {
           // Learning/Knowledge: the second force-graph re-fits to the post-dock width.
           if (this.state.view === 'brain' && this._knowGraph && this._knowGraphEl) {
             if (this._brainView === 'changelog') { this._brainRender(); return; }
-            // Option A: swap canvas <-> repo accordion for the new breakpoint first, then
-            // (desktop only — the mobile canvas is display:none, so it measures 0) re-fit.
+            // Apply the mobile List/Graph choice first. Re-fit whenever the graph is
+            // actually visible (desktop, fallback mobile, or explicit mobile Graph).
             this._knowApplyMobile();
-            if (!this.state.isMobile) {
+            if (this._knowGraphEl.style.display !== 'none') {
               const kr = this._knowGraphEl.getBoundingClientRect();
               this._knowGraph.width(kr.width).height(kr.height);
-              // Re-dock changed the container width (216px<->0), so recompute the bands and
-              // re-settle the three columns into the new geometry.
+              // Re-dock changed the container width, so recompute the bands and re-settle.
               this._knowRelayout();
             }
           }
@@ -6750,7 +6749,10 @@ class Component extends DCLogic {
       "#learning-root .lr-dlinkarrow{color:#bb9af7;flex:none;margin-top:1px;font-size:12px}",
       "#learning-root .lr-dlinktext{flex:1;min-width:0;font-size:12.5px;line-height:1.42;color:#d7c4ff;word-break:break-word}",
       "#learning-root .lr-dmute{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#5a6088;padding:6px 2px}",
-      "#learning-root #lr-know-mobile{position:absolute;inset:0;overflow-y:auto;padding:58px 14px 24px;display:none}",
+      "#learning-root #lr-know-mobile{position:absolute;inset:0;overflow-y:auto;padding:108px 14px 24px;display:none}",
+      "#learning-root #lr-know-mobile-view{display:none;padding:3px;gap:2px;border-radius:9px;flex:none}",
+      "#learning-root #lr-know-mobile-view button{border:0;background:transparent;color:#6b7196;padding:5px 9px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;cursor:pointer}",
+      "#learning-root #lr-know-mobile-view button.on{color:#eef0ff;background:rgba(187,154,247,.16)}",
       "#learning-root .km-sec{border:1px solid rgba(160,168,220,0.12);border-radius:11px;margin-bottom:10px;overflow:hidden;background:rgba(255,255,255,0.02)}",
       "#learning-root .km-head{display:flex;align-items:center;gap:11px;padding:13px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent}",
       "#learning-root .km-bar{width:3px;height:16px;border-radius:2px;flex:none}",
@@ -6849,7 +6851,7 @@ class Component extends DCLogic {
       "#learning-root .bc-empty p{font-size:13px;color:#5a627e;max-width:400px;line-height:1.5;margin:0}",
       "#learning-root .bc-sheetback,#learning-root .bc-sheet{display:none}",
       "@media (prefers-reduced-motion:reduce){#learning-root .bc-event.live-new,#learning-root .bc-expand{animation:none!important}#learning-root .bc-caret{transition:none!important}}",
-      "@media (max-width:768px){#learning-root .lr-head{padding-left:16px;padding-right:16px}#learning-root .lr-skbody{padding-left:14px;padding-right:14px}#learning-root .lr-thead{display:none}#learning-root .lr-trow{flex-wrap:wrap;gap:6px 10px}#learning-root .lr-c-name{flex:1 1 100%;white-space:normal}#learning-root .lr-c-ver,#learning-root .lr-c-changed{width:auto;flex:none}#learning-root .lr-c-score{width:auto;flex:1}#learning-root .lr-nrow{gap:8px}#learning-root .lr-cmd{width:100%;max-width:none}#learning-root .lr-cmd code{white-space:normal;word-break:break-all}#learning-root .lr-detail{width:100%;left:0;border-left:none}#learning-root #lr-know-linkcount,#learning-root #lr-know-controls{display:none!important}}",
+      "@media (max-width:768px){#learning-root .lr-head{padding-left:16px;padding-right:16px}#learning-root .lr-skbody{padding-left:14px;padding-right:14px}#learning-root .lr-thead{display:none}#learning-root .lr-trow{flex-wrap:wrap;gap:6px 10px}#learning-root .lr-c-name{flex:1 1 100%;white-space:normal}#learning-root .lr-c-ver,#learning-root .lr-c-changed{width:auto;flex:none}#learning-root .lr-c-score{width:auto;flex:1}#learning-root .lr-nrow{gap:8px}#learning-root .lr-cmd{width:100%;max-width:none}#learning-root .lr-cmd code{white-space:normal;word-break:break-all}#learning-root .lr-detail{width:100%;left:0;border-left:none}#learning-root #lr-know-linkcount,#learning-root #lr-know-controls{display:none!important}#learning-root #lr-know-count{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#learning-root #lr-know-mobile-view{margin-left:auto}#learning-root #lr-know-chrome.changelog #lr-know-mobile-view{display:none!important}}",
       "@media (max-width:768px){#learning-root #lr-know-chrome{top:12px;left:16px;right:16px;gap:10px}#learning-root #lr-know-chrome .bc-switch{order:0;flex:1 0 100%}#learning-root .bc-switch button{flex:1;justify-content:center;padding:7px 10px;font-size:12.5px}#learning-root #lr-know-chrome.changelog #lr-know-count{order:1;padding:0;border:0;background:none!important;font-size:11.5px}#learning-root #lr-changelog{padding:100px 16px 16px;gap:10px}#learning-root .bc-filterbar{display:none}#learning-root .bc-mobile-actions{display:flex;position:absolute;right:16px;top:58px;z-index:14}#learning-root .bc-filterbtn{display:flex;align-items:center;gap:6px;padding:5px 9px;border:1px solid #1b2233;border-radius:7px;background:#0e1320;color:#8b93ac;font-size:11.5px}#learning-root .bc-filterbtn b{min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:#7dcfff;color:#06121e;font-size:10.5px;display:flex;align-items:center;justify-content:center}#learning-root .bc-row{height:48px;padding:0 14px;gap:10px}#learning-root .bc-key{font-size:12.5px;flex:1;max-width:none;min-width:0}#learning-root .bc-sentence{display:none}#learning-root .bc-time{font-size:11px;width:34px}#learning-root .bc-caret{display:none}#learning-root .bc-kindtag{display:block!important;flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--bc)}#learning-root .bc-day{padding:8px 14px}#learning-root .bc-expand{padding:2px 14px 14px 32px}#learning-root .bc-mobile-sentence{display:block!important;font-size:12px;color:#8b93ac;line-height:1.5;margin-bottom:10px}#learning-root .bc-diff{display:block}#learning-root .bc-dpane.before,#learning-root .bc-dpane.after{display:none}#learning-root .bc-unified{display:block}#learning-root .bc-line{font-size:11.5px;line-height:1.5;padding-left:11px;padding-right:11px}#learning-root .bc-meta{grid-template-columns:1fr 1fr}#learning-root .bc-bio{padding:12px 14px}#learning-root .bc-biohead{gap:10px}#learning-root .bc-back{padding:5px 9px;font-size:12px}#learning-root .bc-biokey{font-size:13px;flex:1}#learning-root .bc-biometa{display:none}#learning-root .bc-status{font-size:10.5px;padding:3px 8px}#learning-root .bc-biocontent{font-size:11.5px;padding:9px 12px;margin-top:9px}#learning-root .bc-biofoot{font-size:11px}#learning-root .bc-sheetback{display:block;position:absolute;inset:0;z-index:49;background:rgba(2,3,8,.58)}#learning-root .bc-sheet{display:flex;position:absolute;left:0;right:0;bottom:0;z-index:50;max-height:78%;background:#0e1320;border:1px solid #28324c;border-radius:14px 14px 0 0;padding:12px 16px 20px;flex-direction:column;gap:13px;box-shadow:0 -18px 50px rgba(0,0,0,.55);overflow-y:auto}#learning-root .bc-sheethead{display:flex;align-items:center;justify-content:space-between;color:#c6cee6;font-weight:600}#learning-root .bc-sheetclose{border:0;background:none;color:#8b93ac;font-size:20px}#learning-root .bc-sheet .bc-kindrow{gap:6px}#learning-root .bc-sheet .bc-kind{padding:5px 9px}#learning-root .bc-sheet .bc-search{max-width:none}#learning-root .bc-sheet .bc-select{width:100%;min-width:0}#learning-root .bc-sheet .bc-menu{position:static;margin-top:5px;max-height:170px}}",
       "@media (pointer:coarse){#learning-root .lr-dclose{width:44px;height:44px;font-size:17px}}"
     ].join('\n');
@@ -6875,6 +6877,10 @@ class Component extends DCLogic {
       '        <button type="button" data-brain-view="changelog" aria-pressed="false"><span class="ico">≡</span>Changelog</button>',
       '      </div>',
       '      <div id="lr-know-count" class="lr-kchip">showing <b id="lr-kAgents">0</b> agents / <b id="lr-kFacts">0</b> facts</div>',
+      '      <div id="lr-know-mobile-view" class="lr-kchip" role="group" aria-label="Mobile knowledge view">',
+      '        <button type="button" class="on" data-know-mobile-view="list" aria-pressed="true">List</button>',
+      '        <button type="button" data-know-mobile-view="graph" aria-pressed="false">Graph</button>',
+      '      </div>',
       '      <div id="lr-know-linkcount" class="lr-kchip" style="display:none"><b>0</b> fact links</div>',
       '      <div id="lr-know-controls" class="lr-kchip" style="display:none">',
       '        <button type="button" class="lr-ktoggle on" data-know-toggle="links" aria-pressed="true"><span class="dot"></span>fact links</button>',
@@ -6907,6 +6913,8 @@ class Component extends DCLogic {
     root.querySelector('#lr-know-chrome').addEventListener('click', (e) => {
       const view = e.target.closest && e.target.closest('[data-brain-view]');
       if (view) { this._brainSetView(view.getAttribute('data-brain-view'), true); return; }
+      const mobileView = e.target.closest && e.target.closest('[data-know-mobile-view]');
+      if (mobileView) { this._knowSetMobileView(mobileView.getAttribute('data-know-mobile-view')); return; }
       const b = e.target.closest && e.target.closest('[data-know-toggle]');
       if (!b) return;
       const which = b.getAttribute('data-know-toggle');
@@ -6960,6 +6968,7 @@ class Component extends DCLogic {
     document.addEventListener('keydown', this._learningKeydown);
     this._knowResize = () => {
       if (this.state.view !== 'brain' || this._brainView === 'changelog' || !this._knowGraph) return;
+      if (this._knowGraphEl.style.display === 'none') return;
       const r = this._knowGraphEl.getBoundingClientRect();
       this._knowGraph.width(r.width).height(r.height);
       // The three bands are graph-space positions derived from the container width, so
@@ -8722,20 +8731,35 @@ class Component extends DCLogic {
     }
   }
 
-  // MOBILE (option A): at phone widths the canvas can't render swimlanes legibly, so
-  // swap #lr-know-graph (+ the canvas legend) for a scrollable repo accordion. Desktop
-  // and the fallback (non-clustered) view keep the canvas. Idempotent; called on every
-  // render + on breakpoint flips (via _onMobileChange), so switching back restores it.
+  _knowSetMobileView(view) {
+    this._knowMobileView = view === 'graph' ? 'graph' : 'list';
+    this._knowApplyMobile();
+  }
+
+  // MOBILE: clustered data keeps the legible repo accordion as its default, with an
+  // explicit List/Graph switch that makes the real ForceGraph reachable. Desktop and
+  // fallback (non-clustered) data keep the graph. Idempotent across polls and breakpoints.
   _knowApplyMobile() {
     const root = this._learningRoot; if (!root) return;
     if (this._brainView === 'changelog') return;
     const graphEl = root.querySelector('#lr-know-graph');
     const legendEl = root.querySelector('#lr-know-legend');
     const emptyEl = root.querySelector('#lr-empty');
-    const useMobile = !!(this.state.isMobile && this._knowClustered && !this._knowEmpty);
+    const switchEl = root.querySelector('#lr-know-mobile-view');
+    const mobileEligible = !!(this.state.isMobile && this._knowClustered && !this._knowEmpty);
+    const showMobileGraph = mobileEligible && this._knowMobileView === 'graph';
+    const graphWasMobileHidden = !!(graphEl && graphEl.getAttribute('data-mobile-hidden') === 'true');
     let mob = root.querySelector('#lr-know-mobile');
-    if (useMobile) {
-      if (graphEl) graphEl.style.display = 'none';
+    if (switchEl) {
+      switchEl.style.display = mobileEligible ? 'flex' : 'none';
+      switchEl.querySelectorAll('[data-know-mobile-view]').forEach(b => {
+        const on = b.getAttribute('data-know-mobile-view') === (showMobileGraph ? 'graph' : 'list');
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+    }
+    if (mobileEligible && !showMobileGraph) {
+      if (graphEl) { graphEl.style.display = 'none'; graphEl.setAttribute('data-mobile-hidden', 'true'); }
       if (legendEl) legendEl.style.display = 'none';
       if (emptyEl) emptyEl.style.display = 'none';
       if (!mob) {
@@ -8759,9 +8783,20 @@ class Component extends DCLogic {
       mob.style.display = 'block';
       this._knowRenderMobileList(mob);
     } else {
-      if (graphEl) graphEl.style.display = '';
-      if (legendEl) legendEl.style.display = '';
+      if (graphEl) { graphEl.style.display = ''; graphEl.removeAttribute('data-mobile-hidden'); }
+      if (legendEl) legendEl.style.display = mobileEligible ? 'none' : '';
       if (mob) mob.style.display = 'none';
+      if (graphEl && graphWasMobileHidden && this._knowGraph) {
+        requestAnimationFrame(() => {
+          if (!this._knowGraph || graphEl.style.display === 'none') return;
+          const r = graphEl.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          this._knowGraph.width(r.width).height(r.height);
+          try { if (this._knowGraph.resumeAnimation) this._knowGraph.resumeAnimation(); } catch (e) {}
+          if (this._knowEmpty) this._knowFit(0, 60);
+          else this._knowRelayout();
+        });
+      }
     }
   }
 
