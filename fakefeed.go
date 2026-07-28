@@ -780,7 +780,7 @@ func fakeWakeReceipts() []WakeReceipt {
 // WakeSummary implements the deterministic wake-outbox rollup.
 func (f *FakeDataSource) WakeSummary(ctx context.Context) (WakeSummary, error) {
 	return WakeSummary{
-		Outstanding: 6, Pending: 2, AgedAttempted: 1,
+		Outstanding: 5, Pending: 2, AgedAttempted: 1,
 		DeliveryUnknown: 1, Stalled: 1, OldestAgeSeconds: 3100,
 		Rows: fakeWakeRows(),
 	}, nil
