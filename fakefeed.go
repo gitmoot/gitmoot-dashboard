@@ -725,6 +725,111 @@ func (f *FakeDataSource) Overview(ctx context.Context) (Overview, error) {
 	}, nil
 }
 
+func fakeWakeRows() []WakeRow {
+	attemptedA := "2026-07-28T22:47:00Z"
+	attemptedB := "2026-07-28T22:51:00Z"
+	attemptedC := "2026-07-28T23:03:00Z"
+	return []WakeRow{
+		{
+			ID: "wake-unknown-001", TargetRole: "lead", SourceKind: "escalation", SourceID: "esc-g4-owner-17",
+			State: "delivery_unknown", AttemptCount: 3, AgeSeconds: 3100,
+			LastError:   `connection reset while sending payload "owner decision: rotate the private signing key"`,
+			CreatedAt:   "2026-07-28T22:39:00Z",
+			AttemptedAt: &attemptedA,
+		},
+		{
+			ID: "wake-stalled-001", TargetRole: "g4", SourceKind: "delegation", SourceID: "job-contract-review",
+			State: "stalled", AttemptCount: 4, AgeSeconds: 2700,
+			LastError:   `delivery deadline exceeded: message "use the unredacted customer fixture"`,
+			CreatedAt:   "2026-07-28T22:45:00Z",
+			AttemptedAt: &attemptedB,
+		},
+		{
+			ID: "wake-attempted-001", TargetRole: "vetrina", SourceKind: "recycle", SourceID: "recycle-vetrina-09",
+			State: "attempted", AttemptCount: 2, AgeSeconds: 1900,
+			LastError:   "dial unix /run/tmux/default: connect: connection refused",
+			CreatedAt:   "2026-07-28T22:58:00Z",
+			AttemptedAt: &attemptedC,
+		},
+		{
+			ID: "wake-pending-001", TargetRole: "joltra", SourceKind: "delegation", SourceID: "job-video-export",
+			State: "pending", AttemptCount: 0, AgeSeconds: 420, CreatedAt: "2026-07-28T23:21:00Z",
+		},
+		{
+			ID: "wake-pending-002", TargetRole: "g2", SourceKind: "pipeline", SourceID: "pipeline-run-1230",
+			State: "pending", AttemptCount: 0, AgeSeconds: 180, CreatedAt: "2026-07-28T23:25:00Z",
+		},
+		{
+			ID: "wake-failed-001", TargetRole: "herdres", SourceKind: "escalation", SourceID: "esc-delivery-audit",
+			State: "failed", AttemptCount: 2, AgeSeconds: 800,
+			LastError:   "authentication required for delivery transport",
+			CreatedAt:   "2026-07-28T23:14:00Z",
+			AttemptedAt: &attemptedC,
+		},
+	}
+}
+
+func fakeWakeReceipts() []WakeReceipt {
+	return []WakeReceipt{
+		{ID: "wake-delivered-003", TargetRole: "g3", SourceKind: "delegation", State: "delivered", AttemptCount: 1, DeliveredAt: "2026-07-28T23:24:00Z"},
+		{ID: "wake-delivered-002", TargetRole: "lead", SourceKind: "escalation", State: "delivered", AttemptCount: 2, DeliveredAt: "2026-07-28T22:55:00Z"},
+		{ID: "wake-delivered-001", TargetRole: "joltra", SourceKind: "recycle", State: "delivered", AttemptCount: 1, DeliveredAt: "2026-07-28T20:15:00Z"},
+	}
+}
+
+// WakeSummary implements the deterministic wake-outbox rollup.
+func (f *FakeDataSource) WakeSummary(ctx context.Context) (WakeSummary, error) {
+	return WakeSummary{
+		Outstanding: 5, Pending: 2, AgedAttempted: 1,
+		DeliveryUnknown: 1, Stalled: 1, OldestAgeSeconds: 3100,
+	}, nil
+}
+
+// Wakes implements the metadata-only wake obligation listing.
+func (f *FakeDataSource) Wakes(ctx context.Context, query WakeQuery) (WakeRows, error) {
+	rows := fakeWakeRows()
+	out := make([]WakeRow, 0, len(rows))
+	for _, row := range rows {
+		if query.State != "" && row.State != query.State {
+			continue
+		}
+		if query.Role != "" && row.TargetRole != query.Role {
+			continue
+		}
+		out = append(out, row)
+		if query.Limit > 0 && len(out) >= query.Limit {
+			break
+		}
+	}
+	return WakeRows{Rows: out}, nil
+}
+
+// WakeReceipts implements delivered wake history with role/time filtering.
+func (f *FakeDataSource) WakeReceipts(ctx context.Context, query WakeReceiptQuery) (WakeReceipts, error) {
+	var since time.Time
+	if query.Since != "" {
+		since, _ = time.Parse(time.RFC3339, query.Since)
+	}
+	rows := fakeWakeReceipts()
+	out := make([]WakeReceipt, 0, len(rows))
+	for _, row := range rows {
+		if query.Role != "" && row.TargetRole != query.Role {
+			continue
+		}
+		if !since.IsZero() {
+			deliveredAt, err := time.Parse(time.RFC3339, row.DeliveredAt)
+			if err != nil || deliveredAt.Before(since) {
+				continue
+			}
+		}
+		out = append(out, row)
+		if query.Limit > 0 && len(out) >= query.Limit {
+			break
+		}
+	}
+	return WakeReceipts{Rows: out}, nil
+}
+
 func fakeTaskTitles() []string {
 	return []string{
 		"Add memory-groom split heuristics to nightly propose pass",

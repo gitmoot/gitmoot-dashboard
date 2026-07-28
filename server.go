@@ -13,6 +13,7 @@ import (
 // handleJobs/handleAgents/handleAgent/handleCharts/handleHealth/
 // handleLearningSkills/handleLearningKnowledge/handlePipelines/
 // handlePipelineDetail/handlePipelineRun/handleOverview/handleTasks/
+// handleWakeSummary/handleWakes/handleWakeReceipts/
 // handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/handleChatThreads/handleChatThread/
 // handleAttention/handleJobChecks/handleBinaryVerdicts/
 // handleState/handleJob/handleGraph/handleChangeEvents in api.go) and the
@@ -34,6 +35,9 @@ func Serve(ds DataSource) http.Handler {
 	mux.HandleFunc("GET /api/pipelines/{name}", s.handlePipelineDetail)
 	mux.HandleFunc("GET /api/pipeline/run/{id}", s.handlePipelineRun)
 	mux.HandleFunc("GET /api/overview", s.handleOverview)
+	mux.HandleFunc("GET /api/wakes/summary", s.handleWakeSummary)
+	mux.HandleFunc("GET /api/wakes/receipts", s.handleWakeReceipts)
+	mux.HandleFunc("GET /api/wakes", s.handleWakes)
 	mux.HandleFunc("GET /api/tasks", s.handleTasks)
 	mux.HandleFunc("GET /api/org", s.handleOrg)
 	mux.HandleFunc("GET /api/org/role/{name}", s.handleOrgRole)
@@ -74,6 +78,7 @@ func newServer(ds DataSource) *server {
 // The JSON API handlers (handleRuns/handleJobs/handleAgents/handleAgent/
 // handleCharts/handleHealth/handleLearningSkills/handleLearningKnowledge/
 // handlePipelines/handlePipelineDetail/handlePipelineRun/handleOverview/handleTasks/
+// handleWakeSummary/handleWakes/handleWakeReceipts/
 // handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/handleChatThreads/
 // handleChatThread/handleAttention/handleJobChecks/handleBinaryVerdicts/
 // handleState/handleJob/handleGraph/handleChangeEvents) live in api.go and the

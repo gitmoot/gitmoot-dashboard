@@ -17,6 +17,8 @@ import (
 const (
 	workflowMaxRuns         = 50
 	workflowMaxNotes        = 200
+	wakeDefaultLimit        = 100
+	wakeMaxLimit            = 500
 	changePollInterval      = time.Second
 	changeHeartbeatInterval = 15 * time.Second
 	changeClientCap         = 32
@@ -245,6 +247,26 @@ func workflowLimit(raw string, cap int) int {
 	return n
 }
 
+func wakeLimit(raw string) int {
+	n, err := strconv.Atoi(raw)
+	if err != nil || n <= 0 {
+		return wakeDefaultLimit
+	}
+	if n > wakeMaxLimit {
+		return wakeMaxLimit
+	}
+	return n
+}
+
+func validWakeState(state string) bool {
+	switch state {
+	case "pending", "attempted", "delivered", "stalled", "failed", "delivery_unknown":
+		return true
+	default:
+		return false
+	}
+}
+
 func splitWorkflowLabel(label string) (string, string) {
 	namespace, campaign, ok := strings.Cut(label, "/")
 	if !ok {
@@ -374,6 +396,78 @@ func (s *server) handleOverview(w http.ResponseWriter, r *http.Request) {
 		return o.Fleet[i].Agent < o.Fleet[j].Agent
 	})
 	writeJSON(w, http.StatusOK, o)
+}
+
+// handleWakeSummary serves the wake-outbox rollup used by the Overview badge.
+func (s *server) handleWakeSummary(w http.ResponseWriter, r *http.Request) {
+	ds, ok := s.ds.(WakeDataSource)
+	if !ok {
+		http.Error(w, "wake ledger unsupported by data source", http.StatusNotFound)
+		return
+	}
+	summary, err := ds.WakeSummary(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), statusForError(err))
+		return
+	}
+	writeJSON(w, http.StatusOK, summary)
+}
+
+// handleWakes serves metadata-only wake obligations. The data source controls
+// filtering; the handler validates the public query and normalizes nil rows.
+func (s *server) handleWakes(w http.ResponseWriter, r *http.Request) {
+	ds, ok := s.ds.(WakeDataSource)
+	if !ok {
+		http.Error(w, "wake ledger unsupported by data source", http.StatusNotFound)
+		return
+	}
+	state := r.URL.Query().Get("state")
+	if state != "" && !validWakeState(state) {
+		http.Error(w, "invalid wake state", http.StatusBadRequest)
+		return
+	}
+	rows, err := ds.Wakes(r.Context(), WakeQuery{
+		State: state,
+		Role:  r.URL.Query().Get("role"),
+		Limit: wakeLimit(r.URL.Query().Get("limit")),
+	})
+	if err != nil {
+		http.Error(w, err.Error(), statusForError(err))
+		return
+	}
+	if rows.Rows == nil {
+		rows.Rows = []WakeRow{}
+	}
+	writeJSON(w, http.StatusOK, rows)
+}
+
+// handleWakeReceipts serves delivered wake metadata filtered by role and time.
+func (s *server) handleWakeReceipts(w http.ResponseWriter, r *http.Request) {
+	ds, ok := s.ds.(WakeDataSource)
+	if !ok {
+		http.Error(w, "wake ledger unsupported by data source", http.StatusNotFound)
+		return
+	}
+	since := r.URL.Query().Get("since")
+	if since != "" {
+		if _, err := time.Parse(time.RFC3339, since); err != nil {
+			http.Error(w, "invalid wake receipt since", http.StatusBadRequest)
+			return
+		}
+	}
+	rows, err := ds.WakeReceipts(r.Context(), WakeReceiptQuery{
+		Role:  r.URL.Query().Get("role"),
+		Since: since,
+		Limit: wakeLimit(r.URL.Query().Get("limit")),
+	})
+	if err != nil {
+		http.Error(w, err.Error(), statusForError(err))
+		return
+	}
+	if rows.Rows == nil {
+		rows.Rows = []WakeReceipt{}
+	}
+	writeJSON(w, http.StatusOK, rows)
 }
 
 // handleTasks serves GET /api/tasks. Ordering is normalized for byte-stable

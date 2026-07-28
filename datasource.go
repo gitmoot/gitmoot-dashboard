@@ -459,6 +459,73 @@ type OverviewDataSource interface {
 	Overview(ctx context.Context) (Overview, error)
 }
 
+// WakeSummary is the operator-facing rollup served by GET /api/wakes/summary.
+type WakeSummary struct {
+	Outstanding      int `json:"outstanding"`
+	Pending          int `json:"pending"`
+	AgedAttempted    int `json:"aged_attempted"`
+	DeliveryUnknown  int `json:"delivery_unknown"`
+	Stalled          int `json:"stalled"`
+	OldestAgeSeconds int `json:"oldest_age_seconds"`
+}
+
+// WakeRow is one metadata-only wake obligation. LastError is untrusted and may
+// contain payload content; public clients must not render it verbatim.
+type WakeRow struct {
+	ID           string  `json:"id"`
+	TargetRole   string  `json:"target_role"`
+	SourceKind   string  `json:"source_kind"`
+	SourceID     string  `json:"source_id"`
+	State        string  `json:"state"` // pending | attempted | delivered | stalled | failed | delivery_unknown
+	AttemptCount int     `json:"attempt_count"`
+	LastError    string  `json:"last_error"`
+	AgeSeconds   int     `json:"age_seconds"`
+	CreatedAt    string  `json:"created_at"`   // RFC3339
+	AttemptedAt  *string `json:"attempted_at"` // RFC3339 or null
+}
+
+// WakeRows is the non-null list envelope served by GET /api/wakes.
+type WakeRows struct {
+	Rows []WakeRow `json:"rows"`
+}
+
+// WakeReceipt is one metadata-only delivered wake record.
+type WakeReceipt struct {
+	ID           string `json:"id"`
+	TargetRole   string `json:"target_role"`
+	SourceKind   string `json:"source_kind"`
+	State        string `json:"state"` // delivered
+	AttemptCount int    `json:"attempt_count"`
+	DeliveredAt  string `json:"delivered_at"` // RFC3339
+}
+
+// WakeReceipts is the non-null list envelope served by GET /api/wakes/receipts.
+type WakeReceipts struct {
+	Rows []WakeReceipt `json:"rows"`
+}
+
+// WakeQuery is the validated GET /api/wakes query.
+type WakeQuery struct {
+	State string
+	Role  string
+	Limit int
+}
+
+// WakeReceiptQuery is the validated GET /api/wakes/receipts query.
+type WakeReceiptQuery struct {
+	Role  string
+	Since string
+	Limit int
+}
+
+// WakeDataSource is the optional read-only wake-ledger extension. Keeping it
+// separate preserves the core DataSource contract for older bridges.
+type WakeDataSource interface {
+	WakeSummary(ctx context.Context) (WakeSummary, error)
+	Wakes(ctx context.Context, query WakeQuery) (WakeRows, error)
+	WakeReceipts(ctx context.Context, query WakeReceiptQuery) (WakeReceipts, error)
+}
+
 // TaskSummary is one read-only lifecycle card on GET /api/tasks. UpdatedAt is
 // epoch milliseconds; AgeS is the server-computed display age. Merged entries
 // are limited to the most recent seven days by the data source.
