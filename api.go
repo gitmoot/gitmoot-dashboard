@@ -274,6 +274,22 @@ func validWakeState(state string) bool {
 	}
 }
 
+var wakeOutstandingStates = [...]string{
+	"pending",
+	"attempted",
+	"stalled",
+	"delivery_unknown",
+}
+
+func wakeStateOutstanding(state string) bool {
+	for _, outstanding := range wakeOutstandingStates {
+		if state == outstanding {
+			return true
+		}
+	}
+	return false
+}
+
 // wakeErrorClass reduces untrusted transport text to a fixed public enum.
 // Bound before case folding so classification work cannot scale with an
 // arbitrarily large error string supplied by a data source.
@@ -298,6 +314,18 @@ func wakeErrorClass(value string) string {
 	default:
 		return wakeErrorDelivery
 	}
+}
+
+func publicWakeRows(rows []WakeRow, outstandingOnly bool) []WakeRow {
+	public := make([]WakeRow, 0, len(rows))
+	for _, row := range rows {
+		if outstandingOnly && !wakeStateOutstanding(row.State) {
+			continue
+		}
+		row.LastError = wakeErrorClass(row.LastError)
+		public = append(public, row)
+	}
+	return public
 }
 
 func splitWorkflowLabel(label string) (string, string) {
@@ -443,6 +471,19 @@ func (s *server) handleWakeSummary(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), statusForError(err))
 		return
 	}
+	candidates := summary.Rows
+	if candidates == nil {
+		for _, state := range wakeOutstandingStates {
+			rows, rowsErr := ds.Wakes(r.Context(), WakeQuery{State: state, Limit: wakeMaxLimit})
+			if rowsErr != nil {
+				http.Error(w, rowsErr.Error(), statusForError(rowsErr))
+				return
+			}
+			candidates = append(candidates, rows.Rows...)
+		}
+	}
+	summary.Rows = publicWakeRows(candidates, true)
+	summary.Outstanding = len(summary.Rows)
 	writeJSON(w, http.StatusOK, summary)
 }
 
@@ -468,12 +509,7 @@ func (s *server) handleWakes(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), statusForError(err))
 		return
 	}
-	if rows.Rows == nil {
-		rows.Rows = []WakeRow{}
-	}
-	for i := range rows.Rows {
-		rows.Rows[i].LastError = wakeErrorClass(rows.Rows[i].LastError)
-	}
+	rows.Rows = publicWakeRows(rows.Rows, false)
 	writeJSON(w, http.StatusOK, rows)
 }
 

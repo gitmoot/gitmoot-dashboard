@@ -467,6 +467,9 @@ type WakeSummary struct {
 	DeliveryUnknown  int `json:"delivery_unknown"`
 	Stalled          int `json:"stalled"`
 	OldestAgeSeconds int `json:"oldest_age_seconds"`
+	// Rows is the candidate wake set. The public handler applies the canonical
+	// outstanding-state classifier and derives Outstanding from the result.
+	Rows []WakeRow `json:"rows"`
 }
 
 // WakeRow is one metadata-only wake obligation. Data sources may populate

@@ -424,10 +424,38 @@ func TestHandleWakeLedgerNormalizesNilRows(t *testing.T) {
 	srv := httptest.NewServer(Serve(sparseWakeDataSource{DataSource: NewFakeDataSource()}))
 	defer srv.Close()
 
-	for _, path := range []string{"/api/wakes", "/api/wakes/receipts"} {
+	for _, path := range []string{"/api/wakes/summary", "/api/wakes", "/api/wakes/receipts"} {
 		raw := getRaw(t, srv.URL+path)
 		if !bytes.Contains(raw, []byte(`"rows": []`)) {
 			t.Fatalf("GET %s did not normalize rows: %s", path, raw)
+		}
+	}
+}
+
+func TestFakeWakeSummaryOutstandingRowsCannotDrift(t *testing.T) {
+	srv := httptest.NewServer(Serve(NewFakeDataSource()))
+	defer srv.Close()
+
+	var summary WakeSummary
+	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/wakes/summary"), &summary); err != nil {
+		t.Fatalf("decode wake summary: %v", err)
+	}
+	if summary.Rows == nil {
+		t.Fatal("wake summary rows are nil")
+	}
+	if got := len(summary.Rows); got != summary.Outstanding {
+		t.Fatalf("outstanding badge=%d but ledger rows=%d", summary.Outstanding, got)
+	}
+	seen := make(map[string]bool)
+	for _, row := range summary.Rows {
+		if !wakeStateOutstanding(row.State) {
+			t.Fatalf("terminal state %q appeared in outstanding rows: %+v", row.State, summary.Rows)
+		}
+		seen[row.State] = true
+	}
+	for _, required := range []string{"pending", "attempted", "stalled", "delivery_unknown"} {
+		if !seen[required] {
+			t.Fatalf("outstanding rows omitted required state %q: %+v", required, summary.Rows)
 		}
 	}
 }
@@ -475,9 +503,17 @@ func TestFakeWakeLedgerContractFiltersAndDeterminism(t *testing.T) {
 	if summary.Outstanding != 5 || summary.Pending != 2 || summary.AgedAttempted != 1 || summary.DeliveryUnknown != 1 || summary.Stalled != 1 || summary.OldestAgeSeconds != 3100 {
 		t.Fatalf("wake summary = %+v", summary)
 	}
-	for _, field := range []string{"\"outstanding\"", "\"pending\"", "\"aged_attempted\"", "\"delivery_unknown\"", "\"stalled\"", "\"oldest_age_seconds\""} {
+	if summary.Rows == nil || len(summary.Rows) != summary.Outstanding {
+		t.Fatalf("wake summary rows=%+v outstanding=%d", summary.Rows, summary.Outstanding)
+	}
+	for _, field := range []string{"\"outstanding\"", "\"pending\"", "\"aged_attempted\"", "\"delivery_unknown\"", "\"stalled\"", "\"oldest_age_seconds\"", "\"rows\""} {
 		if !bytes.Contains(summaryRaw, []byte(field)) {
 			t.Fatalf("wake summary missing %s: %s", field, summaryRaw)
+		}
+	}
+	for _, secret := range []string{"rotate the private signing key", "unredacted customer fixture"} {
+		if bytes.Contains(summaryRaw, []byte(secret)) {
+			t.Fatalf("wake summary leaked raw delivery error %q: %s", secret, summaryRaw)
 		}
 	}
 

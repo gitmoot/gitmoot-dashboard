@@ -782,6 +782,7 @@ func (f *FakeDataSource) WakeSummary(ctx context.Context) (WakeSummary, error) {
 	return WakeSummary{
 		Outstanding: 5, Pending: 2, AgedAttempted: 1,
 		DeliveryUnknown: 1, Stalled: 1, OldestAgeSeconds: 3100,
+		Rows: fakeWakeRows(),
 	}, nil
 }
 

@@ -1445,7 +1445,6 @@ class Component extends DCLogic {
     Promise.all([
       this._wakeRead('/api/overview'),
       this._wakeRead('/api/wakes/summary'),
-      this._wakeRead('/api/wakes?limit=100'),
       this._wakeRead('/api/wakes/receipts?'+receiptParams.toString())
     ]).then(parts=>{
       if(token!==this._overviewFetchToken||this.state.view!=='overview')return;
@@ -1459,8 +1458,8 @@ class Component extends DCLogic {
         this._wakeLedgerData={status:'unsupported',summary:{},rows:[],receipts:[]};
       }else if(wakeParts.every(p=>p.status>=200&&p.status<300)){
         try{
-          const summary=JSON.parse(wakeParts[0].text)||{},wakeBody=JSON.parse(wakeParts[1].text)||{},receiptBody=JSON.parse(wakeParts[2].text)||{};
-          const rows=Array.isArray(wakeBody.rows)?wakeBody.rows:[],receipts=Array.isArray(receiptBody.rows)?receiptBody.rows:[];
+          const summary=JSON.parse(wakeParts[0].text)||{},receiptBody=JSON.parse(wakeParts[1].text)||{};
+          const rows=Array.isArray(summary.rows)?summary.rows:[],receipts=Array.isArray(receiptBody.rows)?receiptBody.rows:[];
           this._wakeLedgerData={status:'ready',hasSnapshot:true,summary:summary,rows:rows,receipts:receipts};
           this._wakeRoles=[...new Set([...(this._wakeRoles||[]),...rows.map(r=>r.target_role),...receipts.map(r=>r.target_role)].filter(Boolean))].sort();
         }catch(e){
@@ -1479,7 +1478,7 @@ class Component extends DCLogic {
     if(ledger.status==='unsupported')return '<section class="ov-panel ov-wake-shell"><div class="ov-head"><span class="ov-wake-dot"></span>Wake obligations</div><div class="ov-wake-empty">Wake ledger requires a newer gitmoot build.</div></section>';
     if(ledger.status==='loading')return '<section class="ov-panel ov-wake-shell"><div class="ov-head"><span class="ov-wake-dot"></span>Wake obligations</div><div class="ov-wake-empty">Loading wake obligations and receipts...</div></section>';
     if(ledger.status==='error'&&!ledger.hasSnapshot)return '<section class="ov-panel ov-wake-shell problem"><div class="ov-head"><span class="ov-wake-dot"></span>Wake obligations</div><div class="ov-wake-empty">Wake obligations are temporarily unavailable. No clear state is being inferred.</div></section>';
-    const rows=(Array.isArray(ledger.rows)?ledger.rows:[]).filter(r=>r&&r.state!=='delivered').slice().sort((a,b)=>this._wakeStateRank(a.state)-this._wakeStateRank(b.state)||n(b.age_seconds)-n(a.age_seconds));
+    const rows=(Array.isArray(ledger.rows)?ledger.rows:[]).slice().sort((a,b)=>this._wakeStateRank(a.state)-this._wakeStateRank(b.state)||n(b.age_seconds)-n(a.age_seconds));
     const wakeRows=rows.length?rows.map(r=>{
       const state=String(r.state||'pending'),urgent=state==='delivery_unknown'||state==='stalled',errorClass=this._wakeErrorClass(r.last_error);
       return '<div class="ov-wake-row'+(urgent?' urgent':'')+'"><span class="ov-wake-role" title="'+esc(r.target_role||'-')+'">'+esc(r.target_role||'-')+'</span><span class="ov-wake-source"><b>'+esc(r.source_kind||'-')+'</b><span>'+esc(r.source_id||r.id||'-')+'</span></span><span class="ov-wake-state '+esc(state)+'">'+esc(state.replace(/_/g,' '))+'</span><span class="ov-wake-attempt">'+n(r.attempt_count)+'</span><span class="ov-wake-error">'+esc(errorClass||'-')+'</span><span class="ov-wake-age" title="'+esc(this._wakeAbs(r.created_at))+'">'+esc(this._ovDur(r.age_seconds))+'</span></div>';
