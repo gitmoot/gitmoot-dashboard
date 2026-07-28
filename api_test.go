@@ -432,6 +432,34 @@ func TestHandleWakeLedgerNormalizesNilRows(t *testing.T) {
 	}
 }
 
+func TestWakeErrorClass(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  string
+	}{
+		{name: "empty", value: "", want: ""},
+		{name: "timeout", value: "delivery deadline exceeded", want: wakeErrorTimeout},
+		{name: "rate limited", value: "remote returned HTTP 429", want: wakeErrorRateLimited},
+		{name: "auth before transport", value: "unauthorized transport connection", want: wakeErrorAuth},
+		{name: "not found", value: "unknown role g9", want: wakeErrorNotFound},
+		{name: "transport", value: "connection reset by peer", want: wakeErrorTransport},
+		{name: "generic", value: "payload included here", want: wakeErrorDelivery},
+		{
+			name:  "bounded scan",
+			value: strings.Repeat("x", wakeErrorScanLimit) + " timeout",
+			want:  wakeErrorDelivery,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := wakeErrorClass(tt.value); got != tt.want {
+				t.Fatalf("wakeErrorClass(%q) = %q, want %q", tt.value, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestFakeWakeLedgerContractFiltersAndDeterminism(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
@@ -472,6 +500,22 @@ func TestFakeWakeLedgerContractFiltersAndDeterminism(t *testing.T) {
 	}
 	if !bytes.Contains(wakesRaw, []byte(`"attempted_at": null`)) {
 		t.Fatalf("pending wake must carry attempted_at:null: %s", wakesRaw)
+	}
+	for _, secret := range []string{"rotate the private signing key", "unredacted customer fixture"} {
+		if bytes.Contains(wakesRaw, []byte(secret)) {
+			t.Fatalf("wake API leaked raw delivery error %q: %s", secret, wakesRaw)
+		}
+	}
+	errorClasses := map[string]string{
+		"wake-unknown-001":   wakeErrorTransport,
+		"wake-stalled-001":   wakeErrorTimeout,
+		"wake-attempted-001": wakeErrorTransport,
+		"wake-failed-001":    wakeErrorAuth,
+	}
+	for _, row := range wakes.Rows {
+		if want, ok := errorClasses[row.ID]; ok && row.LastError != want {
+			t.Fatalf("wake %s last_error=%q, want public class %q", row.ID, row.LastError, want)
+		}
 	}
 
 	var filtered WakeRows

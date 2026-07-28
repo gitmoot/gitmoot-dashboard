@@ -469,8 +469,9 @@ type WakeSummary struct {
 	OldestAgeSeconds int `json:"oldest_age_seconds"`
 }
 
-// WakeRow is one metadata-only wake obligation. LastError is untrusted and may
-// contain payload content; public clients must not render it verbatim.
+// WakeRow is one metadata-only wake obligation. Data sources may populate
+// LastError with untrusted transport text; handleWakes replaces it with a fixed
+// error class before serialization on the public API.
 type WakeRow struct {
 	ID           string  `json:"id"`
 	TargetRole   string  `json:"target_role"`

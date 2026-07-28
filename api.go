@@ -19,6 +19,13 @@ const (
 	workflowMaxNotes        = 200
 	wakeDefaultLimit        = 100
 	wakeMaxLimit            = 500
+	wakeErrorScanLimit      = 256
+	wakeErrorTimeout        = "TIMEOUT"
+	wakeErrorRateLimited    = "RATE LIMITED"
+	wakeErrorAuth           = "AUTH"
+	wakeErrorNotFound       = "NOT FOUND"
+	wakeErrorTransport      = "TRANSPORT"
+	wakeErrorDelivery       = "DELIVERY ERROR"
 	changePollInterval      = time.Second
 	changeHeartbeatInterval = 15 * time.Second
 	changeClientCap         = 32
@@ -267,6 +274,32 @@ func validWakeState(state string) bool {
 	}
 }
 
+// wakeErrorClass reduces untrusted transport text to a fixed public enum.
+// Bound before case folding so classification work cannot scale with an
+// arbitrarily large error string supplied by a data source.
+func wakeErrorClass(value string) string {
+	if len(value) > wakeErrorScanLimit {
+		value = value[:wakeErrorScanLimit]
+	}
+	value = strings.ToLower(value)
+	switch {
+	case value == "":
+		return ""
+	case strings.Contains(value, "timeout"), strings.Contains(value, "deadline"), strings.Contains(value, "timed out"):
+		return wakeErrorTimeout
+	case strings.Contains(value, "429"), strings.Contains(value, "rate limit"), strings.Contains(value, "throttl"):
+		return wakeErrorRateLimited
+	case strings.Contains(value, "auth"), strings.Contains(value, "unauthor"), strings.Contains(value, "forbidden"), strings.Contains(value, "permission"), strings.Contains(value, "token"), strings.Contains(value, "credential"):
+		return wakeErrorAuth
+	case strings.Contains(value, "not found"), strings.Contains(value, "unknown role"), strings.Contains(value, "no such"):
+		return wakeErrorNotFound
+	case strings.Contains(value, "connect"), strings.Contains(value, "network"), strings.Contains(value, "dial"), strings.Contains(value, "reset"), strings.Contains(value, "broken pipe"), strings.Contains(value, "eof"), strings.Contains(value, "transport"), strings.Contains(value, "socket"):
+		return wakeErrorTransport
+	default:
+		return wakeErrorDelivery
+	}
+}
+
 func splitWorkflowLabel(label string) (string, string) {
 	namespace, campaign, ok := strings.Cut(label, "/")
 	if !ok {
@@ -437,6 +470,9 @@ func (s *server) handleWakes(w http.ResponseWriter, r *http.Request) {
 	}
 	if rows.Rows == nil {
 		rows.Rows = []WakeRow{}
+	}
+	for i := range rows.Rows {
+		rows.Rows[i].LastError = wakeErrorClass(rows.Rows[i].LastError)
 	}
 	writeJSON(w, http.StatusOK, rows)
 }
