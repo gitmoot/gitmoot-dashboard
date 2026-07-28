@@ -279,6 +279,7 @@ var wakeOutstandingStates = [...]string{
 	"attempted",
 	"stalled",
 	"delivery_unknown",
+	"failed",
 }
 
 func wakeStateOutstanding(state string) bool {

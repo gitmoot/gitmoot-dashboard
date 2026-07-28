@@ -443,6 +443,9 @@ func TestFakeWakeSummaryOutstandingRowsCannotDrift(t *testing.T) {
 	if summary.Rows == nil {
 		t.Fatal("wake summary rows are nil")
 	}
+	if summary.Outstanding != 6 {
+		t.Fatalf("outstanding=%d, want 6 including failed wake", summary.Outstanding)
+	}
 	if got := len(summary.Rows); got != summary.Outstanding {
 		t.Fatalf("outstanding badge=%d but ledger rows=%d", summary.Outstanding, got)
 	}
@@ -453,7 +456,7 @@ func TestFakeWakeSummaryOutstandingRowsCannotDrift(t *testing.T) {
 		}
 		seen[row.State] = true
 	}
-	for _, required := range []string{"pending", "attempted", "stalled", "delivery_unknown"} {
+	for _, required := range []string{"pending", "attempted", "stalled", "delivery_unknown", "failed"} {
 		if !seen[required] {
 			t.Fatalf("outstanding rows omitted required state %q: %+v", required, summary.Rows)
 		}
@@ -500,7 +503,7 @@ func TestFakeWakeLedgerContractFiltersAndDeterminism(t *testing.T) {
 	if err := json.Unmarshal(summaryRaw, &summary); err != nil {
 		t.Fatalf("decode wake summary: %v", err)
 	}
-	if summary.Outstanding != 5 || summary.Pending != 2 || summary.AgedAttempted != 1 || summary.DeliveryUnknown != 1 || summary.Stalled != 1 || summary.OldestAgeSeconds != 3100 {
+	if summary.Outstanding != 6 || summary.Pending != 2 || summary.AgedAttempted != 1 || summary.DeliveryUnknown != 1 || summary.Stalled != 1 || summary.OldestAgeSeconds != 3100 {
 		t.Fatalf("wake summary = %+v", summary)
 	}
 	if summary.Rows == nil || len(summary.Rows) != summary.Outstanding {
