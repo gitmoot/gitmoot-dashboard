@@ -18,6 +18,21 @@ import (
 type noWorkflowDataSource struct{ DataSource }
 type noChangeCursorDataSource struct{ DataSource }
 type noOrgDataSource struct{ DataSource }
+type noWakeDataSource struct{ DataSource }
+
+type sparseWakeDataSource struct{ DataSource }
+
+func (d sparseWakeDataSource) WakeSummary(context.Context) (WakeSummary, error) {
+	return WakeSummary{}, nil
+}
+
+func (d sparseWakeDataSource) Wakes(context.Context, WakeQuery) (WakeRows, error) {
+	return WakeRows{}, nil
+}
+
+func (d sparseWakeDataSource) WakeReceipts(context.Context, WakeReceiptQuery) (WakeReceipts, error) {
+	return WakeReceipts{}, nil
+}
 
 type sparseOrgDataSource struct{ DataSource }
 
@@ -383,6 +398,189 @@ func TestFakeOverviewContractOrderingAndDeterminism(t *testing.T) {
 	for _, field := range []string{"\"needs_you\"", "\"session_id\"", "\"per_hour\"", "\"next_in_s\"", "\"jobs_today\""} {
 		if !bytes.Contains(raw1, []byte(field)) {
 			t.Fatalf("overview wire payload missing %s: %s", field, raw1)
+		}
+	}
+}
+
+func TestHandleWakeLedgerUnsupportedDataSource(t *testing.T) {
+	ds := noWakeDataSource{DataSource: NewFakeDataSource()}
+	srv := httptest.NewServer(Serve(ds))
+	defer srv.Close()
+
+	for _, path := range []string{"/api/wakes/summary", "/api/wakes", "/api/wakes/receipts"} {
+		resp, err := http.Get(srv.URL + path)
+		if err != nil {
+			t.Fatalf("GET %s: %v", path, err)
+		}
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusNotFound || !strings.Contains(string(body), "wake ledger unsupported") {
+			t.Fatalf("GET %s status=%d body=%q, want clear 404", path, resp.StatusCode, body)
+		}
+	}
+}
+
+func TestHandleWakeLedgerNormalizesNilRows(t *testing.T) {
+	srv := httptest.NewServer(Serve(sparseWakeDataSource{DataSource: NewFakeDataSource()}))
+	defer srv.Close()
+
+	for _, path := range []string{"/api/wakes/summary", "/api/wakes", "/api/wakes/receipts"} {
+		raw := getRaw(t, srv.URL+path)
+		if !bytes.Contains(raw, []byte(`"rows": []`)) {
+			t.Fatalf("GET %s did not normalize rows: %s", path, raw)
+		}
+	}
+}
+
+func TestFakeWakeSummaryOutstandingRowsCannotDrift(t *testing.T) {
+	srv := httptest.NewServer(Serve(NewFakeDataSource()))
+	defer srv.Close()
+
+	var summary WakeSummary
+	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/wakes/summary"), &summary); err != nil {
+		t.Fatalf("decode wake summary: %v", err)
+	}
+	if summary.Rows == nil {
+		t.Fatal("wake summary rows are nil")
+	}
+	if summary.Outstanding != 6 {
+		t.Fatalf("outstanding=%d, want 6 including failed wake", summary.Outstanding)
+	}
+	if got := len(summary.Rows); got != summary.Outstanding {
+		t.Fatalf("outstanding badge=%d but ledger rows=%d", summary.Outstanding, got)
+	}
+	seen := make(map[string]bool)
+	for _, row := range summary.Rows {
+		if !wakeStateOutstanding(row.State) {
+			t.Fatalf("terminal state %q appeared in outstanding rows: %+v", row.State, summary.Rows)
+		}
+		seen[row.State] = true
+	}
+	for _, required := range []string{"pending", "attempted", "stalled", "delivery_unknown", "failed"} {
+		if !seen[required] {
+			t.Fatalf("outstanding rows omitted required state %q: %+v", required, summary.Rows)
+		}
+	}
+}
+
+func TestWakeErrorClass(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  string
+	}{
+		{name: "empty", value: "", want: ""},
+		{name: "timeout", value: "delivery deadline exceeded", want: wakeErrorTimeout},
+		{name: "rate limited", value: "remote returned HTTP 429", want: wakeErrorRateLimited},
+		{name: "auth before transport", value: "unauthorized transport connection", want: wakeErrorAuth},
+		{name: "not found", value: "unknown role g9", want: wakeErrorNotFound},
+		{name: "transport", value: "connection reset by peer", want: wakeErrorTransport},
+		{name: "generic", value: "payload included here", want: wakeErrorDelivery},
+		{
+			name:  "bounded scan",
+			value: strings.Repeat("x", wakeErrorScanLimit) + " timeout",
+			want:  wakeErrorDelivery,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := wakeErrorClass(tt.value); got != tt.want {
+				t.Fatalf("wakeErrorClass(%q) = %q, want %q", tt.value, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFakeWakeLedgerContractFiltersAndDeterminism(t *testing.T) {
+	srv := httptest.NewServer(Serve(NewFakeDataSource()))
+	defer srv.Close()
+
+	summaryRaw := getRaw(t, srv.URL+"/api/wakes/summary")
+	if again := getRaw(t, srv.URL+"/api/wakes/summary"); !bytes.Equal(summaryRaw, again) {
+		t.Fatalf("wake summary changed across identical reads\nfirst=%s\nsecond=%s", summaryRaw, again)
+	}
+	var summary WakeSummary
+	if err := json.Unmarshal(summaryRaw, &summary); err != nil {
+		t.Fatalf("decode wake summary: %v", err)
+	}
+	if summary.Outstanding != 6 || summary.Pending != 2 || summary.AgedAttempted != 1 || summary.DeliveryUnknown != 1 || summary.Stalled != 1 || summary.OldestAgeSeconds != 3100 {
+		t.Fatalf("wake summary = %+v", summary)
+	}
+	if summary.Rows == nil || len(summary.Rows) != summary.Outstanding {
+		t.Fatalf("wake summary rows=%+v outstanding=%d", summary.Rows, summary.Outstanding)
+	}
+	for _, field := range []string{"\"outstanding\"", "\"pending\"", "\"aged_attempted\"", "\"delivery_unknown\"", "\"stalled\"", "\"oldest_age_seconds\"", "\"rows\""} {
+		if !bytes.Contains(summaryRaw, []byte(field)) {
+			t.Fatalf("wake summary missing %s: %s", field, summaryRaw)
+		}
+	}
+	for _, secret := range []string{"rotate the private signing key", "unredacted customer fixture"} {
+		if bytes.Contains(summaryRaw, []byte(secret)) {
+			t.Fatalf("wake summary leaked raw delivery error %q: %s", secret, summaryRaw)
+		}
+	}
+
+	wakesRaw := getRaw(t, srv.URL+"/api/wakes?limit=100")
+	if again := getRaw(t, srv.URL+"/api/wakes?limit=100"); !bytes.Equal(wakesRaw, again) {
+		t.Fatalf("wake rows changed across identical reads\nfirst=%s\nsecond=%s", wakesRaw, again)
+	}
+	var wakes WakeRows
+	if err := json.Unmarshal(wakesRaw, &wakes); err != nil {
+		t.Fatalf("decode wakes: %v", err)
+	}
+	if wakes.Rows == nil || len(wakes.Rows) != 6 {
+		t.Fatalf("wake rows = %+v, want six non-nil rows", wakes.Rows)
+	}
+	validStates := map[string]bool{"pending": true, "attempted": true, "delivered": true, "stalled": true, "failed": true, "delivery_unknown": true}
+	for i, row := range wakes.Rows {
+		if row.ID == "" || row.TargetRole == "" || row.SourceKind == "" || row.SourceID == "" || !validStates[row.State] || row.CreatedAt == "" {
+			t.Fatalf("incomplete wake row[%d] = %+v", i, row)
+		}
+	}
+	if !bytes.Contains(wakesRaw, []byte(`"attempted_at": null`)) {
+		t.Fatalf("pending wake must carry attempted_at:null: %s", wakesRaw)
+	}
+	for _, secret := range []string{"rotate the private signing key", "unredacted customer fixture"} {
+		if bytes.Contains(wakesRaw, []byte(secret)) {
+			t.Fatalf("wake API leaked raw delivery error %q: %s", secret, wakesRaw)
+		}
+	}
+	errorClasses := map[string]string{
+		"wake-unknown-001":   wakeErrorTransport,
+		"wake-stalled-001":   wakeErrorTimeout,
+		"wake-attempted-001": wakeErrorTransport,
+		"wake-failed-001":    wakeErrorAuth,
+	}
+	for _, row := range wakes.Rows {
+		if want, ok := errorClasses[row.ID]; ok && row.LastError != want {
+			t.Fatalf("wake %s last_error=%q, want public class %q", row.ID, row.LastError, want)
+		}
+	}
+
+	var filtered WakeRows
+	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/wakes?state=pending&role=g2&limit=1"), &filtered); err != nil {
+		t.Fatalf("decode filtered wakes: %v", err)
+	}
+	if len(filtered.Rows) != 1 || filtered.Rows[0].State != "pending" || filtered.Rows[0].TargetRole != "g2" {
+		t.Fatalf("filtered wakes = %+v", filtered.Rows)
+	}
+
+	var receipts WakeReceipts
+	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/wakes/receipts?role=lead&since=2026-07-28T22:00:00Z&limit=10"), &receipts); err != nil {
+		t.Fatalf("decode receipts: %v", err)
+	}
+	if receipts.Rows == nil || len(receipts.Rows) != 1 || receipts.Rows[0].TargetRole != "lead" || receipts.Rows[0].State != "delivered" {
+		t.Fatalf("filtered receipts = %+v", receipts.Rows)
+	}
+
+	for _, path := range []string{"/api/wakes?state=unknown", "/api/wakes/receipts?since=not-a-time"} {
+		resp, err := http.Get(srv.URL + path)
+		if err != nil {
+			t.Fatalf("GET invalid query %s: %v", path, err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusBadRequest {
+			t.Fatalf("GET %s status=%d, want 400", path, resp.StatusCode)
 		}
 	}
 }
