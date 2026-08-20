@@ -53,3 +53,5 @@ go build ./... && go vet ./... && go test ./...
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
+
+<!-- CI dispatch probe 2026-08-20T01:30:54Z — diagnosing whether the gitmoot org Actions gate is org-level or scoped to gitmoot/gitmoot. Authorised: journal note 70310. Reverted immediately. -->
