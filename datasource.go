@@ -111,9 +111,6 @@ type AgentSummary struct {
 	Capabilities   []string `json:"capabilities,omitempty"`
 	AutonomyPolicy string   `json:"autonomyPolicy,omitempty"`
 	Health         string   `json:"health,omitempty"`
-	// MemoryEnabled is true when the agent's [agents.<name>] config section turns
-	// the memory feature on; the Agents page renders a small "memory" chip for it.
-	MemoryEnabled bool `json:"memoryEnabled,omitempty"`
 	// Ephemeral is true only for the synthetic ephemeral-workers rollup row.
 	Ephemeral      bool  `json:"ephemeral,omitempty"`
 	JobCount       int   `json:"jobCount"`
@@ -164,7 +161,6 @@ type AgentTemplateInfo struct {
 // workers gitmoot spins up for this agent, so they do not describe a one-off
 // foreground invocation.
 type AgentConfigInfo struct {
-	Memory        bool     `json:"memory"`
 	MaxBackground int      `json:"maxBackground,omitempty"`
 	IdleTimeout   string   `json:"idleTimeout,omitempty"`
 	JobTimeout    string   `json:"jobTimeout,omitempty"`
@@ -183,11 +179,6 @@ type AgentDetail struct {
 	// Config is the agent's [agents.<name>] config section, or nil when the agent
 	// has no such section.
 	Config *AgentConfigInfo `json:"config,omitempty"`
-	// MemoryFacts is the count of confirmed_memories rows owned by this agent
-	// (across all owner versions).
-	MemoryFacts int `json:"memoryFacts"`
-	// MemoryObservations is the count of memory_observations rows owned by this agent.
-	MemoryObservations int `json:"memoryObservations"`
 }
 
 // GraphNode is a node in the whole-history "galaxy" graph. Type is "job" (a real
