@@ -237,7 +237,7 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 // statusForError maps a DataSource error to an HTTP status code: not-found
 // sentinels become 404, everything else 500.
 func statusForError(err error) int {
-	if errors.Is(err, ErrRunNotFound) || errors.Is(err, ErrJobNotFound) || errors.Is(err, ErrAgentNotFound) || errors.Is(err, ErrPipelineRunNotFound) || errors.Is(err, ErrPipelineNotFound) || errors.Is(err, ErrOrgRoleNotFound) || errors.Is(err, ErrChatThreadNotFound) || errors.Is(err, ErrWorkflowNotFound) {
+	if errors.Is(err, ErrRunNotFound) || errors.Is(err, ErrJobNotFound) || errors.Is(err, ErrAgentNotFound) || errors.Is(err, ErrPipelineRunNotFound) || errors.Is(err, ErrPipelineNotFound) || errors.Is(err, ErrOrgRoleNotFound) || errors.Is(err, ErrWorkflowNotFound) {
 		return http.StatusNotFound
 	}
 	return http.StatusInternalServerError
@@ -890,30 +890,6 @@ func (s *server) handleLearningSkills(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, skills)
 }
 
-// handleLearningKnowledge serves GET /api/learning/knowledge -> Knowledge, the
-// memory brain graph. Mirrors handleRuns; every list is coerced non-nil so the
-// client always sees JSON arrays.
-func (s *server) handleLearningKnowledge(w http.ResponseWriter, r *http.Request) {
-	k, err := s.ds.Knowledge(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if k.Agents == nil {
-		k.Agents = []KnowledgeAgent{}
-	}
-	if k.Facts == nil {
-		k.Facts = []KnowledgeFact{}
-	}
-	if k.Clusters == nil {
-		k.Clusters = []KnowledgeCluster{}
-	}
-	if k.Edges == nil {
-		k.Edges = []KnowledgeEdge{}
-	}
-	writeJSON(w, http.StatusOK, k)
-}
-
 // handlePipelines serves GET /api/pipelines -> []PipelineSummary, the declared
 // pipelines with their schedule state and recent run outcomes. Mirrors
 // handleRuns; the list and every element's Recent are coerced non-nil so the
@@ -997,56 +973,6 @@ func (s *server) handlePipelineRun(w http.ResponseWriter, r *http.Request) {
 		run.Stages = []PipelineStage{}
 	}
 	writeJSON(w, http.StatusOK, run)
-}
-
-// handleChatThreads serves GET /api/chat/threads -> []ChatThreadSummary, the
-// chat threads with their activity rollups (gitmoot #534). Mirrors handleRuns;
-// the list and every element's Participants are coerced non-nil so the client
-// always sees JSON arrays.
-func (s *server) handleChatThreads(w http.ResponseWriter, r *http.Request) {
-	threads, err := s.ds.ChatThreads(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if threads == nil {
-		threads = []ChatThreadSummary{}
-	}
-	for i := range threads {
-		if threads[i].Participants == nil {
-			threads[i].Participants = []string{}
-		}
-	}
-	writeJSON(w, http.StatusOK, threads)
-}
-
-// handleChatThread serves GET /api/chat/thread?id=<id> -> ChatThreadDetail, one
-// thread's summary plus its full message history. Unknown ids map to 404
-// (mirrors handleJob). Messages and Participants are coerced non-nil so the
-// client always sees JSON arrays; a message's Refs stays omitempty (optional
-// per message), so the client reads it defensively.
-func (s *server) handleChatThread(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		http.Error(w, "missing thread id", http.StatusBadRequest)
-		return
-	}
-	detail, err := s.ds.ChatThread(r.Context(), id)
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if detail == nil {
-		http.Error(w, ErrChatThreadNotFound.Error(), http.StatusNotFound)
-		return
-	}
-	if detail.Messages == nil {
-		detail.Messages = []ChatMessage{}
-	}
-	if detail.Participants == nil {
-		detail.Participants = []string{}
-	}
-	writeJSON(w, http.StatusOK, detail)
 }
 
 // handleAttention serves GET /api/attention -> Attention, the "Needs a human"

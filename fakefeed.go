@@ -26,8 +26,6 @@ var (
 	ErrPipelineNotFound = errors.New("pipeline not found")
 	// ErrOrgRoleNotFound indicates the requested org role does not exist.
 	ErrOrgRoleNotFound = errors.New("org role not found")
-	// ErrChatThreadNotFound indicates the requested chat thread does not exist.
-	ErrChatThreadNotFound = errors.New("chat thread not found")
 	// ErrWorkflowNotFound indicates the requested workflow label does not exist.
 	ErrWorkflowNotFound = errors.New("workflow not found")
 )
@@ -54,10 +52,9 @@ const (
 //
 // FakeDataSource is safe for concurrent use.
 type FakeDataSource struct {
-	interval             time.Duration
-	broker               *broker
-	flatKnowledgeFixture bool
-	workflowsEnabled     bool
+	interval         time.Duration
+	broker           *broker
+	workflowsEnabled bool
 
 	mu      sync.Mutex
 	st      State
@@ -68,24 +65,12 @@ type FakeDataSource struct {
 // NewFakeDataSource returns a FakeDataSource seeded with the noted run and
 // starts the background goroutine that advances it.
 func NewFakeDataSource() *FakeDataSource {
-	return newFakeDataSource(false)
-}
-
-// NewFakeDataSourceFlatKnowledge returns the base Knowledge fixture without the
-// additional cluster:4 split. The base fixture still carries the issue #69
-// depth-three research chain so both dev-harness modes exercise deep ancestry.
-func NewFakeDataSourceFlatKnowledge() *FakeDataSource {
-	return newFakeDataSource(true)
-}
-
-func newFakeDataSource(flatKnowledgeFixture bool) *FakeDataSource {
 	workflowsEnabled := os.Getenv("FAKEFEED_WORKFLOWS") != "0"
 	f := &FakeDataSource{
-		interval:             fakeTickInterval,
-		broker:               newBroker(),
-		flatKnowledgeFixture: flatKnowledgeFixture,
-		workflowsEnabled:     workflowsEnabled,
-		st:                   initialFakeState(workflowsEnabled),
+		interval:         fakeTickInterval,
+		broker:           newBroker(),
+		workflowsEnabled: workflowsEnabled,
+		st:               initialFakeState(workflowsEnabled),
 	}
 	f.start()
 	return f
@@ -1926,9 +1911,6 @@ func (f *FakeDataSource) Config(ctx context.Context) (ConfigSnapshot, error) {
 		ModifiedAt:      fakeChartsNow.Add(-37 * time.Minute).UnixMilli(),
 		Exists:          true,
 		Sections: []ConfigSection{
-			{Name: "chat", Knobs: []ConfigKnob{
-				{Key: "auto_respond", Value: false, Default: false, IsDefault: true, Kind: "flag", Doc: "Allow enrolled agents to respond automatically in chat threads."},
-			}},
 			{Name: "github", Knobs: []ConfigKnob{
 				{Key: "rate_limit_per_hour", Value: 4200, Default: 4500, IsDefault: false, Kind: "int", Doc: "Reserve-aware GitHub request budget per hour."},
 			}},
@@ -1952,10 +1934,10 @@ func (f *FakeDataSource) Config(ctx context.Context) (ConfigSnapshot, error) {
 			}},
 		},
 		Agents: []ConfigAgent{
-			{Name: "galaxy-impl", Runtime: "codex", Model: "gpt-5.6-codex", Memory: true, ChatAutorespond: false, Capabilities: []string{"ask", "implement"}, AutonomyPolicy: "workspace-write", MaxBackground: 2},
-			{Name: "lead", Runtime: "claude", Model: "opus-4.6", Memory: true, ChatAutorespond: true, Capabilities: []string{"ask", "implement", "review"}, AutonomyPolicy: "workspace-write", MaxBackground: 3},
-			{Name: "researcher", Runtime: "kimi", Model: "kimi-k2.5", Memory: true, ChatAutorespond: false, Capabilities: []string{"ask", "review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
-			{Name: "reviewer", Runtime: "codex", Model: "gpt-5.6-codex", Memory: false, ChatAutorespond: false, Capabilities: []string{"review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
+			{Name: "galaxy-impl", Runtime: "codex", Model: "gpt-5.6-codex", Memory: true, Capabilities: []string{"ask", "implement"}, AutonomyPolicy: "workspace-write", MaxBackground: 2},
+			{Name: "lead", Runtime: "claude", Model: "opus-4.6", Memory: true, Capabilities: []string{"ask", "implement", "review"}, AutonomyPolicy: "workspace-write", MaxBackground: 3},
+			{Name: "researcher", Runtime: "kimi", Model: "kimi-k2.5", Memory: true, Capabilities: []string{"ask", "review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
+			{Name: "reviewer", Runtime: "codex", Model: "gpt-5.6-codex", Memory: false, Capabilities: []string{"review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
 		},
 		UnknownKeys: []string{"experimental.scheduler_bias", "plugins.private_token"},
 		Keychain:    fakeKeychain(),
@@ -2105,198 +2087,6 @@ func fakeSkills() Skills {
 // is deterministic and byte-stable across calls.
 func (f *FakeDataSource) Skills(ctx context.Context) (Skills, error) {
 	return fakeSkills(), nil
-}
-
-// fakeKnowledge builds the fixed memory brain-graph fixture behind the Learning
-// page's Knowledge view. Timestamps are anchored on fakeChartsNow (never
-// time.Now()) so the view is byte-stable across polls. It models three enrolled
-// agents owning eleven facts spread across two repos and two general-scope entries,
-// with witness counts varied across 1..7 and two superseded chains. One historical
-// repo fact deliberately has no cluster so the client fixture exercises repo-scoped
-// unclustered placement. Some fact bodies carry angle brackets,
-// ampersands and quotes so the client's HTML-escaping is exercised.
-func fakeKnowledge() Knowledge {
-	dA := func(n int) int64 { return fakeChartsNow.AddDate(0, 0, -n).UnixMilli() }
-
-	// Fact bodies deliberately mix angle brackets, ampersands and quotes (to
-	// exercise the client's escape-FIRST HTML escaping) with a safe markdown
-	// subset — **bold**, `inline code`, - lists, fenced code, plain https links
-	// and [[fact:id]] wikilinks — so the detail panel's markdown renderer is
-	// exercised end-to-end. The wikilinks mirror the Links slice.
-	facts := []KnowledgeFact{
-		{ID: "fact:1", Content: `Build with GOTOOLCHAIN=local & GOFLAGS=-mod=mod; the pinned go1.26.4 toolchain lives under /root/.local.`, Repo: fakeRepo, Key: "build-toolchain", Owner: "researcher", Witnesses: 5, FirstSeen: dA(18), LastSeen: dA(1), Cluster: "cluster:3:delivery:build", SourceJob: "job:build-31", Links: []string{"fact:8"}},
-		{ID: "fact:2", Content: `TestExport is flaky under -race; retry once before failing the job.`, Repo: fakeRepo, Key: "test-flake", Owner: "reviewer-kimi", Witnesses: 3, FirstSeen: dA(16), LastSeen: dA(2), Cluster: "cluster:2", SourceJob: "job:test-88"},
-		{ID: "fact:3", Content: `Auth uses <bearer> tokens & refreshes 5m before expiry; header is "Authorization".`, Repo: fakeRepo, Key: "auth-flow", Owner: "researcher", Witnesses: 7, FirstSeen: dA(15), LastSeen: dA(2), Superseded: true, Cluster: "cluster:1", SourceJob: "job:auth-12"},
-		{ID: "fact:4", Content: `Exports default to CSV; JSON is opt-in via --format json.`, Repo: "jerryfane/noted", Key: "export-format", Owner: "project-lead", Witnesses: 2, FirstSeen: dA(12), LastSeen: dA(3), Cluster: "cluster:4", SourceFile: "jerryfane/noted:docs/exports.md"},
-		{ID: "fact:5", Content: `Search index rebuilds lazily on the first query after a write.`, Repo: "jerryfane/noted", Key: "search-index", Owner: "researcher", Witnesses: 4, FirstSeen: dA(10), LastSeen: dA(1), Cluster: "cluster:4", SourceJob: "job:idx-40", Links: []string{"fact:7"}},
-		{ID: "fact:6", Content: `Bulk delete requires a confirm token & is soft-delete for 30 days.`, Repo: "jerryfane/noted", Key: "delete-safety", Owner: "reviewer-kimi", Witnesses: 1, FirstSeen: dA(9), LastSeen: dA(4), Cluster: "cluster:4", SourceFile: "jerryfane/noted:docs/deletion.md"},
-		{ID: "fact:7", Content: `Rate limiting is per-token: 100 req/min, burst 20; 429 carries Retry-After.`, Repo: "jerryfane/noted", Key: "rate-limit", Owner: "researcher", Witnesses: 4, FirstSeen: dA(7), LastSeen: dA(2), Cluster: "cluster:4", SourceJob: "job:rl-19"},
-		{ID: "fact:8", Content: "Cut GA releases only with explicit sign-off; \"deploy latest\" means build & install locally.\n\nChecklist:\n- run `make release`\n- verify the tag & sha256sums\n- see https://gitmoot.io/docs/releasing\n\n```sh\ngh release create vX.Y.Z --latest\n```\n\nRelated: [[fact:1]].", Key: "release-policy", Owner: "researcher", Witnesses: 6, FirstSeen: dA(5), LastSeen: dA(1), Cluster: "cluster:3:delivery:release", SourceFile: "docs/RELEASING.md", Links: []string{"fact:1"}},
-		{ID: "fact:9", Content: "Auth migrated to <PASETO> tokens & rotating keys; refresh 10m before \"expiry\". Supersedes [[fact:3]]; **rotate keys** nightly via `authctl rotate`.", Repo: fakeRepo, Key: "auth-flow", Owner: "researcher", Witnesses: 2, FirstSeen: dA(2), LastSeen: dA(1), Cluster: "cluster:1", SourceJob: "job:auth-77", Links: []string{"fact:3"}},
-		{ID: "fact:10", Content: `Prefer table-driven tests & gofmt; avoid naked returns in long functions.`, Key: "coding-style", Owner: "project-lead", Witnesses: 3, FirstSeen: dA(4), LastSeen: dA(1), Cluster: "cluster:2", SourceFile: "CONTRIBUTING.md"},
-		{ID: "fact:11", Content: `Builds must use the system Go toolchain; do not use a pinned local toolchain.`, Repo: fakeRepo, Key: "build-toolchain", Owner: "researcher", Witnesses: 2, FirstSeen: dA(22), LastSeen: dA(19), Superseded: true, SourceJob: "job:build-09"},
-	}
-	// Newest-first by FirstSeen (distinct across the fixture), ID tie-break.
-	sort.SliceStable(facts, func(i, j int) bool {
-		if facts[i].FirstSeen != facts[j].FirstSeen {
-			return facts[i].FirstSeen > facts[j].FirstSeen
-		}
-		return facts[i].ID < facts[j].ID
-	})
-
-	// Enrolled agents. Facts is the INJECTABLE count (the real datasource fills it
-	// from CountConfirmedMemoriesForOwner, which excludes superseded_by IS NOT NULL
-	// rows), so it deliberately differs from the on-graph owned-node count where an
-	// agent has superseded facts. researcher OWNS seven fact nodes but two (fact:3
-	// and fact:11) are excluded, so its injectable count is 5; reviewer-kimi owns 2
-	// and project-lead owns 2 (none superseded).
-	agents := []KnowledgeAgent{
-		{Name: "project-lead", Enrolled: true, Facts: 2, Observations: 3},
-		{Name: "researcher", Enrolled: true, Facts: 5, Observations: 12},
-		{Name: "reviewer-kimi", Enrolled: true, Facts: 2, Observations: 4},
-	}
-	sort.SliceStable(agents, func(i, j int) bool { return agents[i].Name < agents[j].Name })
-
-	// Emergent clusters (gitmoot #763): four communities over the ten facts,
-	// anchored to a medoid fact for label stability. Repo is the dominant repo
-	// scope ("" = general/mixed), so the client nests repo -> cluster -> fact.
-	// The client renders Label verbatim (an owner override wins server-side).
-	//
-	// The member distribution is deliberately UNEVEN (4 / 2 / 2 / 2 facts) so the
-	// clustered four-column layout shows visibly grouped fact bands with gaps
-	// between cluster groups. This non-empty slice drives the clustered left ->
-	// right column view; a build that returns an EMPTY clusters slice (and empty
-	// per-fact Cluster fields) instead exercises the legacy fallback layout
-	// (the scope/category columns), so both code paths stay reachable in fake mode.
-	clusters := []KnowledgeCluster{
-		{ID: "cluster:1", Label: "auth & tokens", Repo: fakeRepo, Medoid: "fact:9"},
-		{ID: "cluster:2", Label: "testing & style", Medoid: "fact:2"},
-		{ID: "cluster:3", Label: "build & release"},
-		{ID: "cluster:3:delivery", Label: "delivery workflow", Medoid: "fact:1", ParentID: "cluster:3"},
-		{ID: "cluster:3:delivery:build", Label: "build toolchain", Medoid: "fact:1", ParentID: "cluster:3:delivery"},
-		{ID: "cluster:3:delivery:release", Label: "release policy", Medoid: "fact:8", ParentID: "cluster:3:delivery"},
-		{ID: "cluster:4", Label: "noted api & data", Repo: "jerryfane/noted", Medoid: "fact:7"},
-	}
-	// Count is derived recursively from leaf assignments so intermediate/root
-	// totals cannot drift as the fixture grows deeper.
-	directCount := map[string]int{}
-	for _, fct := range facts {
-		if fct.Cluster != "" {
-			directCount[fct.Cluster]++
-		}
-	}
-	children := map[string][]string{}
-	for _, c := range clusters {
-		if c.ParentID != "" {
-			children[c.ParentID] = append(children[c.ParentID], c.ID)
-		}
-	}
-	var clusterCount func(string) int
-	clusterCount = func(id string) int {
-		total := directCount[id]
-		for _, child := range children[id] {
-			total += clusterCount(child)
-		}
-		return total
-	}
-	for i := range clusters {
-		clusters[i].Count = clusterCount(clusters[i].ID)
-	}
-	sort.SliceStable(clusters, func(i, j int) bool { return clusters[i].ID < clusters[j].ID })
-
-	// Owner + category + cluster edges per fact, then two supersede chains.
-	// Category edges stay
-	// for the pre-cluster fallback view; cluster edges back the repo -> cluster
-	// -> fact hierarchy. Scored link edges are undirected and emitted once per
-	// pair. They deliberately cover tight in-cluster pairs, cross-cluster pairs,
-	// and cross-repo pairs so the dev harness exercises every galaxy treatment.
-	edges := make([]KnowledgeEdge, 0, len(facts)*3+10)
-	for _, fct := range facts {
-		edges = append(edges, KnowledgeEdge{Source: fct.ID, Target: fct.Owner, Kind: "owner"})
-		cat := fct.Repo
-		if cat == "" {
-			cat = "general"
-		}
-		edges = append(edges, KnowledgeEdge{Source: fct.ID, Target: cat, Kind: "category"})
-		if fct.Cluster != "" {
-			edges = append(edges, KnowledgeEdge{Source: fct.ID, Target: fct.Cluster, Kind: "cluster"})
-		}
-	}
-	edges = append(edges, KnowledgeEdge{Source: "fact:9", Target: "fact:3", Kind: "supersede"})
-	edges = append(edges, KnowledgeEdge{Source: "fact:1", Target: "fact:11", Kind: "supersede"})
-	edges = append(edges,
-		KnowledgeEdge{Source: "fact:3", Target: "fact:9", Kind: "link", Score: 0.95},
-		KnowledgeEdge{Source: "fact:1", Target: "fact:8", Kind: "link", Score: 0.92},
-		KnowledgeEdge{Source: "fact:6", Target: "fact:7", Kind: "link", Score: 0.88},
-		KnowledgeEdge{Source: "fact:2", Target: "fact:10", Kind: "link", Score: 0.84},
-		KnowledgeEdge{Source: "fact:4", Target: "fact:5", Kind: "link", Score: 0.78},
-		KnowledgeEdge{Source: "fact:5", Target: "fact:7", Kind: "link", Score: 0.62},
-		KnowledgeEdge{Source: "fact:1", Target: "fact:2", Kind: "link", Score: 0.48},
-		KnowledgeEdge{Source: "fact:1", Target: "fact:4", Kind: "link", Score: 0.33},
-		KnowledgeEdge{Source: "fact:9", Target: "fact:5", Kind: "link", Score: 0.15},
-	)
-	sort.SliceStable(edges, func(i, j int) bool {
-		if edges[i].Kind != edges[j].Kind {
-			return edges[i].Kind < edges[j].Kind
-		}
-		if edges[i].Source != edges[j].Source {
-			return edges[i].Source < edges[j].Source
-		}
-		return edges[i].Target < edges[j].Target
-	})
-
-	return Knowledge{Agents: agents, Facts: facts, Clusters: clusters, Edges: edges}
-}
-
-// fakeKnowledgeWithSubclusters derives the default hierarchy fixture from the
-// depth-three base fixture. cluster:4 additionally becomes a parent with two
-// leaf children; the children omit Repo so the dashboard inherits the root lane.
-func fakeKnowledgeWithSubclusters() Knowledge {
-	k := fakeKnowledge()
-	leafByFact := map[string]string{
-		"fact:4": "cluster:4:storage",
-		"fact:5": "cluster:4:storage",
-		"fact:6": "cluster:4:safety",
-		"fact:7": "cluster:4:safety",
-	}
-	for i := range k.Facts {
-		if leaf := leafByFact[k.Facts[i].ID]; leaf != "" {
-			k.Facts[i].Cluster = leaf
-		}
-	}
-	k.Clusters = append(k.Clusters,
-		KnowledgeCluster{ID: "cluster:4:safety", Label: "limits & deletion", Count: 2, Medoid: "fact:7", ParentID: "cluster:4"},
-		KnowledgeCluster{ID: "cluster:4:storage", Label: "exports & search", Count: 2, Medoid: "fact:5", ParentID: "cluster:4"},
-	)
-	for i := range k.Edges {
-		if k.Edges[i].Kind != "cluster" {
-			continue
-		}
-		if leaf := leafByFact[k.Edges[i].Source]; leaf != "" {
-			k.Edges[i].Target = leaf
-		}
-	}
-	sort.SliceStable(k.Clusters, func(i, j int) bool { return k.Clusters[i].ID < k.Clusters[j].ID })
-	sort.SliceStable(k.Edges, func(i, j int) bool {
-		if k.Edges[i].Kind != k.Edges[j].Kind {
-			return k.Edges[i].Kind < k.Edges[j].Kind
-		}
-		if k.Edges[i].Source != k.Edges[j].Source {
-			return k.Edges[i].Source < k.Edges[j].Source
-		}
-		return k.Edges[i].Target < k.Edges[j].Target
-	})
-	return k
-}
-
-// Knowledge implements DataSource. Both fixtures carry the issue #69 depth-three
-// chain; the default adds the existing cluster:4 split. Both remain deterministic
-// and byte-stable across calls.
-func (f *FakeDataSource) Knowledge(ctx context.Context) (Knowledge, error) {
-	if f.flatKnowledgeFixture {
-		return fakeKnowledge(), nil
-	}
-	return fakeKnowledgeWithSubclusters(), nil
 }
 
 // fakePipelineRuns builds the fixed set of pipeline run details (gitmoot #681)
@@ -2780,184 +2570,6 @@ func (f *FakeDataSource) PipelineDetail(ctx context.Context, name string) (Pipel
 		return PipelineDetail{}, ErrPipelineNotFound
 	}
 	return detail, nil
-}
-
-// fakeChatThreadDetails builds the fixed set of chat threads (gitmoot #534),
-// keyed by thread id. Every timestamp is anchored on fakeChartsNow (never
-// time.Now()) so the section is byte-stable across polls. The four threads
-// together exercise every real-emittable shape:
-//   - chat-release-room: a busy multi-agent thread with a promotion_request that
-//     spawned a job (promotedJobId) and the agent's job_result posted back, plus
-//     refs to a job and a PR;
-//   - chat-adapter-review: an ask-gate flow — an agent message, a `system`
-//     ask-gate question from a paused job, the human's answer (reply_to), and the
-//     resumed agent's job_result;
-//   - chat-triage-inbox: a fresh thread with pending @mentions (unread) and no
-//     replies yet;
-//   - chat-sqlite-migration: an archived, wrapped-up thread.
-//
-// Some bodies carry angle brackets, ampersands and a fake <script> so the
-// client's HTML-escaping of the UNTRUSTED body is exercised. Messages are
-// emitted ascending by Seq.
-func fakeChatThreadDetails() map[string]*ChatThreadDetail {
-	const (
-		h = time.Hour
-		m = time.Minute
-		d = 24 * time.Hour
-	)
-	// at returns the epoch-ms d before fakeChartsNow (never time.Now()).
-	at := func(x time.Duration) int64 { return fakeChartsNow.Add(-x).UnixMilli() }
-
-	details := []*ChatThreadDetail{
-		{
-			ChatThreadSummary: ChatThreadSummary{
-				ID: "chat-release-room", Slug: "release-room", Name: "Release room",
-				Repo: "jerryfane/gitmoot", State: "open", CreatedBy: "jerry",
-				UnreadMentions: 0, Participants: []string{"codex-b", "jerry", "researcher"},
-			},
-			Messages: []ChatMessage{
-				{ID: "msg-rr-1", Seq: 1, TsMs: at(3 * h), AuthorKind: "human", AuthorName: "jerry", Kind: "chat",
-					Body: "@codex-b can you inspect the runtime adapter seam? @researcher can you compare the A2A & ACP protocol options (latency vs schema flexibility)?"},
-				{ID: "msg-rr-2", Seq: 2, TsMs: at(3*h - 22*m), AuthorKind: "agent", AuthorName: "researcher", Kind: "chat",
-					Body: "Compared 3 options. Trade-off: ANP negotiates schema at runtime (flexible but adds latency & cost) whereas a fixed schema is O(1). For V1 I'd pick a fixed message schema (text + optional refs) — see <taxonomy §4.2>. Recommendation: don't do dynamic negotiation yet.",
-					Refs: []ChatRef{{Kind: "artifact", Repo: "jerryfane/gitmoot", ID: "note-2606.19135", URL: "https://arxiv.org/abs/2606.19135"}}},
-				{ID: "msg-rr-3", Seq: 3, TsMs: at(3*h - 40*m), AuthorKind: "human", AuthorName: "jerry", Kind: "promotion_request",
-					Body:          "/implement @codex-b implement the adapter manifest (fixed schema, text + refs). Promote this to a real job.",
-					PromotedJobID: "job-adapter-01", Refs: []ChatRef{{Kind: "job", Repo: "jerryfane/gitmoot", ID: "job-adapter-01"}}},
-				{ID: "msg-rr-4", Seq: 4, TsMs: at(3*h - 74*m), AuthorKind: "agent", AuthorName: "codex-b", Kind: "job_result", ReplyTo: "msg-rr-3",
-					Body: "> job-adapter-01 · **implemented**\n\n**Decision:** implemented\n**Summary:** added the adapter manifest (`manifest.go` + a schema test). Fixed schema `{kind, body, refs[]}` — no runtime negotiation.\n\n**Changed:**\n- internal/runtime/manifest.go\n- internal/runtime/manifest_test.go\n\n**Verify:**\n```\ngo test ./internal/runtime/ -> ok (0.42s)\n```",
-					Refs: []ChatRef{{Kind: "job", Repo: "jerryfane/gitmoot", ID: "job-adapter-01"}, {Kind: "pr", Repo: "jerryfane/gitmoot", ID: "742", URL: "https://github.com/jerryfane/gitmoot/pull/742"}}},
-				{ID: "msg-rr-5", Seq: 5, TsMs: at(40 * m), AuthorKind: "agent", AuthorName: "codex-b", Kind: "chat",
-					Body: "Opened PR #742 with the manifest. @jerry ready for review — CI (build & vet & test) is green."},
-				// XSS/inertness fixture: an untrusted body carrying a literal <script>,
-				// an <img onerror> and a javascript: URL. The SAFE markdown renderer
-				// must show these as inert text (escaped, links NOT clickable) while
-				// still formatting the **bold** / `code` / > quote around them.
-				{ID: "msg-rr-6", Seq: 6, TsMs: at(30 * m), AuthorKind: "human", AuthorName: "jerry", Kind: "chat",
-					Body: "Sanity-checking the renderer with a hostile body:\n\n**bold <script>alert(1)</script>** and inline `<img src=x onerror=alert(1)>`.\n\n> quoted <b>not-bold</b> & a bare link javascript:alert(document.cookie) stays plain text.\n\n```\n<script>alert('fenced too')</script>\n```"},
-			},
-		},
-		{
-			ChatThreadSummary: ChatThreadSummary{
-				ID: "chat-adapter-review", Slug: "adapter-review", Name: "Adapter review",
-				Repo: "jerryfane/gitmoot", State: "open", CreatedBy: "jerry",
-				UnreadMentions: 0, Participants: []string{"jerry", "reviewer"},
-			},
-			Messages: []ChatMessage{
-				{ID: "msg-ar-1", Seq: 1, TsMs: at(2*h + 30*m), AuthorKind: "agent", AuthorName: "reviewer", Kind: "chat",
-					Body: "Starting an adversarial review of the adapter manifest PR (#742)."},
-				{ID: "msg-ar-2", Seq: 2, TsMs: at(2*h + 8*m), AuthorKind: "system", AuthorName: "", Kind: "system",
-					Body: "Job job-adapter-review-07 is paused awaiting an answer:\n\nThe manifest omits a network_access flag. Should ephemeral codex workers be granted network access by default? (yes/no)",
-					Refs: []ChatRef{{Kind: "job", Repo: "jerryfane/gitmoot", ID: "job-adapter-review-07"}}},
-				{ID: "msg-ar-3", Seq: 3, TsMs: at(2 * h), AuthorKind: "human", AuthorName: "jerry", Kind: "chat", ReplyTo: "msg-ar-2",
-					Body: "yes — codex ephemeral workers need [sandbox_workspace_write] network_access=true to push branches & open PRs (default sandbox blocks network -> gh \"auth invalid\")."},
-				{ID: "msg-ar-4", Seq: 4, TsMs: at(2*h - 12*m), AuthorKind: "agent", AuthorName: "reviewer", Kind: "job_result", ReplyTo: "msg-ar-3",
-					Body: "**Decision:** approved\n**Summary:** resumed after the ask-gate answer. Approved with a note that `network_access=true` is required for the ephemeral worker path. No blocking findings.\n**Verify:** re-ran the manifest schema test -> ok",
-					Refs: []ChatRef{{Kind: "job", Repo: "jerryfane/gitmoot", ID: "job-adapter-review-07"}, {Kind: "pr", Repo: "jerryfane/gitmoot", ID: "742", URL: "https://github.com/jerryfane/gitmoot/pull/742"}}},
-			},
-		},
-		{
-			ChatThreadSummary: ChatThreadSummary{
-				ID: "chat-triage-inbox", Slug: "triage-inbox", Name: "Triage inbox",
-				Repo: "jerryfane/noted", State: "open", CreatedBy: "gaijinjoe",
-				UnreadMentions: 2, Participants: []string{"claude-a", "gaijinjoe", "researcher"},
-			},
-			Messages: []ChatMessage{
-				{ID: "msg-ti-1", Seq: 1, TsMs: at(6 * m), AuthorKind: "human", AuthorName: "gaijinjoe", Kind: "chat",
-					Body: "@claude-a the nightly-deploy pipeline is parked (score stage blocked on the R2 token). Can you look? @researcher any known R2 token rotation issues this week? <urgent> but no auto-run — I'll promote if needed."},
-			},
-		},
-		{
-			ChatThreadSummary: ChatThreadSummary{
-				ID: "chat-sqlite-migration", Slug: "sqlite-migration", Name: "SQLite migration",
-				Repo: "acme/webapp", State: "archived", CreatedBy: "jerry",
-				UnreadMentions: 0, Participants: []string{"codex-b", "jerry"},
-			},
-			Messages: []ChatMessage{
-				{ID: "msg-sm-1", Seq: 1, TsMs: at(6 * d), AuthorKind: "human", AuthorName: "jerry", Kind: "chat",
-					Body: "Let's coordinate the modernc pure-Go SQLite migration here (no cgo, single static binary stays sacred)."},
-				{ID: "msg-sm-2", Seq: 2, TsMs: at(6*d - 3*h), AuthorKind: "agent", AuthorName: "codex-b", Kind: "chat",
-					Body: "Done — swapped mattn/go-sqlite3 -> modernc.org/sqlite. All migrations pass, `CGO_ENABLED=0 go build` is clean, binary is fully static."},
-				{ID: "msg-sm-3", Seq: 3, TsMs: at(6*d - 4*h), AuthorKind: "human", AuthorName: "jerry", Kind: "chat",
-					Body: "Perfect. Archiving this thread, thanks."},
-			},
-		},
-	}
-
-	out := make(map[string]*ChatThreadDetail, len(details))
-	for _, det := range details {
-		// Derive the summary rollup from the message history so the list and the
-		// detail can never disagree.
-		det.MessageCount = len(det.Messages)
-		if n := len(det.Messages); n > 0 {
-			last := det.Messages[n-1]
-			det.UpdatedAt = last.TsMs
-			det.LastAuthor = last.AuthorName
-			if last.AuthorKind == "system" {
-				det.LastAuthor = "system"
-			}
-			det.LastKind = last.Kind
-			det.LastSnippet = chatSnippet(last.Body)
-		}
-		sort.Strings(det.Participants)
-		out[det.ID] = det
-	}
-	return out
-}
-
-// chatSnippet collapses a message body to a single-line, server-truncated
-// preview (matching what the live store would send so the client never has to
-// re-truncate). Newlines become spaces and the result is capped at 90 runes.
-func chatSnippet(body string) string {
-	s := strings.Join(strings.Fields(body), " ")
-	const cap = 90
-	r := []rune(s)
-	if len(r) > cap {
-		return strings.TrimRight(string(r[:cap]), " ") + "…"
-	}
-	return s
-}
-
-// fakeChatThreads projects the fixed thread details into the list summaries,
-// sorted most-recently-active first (UpdatedAt desc, id desc tie-break) so the
-// view is byte-stable across polls.
-func fakeChatThreads() []ChatThreadSummary {
-	details := fakeChatThreadDetails()
-	out := make([]ChatThreadSummary, 0, len(details))
-	for _, det := range details {
-		s := det.ChatThreadSummary
-		// copy the participants slice so callers can't mutate the fixture
-		s.Participants = append([]string(nil), det.Participants...)
-		out = append(out, s)
-	}
-	sort.SliceStable(out, func(i, j int) bool {
-		if out[i].UpdatedAt != out[j].UpdatedAt {
-			return out[i].UpdatedAt > out[j].UpdatedAt // most recent first
-		}
-		return out[i].ID > out[j].ID // id desc tie-break (unique)
-	})
-	return out
-}
-
-// ChatThreads implements DataSource. It returns the fixed fakeChatThreads
-// fixture; output is deterministic and byte-stable across calls.
-func (f *FakeDataSource) ChatThreads(ctx context.Context) ([]ChatThreadSummary, error) {
-	return fakeChatThreads(), nil
-}
-
-// ChatThread implements DataSource. It returns the fixed detail for a thread by
-// id from the fakeChatThreadDetails fixture; unknown ids return
-// (nil, ErrChatThreadNotFound). Output is deterministic and byte-stable.
-func (f *FakeDataSource) ChatThread(ctx context.Context, id string) (*ChatThreadDetail, error) {
-	det, ok := fakeChatThreadDetails()[id]
-	if !ok {
-		return nil, ErrChatThreadNotFound
-	}
-	// copy so callers can't mutate the fixture's shared slices
-	cp := *det
-	cp.Participants = append([]string(nil), det.Participants...)
-	cp.Messages = append([]ChatMessage(nil), det.Messages...)
-	return &cp, nil
 }
 
 // fakeVerdictRun is the SkillOpt eval run id the fake binary-verdicts fixture is

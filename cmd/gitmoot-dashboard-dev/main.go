@@ -12,14 +12,9 @@ import (
 
 func main() {
 	addr := flag.String("addr", ":8099", "HTTP listen address")
-	flatKnowledge := flag.Bool("knowledge-flat", false, "serve the no-parent Knowledge fixture")
 	flag.Parse()
-	ds := dashboard.NewFakeDataSource()
-	if *flatKnowledge {
-		ds = dashboard.NewFakeDataSourceFlatKnowledge()
-	}
-	handler := dashboard.Serve(ds)
-	log.Printf("gitmoot-dashboard-dev listening on %s (knowledge-flat=%t)", *addr, *flatKnowledge)
+	handler := dashboard.Serve(dashboard.NewFakeDataSource())
+	log.Printf("gitmoot-dashboard-dev listening on %s", *addr)
 	if err := http.ListenAndServe(*addr, handler); err != nil {
 		log.Fatal(err)
 	}

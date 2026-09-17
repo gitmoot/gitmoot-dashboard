@@ -742,14 +742,13 @@ type ConfigSection struct {
 // ConfigAgent is the sanitized per-agent behavior visible in config.toml.
 // Credentials, environment and template contents are intentionally absent.
 type ConfigAgent struct {
-	Name            string   `json:"name"`
-	Runtime         string   `json:"runtime"`
-	Model           string   `json:"model"`
-	Memory          bool     `json:"memory"`
-	ChatAutorespond bool     `json:"chat_autorespond"`
-	Capabilities    []string `json:"capabilities"`
-	AutonomyPolicy  string   `json:"autonomy_policy"`
-	MaxBackground   int      `json:"max_background"`
+	Name           string   `json:"name"`
+	Runtime        string   `json:"runtime"`
+	Model          string   `json:"model"`
+	Memory         bool     `json:"memory"`
+	Capabilities   []string `json:"capabilities"`
+	AutonomyPolicy string   `json:"autonomy_policy"`
+	MaxBackground  int      `json:"max_background"`
 }
 
 // KeychainView is the metadata-only registry projection shown on the Config
@@ -925,93 +924,6 @@ type Skills struct {
 	PendingTotal   int             `json:"pendingTotal"`
 }
 
-// Knowledge — the memory brain graph.
-
-// KnowledgeAgent is one memory-enrolled agent hub in the brain graph, with the
-// size of its confirmed-fact / observation pool.
-type KnowledgeAgent struct {
-	Name         string `json:"name"`
-	Enrolled     bool   `json:"enrolled"`
-	Facts        int    `json:"facts"`
-	Observations int    `json:"observations"`
-}
-
-// KnowledgeCluster is an emergent memory cluster (Knowledge graph v2, gitmoot
-// #763): a community of similar facts derived deterministically over the
-// fact-similarity graph (the same FTS/bm25 signal that seeds vault [[links]]).
-// The same DB yields byte-identical clusters, matching the vault byte-identity
-// house rule. Label is the display label (an owner override wins server-side,
-// so the client renders Label verbatim); Count is the number of member facts;
-// Repo is the cluster's dominant repo scope ("" = general/mixed) so the client
-// can nest repo -> cluster -> fact; Medoid anchors the label to a representative
-// fact for stability across recomputes. ParentID is additive hierarchy metadata:
-// facts attach to leaf clusters, while every ancestor aggregates its descendants.
-//
-// Additive contract: Track A (the gitmoot bridge) fills this. A gitmoot build
-// that predates clusters simply omits the enclosing Clusters slice and leaves
-// each fact's Cluster empty, so the client falls back to its pre-cluster view.
-type KnowledgeCluster struct {
-	ID       string `json:"id"`                  // stable unique id (e.g. "cluster:<n>")
-	Label    string `json:"label"`               // display label (owner override wins server-side)
-	Count    int    `json:"count"`               // direct member count for leaves; aggregate for parents
-	Repo     string `json:"repo,omitempty"`      // dominant repo scope, "" = general/mixed
-	Medoid   string `json:"medoid,omitempty"`    // anchor fact id (label stability)
-	ParentID string `json:"parent_id,omitempty"` // parent cluster id; empty for top-level clusters
-}
-
-// KnowledgeFact is a single confirmed memory. Repo scopes the fact ("" = general
-// scope); Superseded marks a fact replaced by a newer one on the same key.
-//
-// The Cluster/SourceJob/SourceFile/Links fields back the Knowledge graph v2
-// detail panel (gitmoot #763) and are all additive + optional: a pre-cluster
-// gitmoot build leaves them empty and the client degrades gracefully.
-// Created/updated are already carried by FirstSeen/LastSeen.
-type KnowledgeFact struct {
-	ID         string `json:"id"` // stable unique id (e.g. "fact:<rowid>")
-	Content    string `json:"content"`
-	Repo       string `json:"repo,omitempty"` // "" = general scope
-	Key        string `json:"key,omitempty"`
-	Owner      string `json:"owner"` // agent name
-	Witnesses  int    `json:"witnesses"`
-	FirstSeen  int64  `json:"firstSeen,omitempty"`
-	LastSeen   int64  `json:"lastSeen,omitempty"`
-	Superseded bool   `json:"superseded,omitempty"`
-	// Cluster is the id of the fact's owning KnowledgeCluster ("" = unclustered).
-	Cluster string `json:"cluster,omitempty"`
-	// SourceJob is the job id the fact was learned from (provenance).
-	SourceJob string `json:"sourceJob,omitempty"`
-	// SourceFile is the file the fact was ingested from (provenance).
-	SourceFile string `json:"sourceFile,omitempty"`
-	// Links are the ids of facts this fact references (the vault [[wikilinks]]),
-	// rendered as clickable cross-references in the detail panel.
-	Links []string `json:"links,omitempty"`
-}
-
-// KnowledgeEdge is one edge in the brain graph: a fact to its owner agent
-// (owner), a fact to its category/scope hub (category), a fact to its emergent
-// cluster hub (cluster, gitmoot #763), a newer fact to the older fact it
-// supersedes (supersede), or an undirected fact-to-fact wiki link (link). Link
-// edges are emitted once per pair and carry a score in (0,1].
-type KnowledgeEdge struct {
-	Source string  `json:"source"`
-	Target string  `json:"target"`
-	Kind   string  `json:"kind"` // owner | category | cluster | supersede | link
-	Score  float64 `json:"score,omitempty"`
-}
-
-// Knowledge is the data behind the Learning page's Knowledge view: the memory
-// brain graph of enrolled agents, their facts, the emergent clusters those
-// facts belong to (gitmoot #763) and the edges between them.
-type Knowledge struct {
-	Agents []KnowledgeAgent `json:"agents"`
-	Facts  []KnowledgeFact  `json:"facts"`
-	// Clusters are the emergent memory clusters (gitmoot #763). Additive: a
-	// pre-cluster gitmoot build leaves this empty and the client falls back to
-	// its scope/category view.
-	Clusters []KnowledgeCluster `json:"clusters"`
-	Edges    []KnowledgeEdge    `json:"edges"`
-}
-
 // Pipelines — the declared shell-stage pipelines (gitmoot #681).
 
 // PipelineSummary is one row of the Pipelines list: a declared pipeline
@@ -1154,66 +1066,6 @@ type PipelineKeyEntry struct {
 	Mode   string `json:"mode"`
 }
 
-// Chat — the Gitmoot-native agent chat layer (gitmoot #534): durable,
-// repo-scoped coordination threads where agents and humans exchange messages,
-// tag each other, and promote messages into real jobs.
-
-// ChatRef is a structured reference carried by a chat message: a link to a
-// Gitmoot entity (a job, PR, artifact, repo, …). Kind names the entity type;
-// URL, when present and http(s), is a safe external link the client can render.
-type ChatRef struct {
-	Kind string `json:"kind"`           // job | pr | artifact | repo | thread | …
-	Repo string `json:"repo,omitempty"` // owning repo, when scoped
-	ID   string `json:"id"`             // the entity id (job id, PR number, …)
-	URL  string `json:"url,omitempty"`  // external link, when the entity has one
-}
-
-// ChatMessage is one durable message in a thread. Body is untrusted,
-// agent/human-authored markdown-ish plain text and MUST be escaped by any
-// renderer. Kind drives how the client styles the message: chat (a normal
-// message), system (an ask-gate question from a paused job), job_result (an
-// agent's job result posted back), or promotion_request (a message that spawned
-// a job — see PromotedJobID).
-type ChatMessage struct {
-	ID            string    `json:"id"`
-	Seq           int       `json:"seq"`                     // 1-based per-thread ordering key
-	TsMs          int64     `json:"tsMs"`                    // epoch milliseconds
-	AuthorKind    string    `json:"authorKind"`              // human | agent | system
-	AuthorName    string    `json:"authorName"`              // agent/human name (empty for system)
-	Kind          string    `json:"kind"`                    // chat | system | job_result | promotion_request
-	Body          string    `json:"body"`                    // UNTRUSTED markdown-ish text — escape everything
-	Refs          []ChatRef `json:"refs,omitempty"`          // structured entity references
-	ReplyTo       string    `json:"replyTo,omitempty"`       // id of the message this replies to
-	PromotedJobID string    `json:"promotedJobId,omitempty"` // set on promotion_request: the job it spawned
-}
-
-// ChatThreadSummary is one row of the Chat threads list: a repo-scoped
-// coordination ledger plus a rollup of its activity (message count, unread
-// mentions, and a server-truncated preview of the last message) so the list can
-// render without fetching each thread's full history.
-type ChatThreadSummary struct {
-	ID             string   `json:"id"`
-	Slug           string   `json:"slug,omitempty"`
-	Name           string   `json:"name"`
-	Repo           string   `json:"repo,omitempty"`
-	State          string   `json:"state"` // open | archived
-	CreatedBy      string   `json:"createdBy,omitempty"`
-	UpdatedAt      int64    `json:"updatedAt,omitempty"` // epoch ms of the last activity
-	MessageCount   int      `json:"messageCount"`
-	UnreadMentions int      `json:"unreadMentions"`         // pending @mentions across enrolled agents
-	LastAuthor     string   `json:"lastAuthor,omitempty"`   // author of the most recent message
-	LastKind       string   `json:"lastKind,omitempty"`     // kind of the most recent message
-	LastSnippet    string   `json:"lastSnippet,omitempty"`  // server-truncated preview of the last message body
-	Participants   []string `json:"participants,omitempty"` // enrolled agents/humans, sorted
-}
-
-// ChatThreadDetail is the click-through detail for one thread: its summary plus
-// the full message history (ascending by Seq).
-type ChatThreadDetail struct {
-	ChatThreadSummary
-	Messages []ChatMessage `json:"messages"` // ascending by Seq; never nil
-}
-
 // Attention + binary checks — surfacing evaluator output and human gates where a
 // human (or the planned Slack/media bridge, gitmoot #519) manages work
 // (gitmoot #528).
@@ -1351,20 +1203,17 @@ type DataSource interface {
 	// by name only, and the keychain projection contains metadata only. Sections,
 	// knobs, agents, unknown keys and keychain rows are deterministic.
 	Config(ctx context.Context) (ConfigSnapshot, error)
-	// Skills returns the SkillOpt evolution overview behind the Learning page's
+	// Skills returns the template evolution overview behind the Learning page's
 	// Skills view: per-template version history, active canaries and pending
 	// candidates. Ordering must be deterministic (the UI polls with a
 	// signature-skip): templates pending-first then most-recently-promoted, each
 	// template's versions ascending by Number.
+	//
+	// Skills is REQUIRED (gitmoot #2206) while Knowledge and ChatThreads left this
+	// interface: gitmoot serves Skills from its surviving agent-template tables, so
+	// the page renders real data, whereas Knowledge and Chat were backed by tables
+	// gitmoot retired and could only ever answer empty.
 	Skills(ctx context.Context) (Skills, error)
-	// Knowledge returns the memory brain graph behind the Learning page's
-	// Knowledge view: enrolled agents, their facts, the emergent clusters those
-	// facts belong to (gitmoot #763) and the owner/category/cluster/supersede
-	// edges between them. Clusters are additive — a pre-cluster gitmoot build
-	// returns an empty Clusters slice and empty per-fact Cluster fields, and the
-	// client falls back to its scope/category view. Ordering must be
-	// deterministic (the UI polls with a signature-skip).
-	Knowledge(ctx context.Context) (Knowledge, error)
 	// Pipelines returns every declared pipeline with its schedule state and recent
 	// run outcomes (newest-first, capped at 10), sorted by name. Ordering must be
 	// deterministic (the UI polls with a signature-skip).
@@ -1377,15 +1226,6 @@ type DataSource interface {
 	// return ErrPipelineNotFound. Ordering must be deterministic (the UI polls with
 	// a signature-skip).
 	PipelineDetail(ctx context.Context, name string) (PipelineDetail, error)
-	// ChatThreads returns every chat thread (gitmoot #534) with its activity
-	// rollup, sorted most-recently-active first (UpdatedAt desc, id desc
-	// tie-break). Ordering must be deterministic (the UI polls with a
-	// signature-skip).
-	ChatThreads(ctx context.Context) ([]ChatThreadSummary, error)
-	// ChatThread returns one thread's detail by id: its summary plus the full
-	// message history (ascending by Seq). Unknown ids return
-	// (nil, ErrChatThreadNotFound). Output must be deterministic.
-	ChatThread(ctx context.Context, id string) (*ChatThreadDetail, error)
 	// Attention returns the "Needs a human" view (gitmoot #528): blocked job
 	// gates, pending synth approvals and template candidates awaiting promotion.
 	// Ordering must be deterministic (the UI polls with a signature-skip).
