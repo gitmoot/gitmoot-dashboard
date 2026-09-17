@@ -745,7 +745,6 @@ type ConfigAgent struct {
 	Name           string   `json:"name"`
 	Runtime        string   `json:"runtime"`
 	Model          string   `json:"model"`
-	Memory         bool     `json:"memory"`
 	Capabilities   []string `json:"capabilities"`
 	AutonomyPolicy string   `json:"autonomy_policy"`
 	MaxBackground  int      `json:"max_background"`

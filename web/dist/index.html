@@ -5804,10 +5804,6 @@ class Component extends DCLogic {
       "#config-root .cfg-runtime.codex{color:#9ad9ff;border-color:rgba(110,198,255,.27);background:rgba(110,198,255,.08)}",
       "#config-root .cfg-runtime.kimi{color:#e8c58a;border-color:rgba(224,175,104,.3);background:rgba(224,175,104,.08)}",
       "#config-root .cfg-runtime.shell{color:#9299b8;border-color:rgba(146,153,184,.24);background:rgba(146,153,184,.06)}",
-      "#config-root .cfg-bool{display:inline-flex;align-items:center;gap:6px;color:#68709a;font:9px 'JetBrains Mono',monospace}",
-      "#config-root .cfg-bool i{width:6px;height:6px;border-radius:50%;background:#4f567c;box-shadow:none}",
-      "#config-root .cfg-bool.on{color:#9baa82}",
-      "#config-root .cfg-bool.on i{background:#9ece6a;box-shadow:0 0 6px rgba(158,206,106,.45)}",
       "#config-root .cfg-agent-cards{display:none}",
       "#config-root .cfg-trust{display:flex;flex-direction:column;gap:9px;padding-top:15px;border-top:1px solid rgba(160,168,220,.08);color:#50577e;font:9.5px 'JetBrains Mono',monospace}",
       "#config-root .cfg-trust-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}",
@@ -6037,13 +6033,12 @@ class Component extends DCLogic {
       return [a.name, a.runtime, a.model, a.autonomy_policy].concat(Array.isArray(a.capabilities) ? a.capabilities : []).join(' ').toLowerCase().indexOf(aq) >= 0;
     });
     if (agents.length) {
-      const id = this._configSlug('agents'), memoryN = agents.filter(a => a.memory).length;
+      const id = this._configSlug('agents');
       anchors.push({ id: id, label: 'Per-agent', count: agents.length });
       const rt = a => { const runtime = String(a.runtime || 'shell').toLowerCase(), cls = /claude/.test(runtime) ? 'claude' : /codex/.test(runtime) ? 'codex' : /kimi/.test(runtime) ? 'kimi' : 'shell'; return '<span class="cfg-runtime ' + cls + '">' + esc(a.runtime || 'shell') + '</span>'; };
-      const bool = (v, label) => '<span class="cfg-bool' + (v ? ' on' : '') + '"><i></i>' + label + '</span>';
-      const trs = agents.map(a => '<tr><td class="name">' + esc(a.name) + '</td><td>' + rt(a) + '</td><td>' + bool(!!a.memory, '') + '</td><td>' + esc((Array.isArray(a.capabilities) ? a.capabilities : []).join(', ') || '-') + '</td><td>' + esc(a.autonomy_policy || '-') + '</td><td>' + esc(a.max_background == null ? '-' : a.max_background) + '</td><td>' + esc(a.model || '-') + '</td></tr>').join('');
-      const cards = agents.map(a => '<article class="cfg-agent-card"><div class="cfg-agent-top"><span class="cfg-agent-name">' + esc(a.name) + '</span>' + rt(a) + '</div><div class="cfg-agent-meta">' + bool(!!a.memory, 'mem') + '<span class="cfg-agent-model">' + esc(a.model || 'default') + '</span></div></article>').join('');
-      out.push('<section id="' + id + '" class="cfg-section" data-cfg-section><div class="cfg-section-head">Per-agent overrides <span class="cfg-section-meta">' + agents.length + ' agents · ' + memoryN + ' memory-enrolled</span></div><div class="cfg-agent-wrap"><table class="cfg-agent-table"><thead><tr><th>Agent</th><th>Runtime</th><th>Memory</th><th>Capabilities</th><th>Policy</th><th>Max bg</th><th>Model</th></tr></thead><tbody>' + trs + '</tbody></table></div><div class="cfg-agent-cards">' + cards + '</div></section>');
+      const trs = agents.map(a => '<tr><td class="name">' + esc(a.name) + '</td><td>' + rt(a) + '</td><td>' + esc((Array.isArray(a.capabilities) ? a.capabilities : []).join(', ') || '-') + '</td><td>' + esc(a.autonomy_policy || '-') + '</td><td>' + esc(a.max_background == null ? '-' : a.max_background) + '</td><td>' + esc(a.model || '-') + '</td></tr>').join('');
+      const cards = agents.map(a => '<article class="cfg-agent-card"><div class="cfg-agent-top"><span class="cfg-agent-name">' + esc(a.name) + '</span>' + rt(a) + '</div><div class="cfg-agent-meta"><span class="cfg-agent-model">' + esc(a.model || 'default') + '</span></div></article>').join('');
+      out.push('<section id="' + id + '" class="cfg-section" data-cfg-section><div class="cfg-section-head">Per-agent overrides <span class="cfg-section-meta">' + agents.length + ' agents</span></div><div class="cfg-agent-wrap"><table class="cfg-agent-table"><thead><tr><th>Agent</th><th>Runtime</th><th>Capabilities</th><th>Policy</th><th>Max bg</th><th>Model</th></tr></thead><tbody>' + trs + '</tbody></table></div><div class="cfg-agent-cards">' + cards + '</div></section>');
     }
     const unknown = (Array.isArray(data.unknown_keys) ? data.unknown_keys : []).filter(k => !q || String(k).toLowerCase().indexOf(q) >= 0);
     if (unknown.length) anchors.push({ id: this._configSlug('unknown'), label: 'Unknown', count: unknown.length });

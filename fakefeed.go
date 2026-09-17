@@ -1914,17 +1914,6 @@ func (f *FakeDataSource) Config(ctx context.Context) (ConfigSnapshot, error) {
 			{Name: "github", Knobs: []ConfigKnob{
 				{Key: "rate_limit_per_hour", Value: 4200, Default: 4500, IsDefault: false, Kind: "int", Doc: "Reserve-aware GitHub request budget per hour."},
 			}},
-			{Name: "memory", Knobs: []ConfigKnob{
-				{Key: "cluster_depth_cap", Value: 3, Default: 3, IsDefault: true, Kind: "int", Doc: "Maximum recursive memory-cluster depth."},
-				{Key: "cluster_fanout", Value: 6, Default: 6, IsDefault: true, Kind: "int", Doc: "Target child clusters created by a split."},
-				{Key: "distill_enabled", Value: false, Default: false, IsDefault: true, Kind: "flag", Doc: "Distill confirmed memories into compact reusable facts."},
-				{Key: "groom_split_llm", Value: true, Default: false, IsDefault: false, Kind: "flag", Doc: "Use an LLM to propose coherent child clusters during grooming."},
-				{Key: "groom_split_max_per_run", Value: 8, Default: 4, IsDefault: false, Kind: "int", Doc: "Maximum LLM-assisted cluster splits per grooming run."},
-				{Key: "groom_split_model", Value: "gpt-5.6-sol", Default: "", IsDefault: false, Kind: "string", Doc: "Optional model override for LLM-assisted splits."},
-				{Key: "groom_split_runtime", Value: "codex", Default: "codex", IsDefault: true, Kind: "string", Doc: "Runtime used for LLM-assisted cluster splits."},
-				{Key: "max_entries", Value: 1200, Default: 1000, IsDefault: false, Kind: "int", Doc: "Maximum confirmed memories considered for injection."},
-				{Key: "token_budget", Value: 12000, Default: 12000, IsDefault: true, Kind: "int", Doc: "Token budget for injected memory context."},
-			}},
 			{Name: "orchestrate", Knobs: []ConfigKnob{
 				{Key: "blocked_ttl", Value: "30m", Default: "30m", IsDefault: true, Kind: "duration", Doc: "Time a blocked orchestration remains resumable."},
 			}},
@@ -1934,10 +1923,10 @@ func (f *FakeDataSource) Config(ctx context.Context) (ConfigSnapshot, error) {
 			}},
 		},
 		Agents: []ConfigAgent{
-			{Name: "galaxy-impl", Runtime: "codex", Model: "gpt-5.6-codex", Memory: true, Capabilities: []string{"ask", "implement"}, AutonomyPolicy: "workspace-write", MaxBackground: 2},
-			{Name: "lead", Runtime: "claude", Model: "opus-4.6", Memory: true, Capabilities: []string{"ask", "implement", "review"}, AutonomyPolicy: "workspace-write", MaxBackground: 3},
-			{Name: "researcher", Runtime: "kimi", Model: "kimi-k2.5", Memory: true, Capabilities: []string{"ask", "review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
-			{Name: "reviewer", Runtime: "codex", Model: "gpt-5.6-codex", Memory: false, Capabilities: []string{"review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
+			{Name: "galaxy-impl", Runtime: "codex", Model: "gpt-5.6-codex", Capabilities: []string{"ask", "implement"}, AutonomyPolicy: "workspace-write", MaxBackground: 2},
+			{Name: "lead", Runtime: "claude", Model: "opus-4.6", Capabilities: []string{"ask", "implement", "review"}, AutonomyPolicy: "workspace-write", MaxBackground: 3},
+			{Name: "researcher", Runtime: "kimi", Model: "kimi-k2.5", Capabilities: []string{"ask", "review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
+			{Name: "reviewer", Runtime: "codex", Model: "gpt-5.6-codex", Capabilities: []string{"review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
 		},
 		UnknownKeys: []string{"experimental.scheduler_bias", "plugins.private_token"},
 		Keychain:    fakeKeychain(),

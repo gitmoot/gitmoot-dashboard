@@ -1908,19 +1908,10 @@ func TestHandleConfig(t *testing.T) {
 		kind       string
 		isDefault  bool
 	}{
-		"github.rate_limit_per_hour":     {"4200", "4500", "int", false},
-		"memory.cluster_depth_cap":       {"3", "3", "int", true},
-		"memory.cluster_fanout":          {"6", "6", "int", true},
-		"memory.distill_enabled":         {"false", "false", "flag", true},
-		"memory.groom_split_llm":         {"true", "false", "flag", false},
-		"memory.groom_split_max_per_run": {"8", "4", "int", false},
-		"memory.groom_split_model":       {`"gpt-5.6-sol"`, `""`, "string", false},
-		"memory.groom_split_runtime":     {`"codex"`, `"codex"`, "string", true},
-		"memory.max_entries":             {"1200", "1000", "int", false},
-		"memory.token_budget":            {"12000", "12000", "int", true},
-		"orchestrate.blocked_ttl":        {`"30m"`, `"30m"`, "duration", true},
-		"skillopt.auto_promote":          {"false", "false", "flag", true},
-		"skillopt.pace_gate":             {"true", "true", "flag", true},
+		"github.rate_limit_per_hour": {"4200", "4500", "int", false},
+		"orchestrate.blocked_ttl":    {`"30m"`, `"30m"`, "duration", true},
+		"skillopt.auto_promote":      {"false", "false", "flag", true},
+		"skillopt.pace_gate":         {"true", "true", "flag", true},
 	}
 	gotKnobs := map[string]bool{}
 	for si, section := range cfg.Sections {
