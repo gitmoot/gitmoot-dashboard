@@ -11,10 +11,10 @@ import (
 // Serve returns an http.Handler serving the read-only dashboard: the embedded
 // static UI (with SPA fallback to index.html) plus the JSON API (handleRuns/
 // handleJobs/handleAgents/handleAgent/handleCharts/handleHealth/
-// handleLearningSkills/handleLearningKnowledge/handlePipelines/
+// handleLearningSkills/handlePipelines/
 // handlePipelineDetail/handlePipelineRun/handleOverview/handleTasks/
 // handleWakeSummary/handleWakes/handleWakeReceipts/
-// handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/handleChatThreads/handleChatThread/
+// handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/
 // handleAttention/handleJobChecks/handleBinaryVerdicts/
 // handleState/handleJob/handleGraph/handleChangeEvents in api.go) and the
 // run-state SSE stream (handleEvents in sse.go).
@@ -30,7 +30,6 @@ func Serve(ds DataSource) http.Handler {
 	mux.HandleFunc("GET /api/health", s.handleHealth)
 	mux.HandleFunc("GET /api/config", s.handleConfig)
 	mux.HandleFunc("GET /api/learning/skills", s.handleLearningSkills)
-	mux.HandleFunc("GET /api/learning/knowledge", s.handleLearningKnowledge)
 	mux.HandleFunc("GET /api/pipelines", s.handlePipelines)
 	mux.HandleFunc("GET /api/pipelines/{name}", s.handlePipelineDetail)
 	mux.HandleFunc("GET /api/pipeline/run/{id}", s.handlePipelineRun)
@@ -43,8 +42,6 @@ func Serve(ds DataSource) http.Handler {
 	mux.HandleFunc("GET /api/org/role/{name}", s.handleOrgRole)
 	mux.HandleFunc("GET /api/workflows", s.handleWorkflows)
 	mux.HandleFunc("GET /api/workflow/{label}", s.handleWorkflow)
-	mux.HandleFunc("GET /api/chat/threads", s.handleChatThreads)
-	mux.HandleFunc("GET /api/chat/thread", s.handleChatThread)
 	mux.HandleFunc("GET /api/attention", s.handleAttention)
 	mux.HandleFunc("GET /api/job/{id}/checks", s.handleJobChecks)
 	mux.HandleFunc("GET /api/run/{id}/verdicts", s.handleBinaryVerdicts)
@@ -76,11 +73,11 @@ func newServer(ds DataSource) *server {
 }
 
 // The JSON API handlers (handleRuns/handleJobs/handleAgents/handleAgent/
-// handleCharts/handleHealth/handleLearningSkills/handleLearningKnowledge/
+// handleCharts/handleHealth/handleLearningSkills/
 // handlePipelines/handlePipelineDetail/handlePipelineRun/handleOverview/handleTasks/
 // handleWakeSummary/handleWakes/handleWakeReceipts/
-// handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/handleChatThreads/
-// handleChatThread/handleAttention/handleJobChecks/handleBinaryVerdicts/
+// handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/
+// handleAttention/handleJobChecks/handleBinaryVerdicts/
 // handleState/handleJob/handleGraph/handleChangeEvents) live in api.go and the
 // run-state SSE handler (handleEvents) lives in sse.go.
 
