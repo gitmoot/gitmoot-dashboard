@@ -20,10 +20,6 @@ var (
 	ErrJobNotFound = errors.New("job not found")
 	// ErrAgentNotFound indicates the requested agent does not exist.
 	ErrAgentNotFound = errors.New("agent not found")
-	// ErrPipelineRunNotFound indicates the requested pipeline run does not exist.
-	ErrPipelineRunNotFound = errors.New("pipeline run not found")
-	// ErrPipelineNotFound indicates the requested pipeline does not exist.
-	ErrPipelineNotFound = errors.New("pipeline not found")
 	// ErrOrgRoleNotFound indicates the requested org role does not exist.
 	ErrOrgRoleNotFound = errors.New("org role not found")
 	// ErrWorkflowNotFound indicates the requested workflow label does not exist.
@@ -620,7 +616,7 @@ func fakeWorkflowIndex(anchor int64) []WorkflowIndexEntry {
 		{Label: "sol/smart-groomer", Summary: "Improving memory grooming with safer split and merge heuristics.", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "sol", SessionID: "c40d8a"}, State: "active", Counts: WorkflowCounts{Jobs: 11, Running: 2, Succeeded: 9, Notes: 12}, TokensIn: 680_000, TokensOut: 210_000, FirstAt: anchor - 2*hour, LastAt: anchor - 4*minute, LastNote: "Validation workers are still moving.", Repos: []string{"jerryfane/gitmoot"}},
 		{Label: "officeqa-point-formula", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "kimi", SessionID: "d7c410"}, State: "settled", Counts: WorkflowCounts{Jobs: 16, Succeeded: 12, Failed: 3, Blocked: 1, Notes: 9}, TokensIn: 2_100_000, TokensOut: 800_000, FirstAt: anchor - day, LastAt: anchor - 8*hour, LastNote: "Closing note published.", Repos: []string{"jerryfane/officeqa"}},
 		{Label: "sol/token-accounting", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "sol", SessionID: "1f9b22"}, State: "settled", Counts: WorkflowCounts{Jobs: 9, Succeeded: 7, Failed: 1, Blocked: 1, Notes: 6}, TokensIn: 470_000, TokensOut: 170_000, FirstAt: anchor - 9*hour, LastAt: anchor - 6*hour, LastNote: "Token totals reconciled.", Repos: []string{"jerryfane/gitmoot"}},
-		{Label: "pipeline/memory-groom-propose", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "pipeline", SessionID: "0f621a"}, State: "settled", Counts: WorkflowCounts{Jobs: 5, Succeeded: 5}, TokensIn: 18_000, TokensOut: 4_000, FirstAt: anchor - 5*hour, LastAt: anchor - 4*hour, Repos: []string{"jerryfane/gitmoot"}},
+		{Label: "ops/groom-propose", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "ops", SessionID: "0f621a"}, State: "settled", Counts: WorkflowCounts{Jobs: 5, Succeeded: 5}, TokensIn: 18_000, TokensOut: 4_000, FirstAt: anchor - 5*hour, LastAt: anchor - 4*hour, Repos: []string{"jerryfane/gitmoot"}},
 		{Label: "adhoc/researcher", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "adhoc", SessionID: "8aa912"}, State: "settled", Counts: WorkflowCounts{Jobs: 26, Succeeded: 22, Failed: 4}, TokensIn: 3_600_000, TokensOut: 1_300_000, FirstAt: anchor - 3*day, LastAt: anchor - day, Repos: []string{"jerryfane/gitmoot", "jerryfane/sophon"}},
 	}
 }
@@ -681,7 +677,7 @@ func (f *FakeDataSource) Overview(ctx context.Context) (Overview, error) {
 				{Label: "sol/dashboard-redesign", Running: 2, Agents: []string{"sol-impl-a", "ui-designer-researcher"}, StartedAgoS: 4 * 60},
 				{Label: "fable/smart-groomer", Running: 3, Agents: []string{"researcher", "research-sol", "wave-impl"}, StartedAgoS: 25 * 60},
 			},
-			UnattendedNote: "pipeline/… + adhoc/… · 4 more jobs running",
+			UnattendedNote: "ops/… + adhoc/… · 4 more jobs running",
 			Queued:         8,
 		},
 		Today: OverviewToday{
@@ -694,11 +690,6 @@ func (f *FakeDataSource) Overview(ctx context.Context) (Overview, error) {
 				{Agent: "btc-coordinator", Title: "Price model backtest sweep r8", Outcome: "succeeded", ElapsedS: 276, AgeS: 5400},
 				{Agent: "planner", Title: "Plan MOOT for jerryfane/gitmoot #779", Outcome: "cancelled", ElapsedS: 0, AgeS: 2 * 3600},
 			},
-		},
-		Scheduled: []OverviewScheduled{
-			{Name: "arxiv-paper-summary", Schedule: "every 6h +30m", LastStatus: "failed", NextInS: 2*3600 + 9*60},
-			{Name: "memory-groom-propose", Schedule: "every 24h", LastStatus: "succeeded", NextInS: 19*3600 + 32*60},
-			{Name: "memory-ingest-sweep", Schedule: "every 24h +30m", LastStatus: "succeeded", NextInS: 21*3600 + 27*60},
 		},
 		Fleet: []OverviewFleet{
 			{Agent: "researcher", Runtime: "claude", Running: true, JobsToday: 22},
@@ -741,7 +732,7 @@ func fakeWakeRows() []WakeRow {
 			State: "pending", AttemptCount: 0, AgeSeconds: 420, CreatedAt: "2026-07-28T23:21:00Z",
 		},
 		{
-			ID: "wake-pending-002", TargetRole: "g2", SourceKind: "pipeline", SourceID: "pipeline-run-1230",
+			ID: "wake-pending-002", TargetRole: "g2", SourceKind: "awaited_fact", SourceID: "fact-release-1230",
 			State: "pending", AttemptCount: 0, AgeSeconds: 180, CreatedAt: "2026-07-28T23:25:00Z",
 		},
 		{
@@ -1927,7 +1918,6 @@ func fakeKeychain() KeychainView {
 			{
 				Name:      "GH_TOKEN",
 				Mode:      "injected",
-				Grants:    []KeychainGrantView{{ConsumerKind: "pipeline", ConsumerID: "gitmoot-marketing"}, {ConsumerKind: "pipeline", ConsumerID: "trend-scout"}},
 				CreatedAt: "2026-07-08T09:12:00Z",
 			},
 			{
@@ -1935,19 +1925,16 @@ func fakeKeychain() KeychainView {
 				Mode:          "proxied",
 				ProxyUpstream: "https://api.openai.com/v1",
 				ProxyAuth:     "bearer",
-				Grants:        []KeychainGrantView{{ConsumerKind: "pipeline", ConsumerID: "trend-scout"}},
 				CreatedAt:     "2026-07-09T14:35:00Z",
 			},
 			{
 				Name:      "TELEGRAM_BOT_TOKEN",
 				Mode:      "injected",
-				Grants:    []KeychainGrantView{{ConsumerKind: "pipeline", ConsumerID: "gitmoot-marketing"}, {ConsumerKind: "pipeline", ConsumerID: "trend-scout"}},
 				CreatedAt: "2026-07-10T07:48:00Z",
 			},
 			{
 				Name:      "TELEGRAM_CHAT_ID",
 				Mode:      "injected",
-				Grants:    []KeychainGrantView{{ConsumerKind: "pipeline", ConsumerID: "gitmoot-marketing"}},
 				CreatedAt: "2026-07-10T07:49:00Z",
 			},
 		},
@@ -2060,489 +2047,6 @@ func fakeSkills() Skills {
 // is deterministic and byte-stable across calls.
 func (f *FakeDataSource) Skills(ctx context.Context) (Skills, error) {
 	return fakeSkills(), nil
-}
-
-// fakePipelineRuns builds the fixed set of pipeline run details (gitmoot #681)
-// behind the Pipelines section, keyed by run id. Every timestamp is anchored on
-// fakeChartsNow (never time.Now()) so the section is byte-stable across polls.
-// The five runs together exercise every real-emittable shape: a healthy linear
-// run that fully succeeded (prun-nightly-deploy-0001); an in-flight run with a
-// done stage, a running stage and a pending stage (…-0002); a parked-blocked
-// diamond carrying persisted needs at both the stage and the run level, with a
-// downstream stage skipped (prun-listing-refresh-0001); a failed run with a
-// retried stage and a skipped report (prun-bench-suite-0001); and an older
-// failed run for run-history/sparkline variety (…-0000). Stages are emitted in
-// spec (topological) order — deliberately NOT alphabetical for the diamond — so
-// the client renders the DAG the same way the CLI funnel prints it. Some cmds
-// and summaries carry angle brackets and ampersands so the client's
-// HTML-escaping is exercised.
-func fakePipelineRuns() map[string]PipelineRun {
-	const (
-		h = time.Hour
-		m = time.Minute
-	)
-	// ago returns the epoch-ms d before fakeChartsNow (never time.Now()).
-	ago := func(d time.Duration) int64 { return fakeChartsNow.Add(-d).UnixMilli() }
-
-	return map[string]PipelineRun{
-		// Healthy linear bridge-triggered run: source -> build -> deploy, all succeeded.
-		// The most recent nightly-deploy run (StartedAt 6h ago), so it is the
-		// pipeline's LastRun.
-		"prun-nightly-deploy-0001": {
-			ID:         "prun-nightly-deploy-0001",
-			Pipeline:   "nightly-deploy",
-			Repo:       "acme/webapp",
-			Trigger:    "bridge",
-			State:      "succeeded",
-			SpecHash:   "sha256:9c1f0ade",
-			StartedAt:  ago(6 * h),
-			FinishedAt: ago(6*h - 13*m),
-			Stages: []PipelineStage{
-				{ID: "source", State: "succeeded", Kind: "shell", Deps: []string{}, Cmd: "git fetch --all && git checkout main", JobID: "job-nd1-source", Summary: "checked out main @ a1b2c3d", StartedAt: ago(6 * h), FinishedAt: ago(6*h - 3*m)},
-				{ID: "build", State: "succeeded", Kind: "agent_ask", AgentRuntime: "codex", Deps: []string{"source"}, Cmd: "make build", JobID: "job-nd1-build", Summary: "built 42 packages, 0 warnings", StartedAt: ago(6*h - 3*m), FinishedAt: ago(6*h - 10*m)},
-				{ID: "deploy", State: "succeeded", Kind: "gate", Deps: []string{"build"}, Cmd: "./scripts/deploy.sh --env prod", JobID: "job-nd1-deploy", Summary: "deployed to prod, health green", StartedAt: ago(6*h - 10*m), FinishedAt: ago(6*h - 13*m)},
-			},
-		},
-		// In-flight run: source succeeded, build running with progress, deploy
-		// pending (no job assigned yet). A static snapshot of a previous hung cycle
-		// (StartedAt 30h ago), so poll-stable byte-equality still holds.
-		"prun-nightly-deploy-0002": {
-			ID:        "prun-nightly-deploy-0002",
-			Pipeline:  "nightly-deploy",
-			Repo:      "acme/webapp",
-			Trigger:   "bridge",
-			State:     "running",
-			SpecHash:  "sha256:9c1f0ade",
-			StartedAt: ago(30 * h),
-			Stages: []PipelineStage{
-				{ID: "source", State: "succeeded", Kind: "shell", Deps: []string{}, Cmd: "git fetch --all && git checkout main", JobID: "job-nd2-source", Summary: "checked out main @ b2c3d4e", StartedAt: ago(30 * h), FinishedAt: ago(30*h - 4*m)},
-				{ID: "build", State: "running", Kind: "agent_ask", AgentRuntime: "codex", Deps: []string{"source"}, Cmd: "make build", JobID: "job-nd2-build", Summary: "compiling packages", ProgressActivity: "compiled 31 of 42 packages", ProgressAt: ago(29*h + 42*m), StartedAt: ago(30*h - 4*m)},
-				{ID: "deploy", State: "pending", Kind: "gate", Deps: []string{"build"}, Cmd: "./scripts/deploy.sh --env prod"},
-			},
-		},
-		// Older scheduled run for hybrid run-history/sparkline variety (StartedAt 3 days ago):
-		// source + build succeeded, deploy failed.
-		"prun-nightly-deploy-0000": {
-			ID:         "prun-nightly-deploy-0000",
-			Pipeline:   "nightly-deploy",
-			Repo:       "acme/webapp",
-			Trigger:    "schedule",
-			State:      "failed",
-			SpecHash:   "sha256:9c1f0ade",
-			HaltStage:  "deploy",
-			HaltReason: "prod healthcheck failed after deploy",
-			StartedAt:  ago(3 * 24 * h),
-			FinishedAt: ago(3*24*h - 9*m),
-			Stages: []PipelineStage{
-				{ID: "source", State: "succeeded", Kind: "shell", Deps: []string{}, Cmd: "git fetch --all && git checkout main", JobID: "job-nd0-source", Summary: "checked out main @ 0f1e2d3", StartedAt: ago(3 * 24 * h), FinishedAt: ago(3*24*h - 2*m)},
-				{ID: "build", State: "succeeded", Kind: "agent_ask", AgentRuntime: "codex", Deps: []string{"source"}, Cmd: "make build", JobID: "job-nd0-build", Summary: "built 41 packages", StartedAt: ago(3*24*h - 2*m), FinishedAt: ago(3*24*h - 7*m)},
-				{ID: "deploy", State: "failed", Kind: "gate", Deps: []string{"build"}, Cmd: "./scripts/deploy.sh --env prod", JobID: "job-nd0-deploy", Summary: "deploy script exited 1: prod healthcheck failed", StartedAt: ago(3*24*h - 7*m), FinishedAt: ago(3*24*h - 9*m)},
-			},
-		},
-		// Parked-blocked diamond: fetch -> {score, dedupe} -> publish. score is
-		// BLOCKED with persisted needs (also aggregated at the run level), dedupe
-		// succeeded, and the downstream publish is SKIPPED. Stage order is spec
-		// order (fetch, score, dedupe, publish), NOT alphabetical, so the client
-		// lays out the DAG correctly.
-		"prun-listing-refresh-0001": {
-			ID:         "prun-listing-refresh-0001",
-			Pipeline:   "listing-refresh",
-			Repo:       "jerryfane/noted",
-			Trigger:    "manual",
-			State:      "blocked",
-			SpecHash:   "sha256:41ab77e0",
-			HaltStage:  "score",
-			HaltReason: "scoring model needs the R2 token",
-			Needs:      []string{"set R2 token: gitmoot config set r2.token"},
-			StartedAt:  ago(2 * h),
-			Stages: []PipelineStage{
-				{ID: "fetch", State: "succeeded", Kind: "shell", Deps: []string{}, Cmd: "gitmoot listings fetch --source noted", JobID: "job-lr1-fetch", Summary: "fetched 128 listings", StartedAt: ago(2 * h), FinishedAt: ago(2*h - 3*m)},
-				{ID: "score", State: "blocked", Kind: "agent_ask", AgentRuntime: "codex", Deps: []string{"fetch"}, Cmd: "gitmoot listings score --model r2", JobID: "job-lr1-score", Retry: 2, Needs: []string{"set R2 token: gitmoot config set r2.token"}, Summary: "blocked: scoring needs the R2 token & <credentials> before it can run", StartedAt: ago(2*h - 3*m)},
-				{ID: "dedupe", State: "succeeded", Kind: "shell", Deps: []string{"fetch"}, Cmd: "gitmoot listings dedupe", JobID: "job-lr1-dedupe", Summary: "removed 9 duplicates", StartedAt: ago(2*h - 3*m), FinishedAt: ago(2*h - 6*m)},
-				{ID: "publish", State: "skipped", Kind: "gate", Deps: []string{"score", "dedupe"}, Cmd: "gitmoot listings publish", Summary: "skipped: upstream stage score is blocked"},
-			},
-		},
-		// Failed run with a retried stage: setup succeeded, bench FAILED on attempt
-		// 2, report SKIPPED. The bench cmd and summary carry angle brackets and
-		// ampersands to exercise the client's HTML-escaping.
-		"prun-bench-suite-0001": {
-			ID:         "prun-bench-suite-0001",
-			Pipeline:   "bench-suite",
-			Repo:       "acme/api",
-			Trigger:    "manual",
-			State:      "failed",
-			SpecHash:   "sha256:7d3c9b12",
-			HaltStage:  "bench",
-			HaltReason: "benchmark stage exceeded the 30m timeout on attempt 2",
-			StartedAt:  ago(26 * h),
-			FinishedAt: ago(26*h - 34*m),
-			Stages: []PipelineStage{
-				{ID: "setup", State: "succeeded", Kind: "shell", Deps: []string{}, Cmd: "make bench-setup", JobID: "job-bs1-setup", Summary: "warmed caches, seeded 10k rows", StartedAt: ago(26 * h), FinishedAt: ago(26*h - 4*m)},
-				{ID: "bench", State: "failed", Kind: "shell", Deps: []string{"setup"}, Cmd: `./scripts/bench.sh --filter "p<95> && q>1"`, JobID: "job-bs1-bench", Attempt: 2, Retry: 2, Summary: "benchmark timeout after 2 retries (filter p<95> && q>1)", StartedAt: ago(26*h - 4*m), FinishedAt: ago(26*h - 34*m)},
-				{ID: "report", State: "skipped", Kind: "shell", Deps: []string{"bench"}, Cmd: "./scripts/report.sh", Summary: "skipped: upstream stage bench failed"},
-			},
-		},
-	}
-}
-
-// fakePipelineRunSummary projects a full PipelineRun detail down to the
-// lightweight listing entry shown in a pipeline's Recent strip. Duration is the
-// finished-started span in ms when both are set, else 0 (a still-running or
-// parked run reports 0).
-func fakePipelineRunSummary(run PipelineRun) PipelineRunSummary {
-	var duration int64
-	if run.StartedAt > 0 && run.FinishedAt > run.StartedAt {
-		duration = run.FinishedAt - run.StartedAt
-	}
-	return PipelineRunSummary{
-		ID:         run.ID,
-		Trigger:    run.Trigger,
-		State:      run.State,
-		HaltStage:  run.HaltStage,
-		StartedAt:  run.StartedAt,
-		FinishedAt: run.FinishedAt,
-		Duration:   duration,
-	}
-}
-
-// fakePipelines builds the fixed Pipelines-list fixture (gitmoot #681). Its
-// groups exercise a cross-repository custom group, a repository split across
-// groups, server-resolved repository fallbacks, and Gitmoot System. Every
-// timestamp is anchored on fakeChartsNow (never time.Now()); the pipeline list
-// is sorted by name and each Recent strip is sorted newest-first (StartedAt
-// desc, then ID desc — matching the store's ORDER BY started_at DESC, id DESC)
-// and coerced non-nil, so the whole view is byte-stable across polls.
-func fakePipelines() []PipelineSummary {
-	// fut returns the epoch-ms d after fakeChartsNow (a future next-due time).
-	fut := func(d time.Duration) int64 { return fakeChartsNow.Add(d).UnixMilli() }
-	runs := fakePipelineRuns()
-
-	// runsFor projects the named runs into Recent entries, newest-first (StartedAt
-	// desc, ID desc), capped at 10 and never nil.
-	runsFor := func(ids ...string) []PipelineRunSummary {
-		out := make([]PipelineRunSummary, 0, len(ids))
-		for _, id := range ids {
-			out = append(out, fakePipelineRunSummary(runs[id]))
-		}
-		sort.SliceStable(out, func(i, j int) bool {
-			if out[i].StartedAt != out[j].StartedAt {
-				return out[i].StartedAt > out[j].StartedAt // newest first
-			}
-			return out[i].ID > out[j].ID // ID desc tie-break (unique)
-		})
-		if len(out) > 10 {
-			out = out[:10]
-		}
-		return out
-	}
-
-	pipelines := []PipelineSummary{
-		{
-			Name:       "api-contract-check",
-			Repo:       "acme/api",
-			Group:      "Release Automation",
-			Enabled:    true,
-			Mode:       "scheduled 24h",
-			Interval:   "24h",
-			StageCount: 2,
-			Recent:     []PipelineRunSummary{},
-		},
-		{
-			Name:       "bench-suite",
-			Repo:       "acme/api",
-			Group:      "Quality",
-			Enabled:    false,
-			Mode:       "scheduled 168h",
-			Interval:   "168h",
-			StageCount: 3,
-			LastRunID:  "prun-bench-suite-0001",
-			LastStatus: "failed",
-			LastRunAt:  runs["prun-bench-suite-0001"].StartedAt,
-			Recent:     runsFor("prun-bench-suite-0001"),
-		},
-		{
-			Name: "listing-refresh",
-			Repo: "jerryfane/noted",
-			// Server-resolved fallback for a spec with no explicit group.
-			Group:      "jerryfane/noted",
-			Enabled:    true,
-			Mode:       "manual",
-			StageCount: 4,
-			LastRunID:  "prun-listing-refresh-0001",
-			LastStatus: "blocked",
-			LastRunAt:  runs["prun-listing-refresh-0001"].StartedAt,
-			Recent:     runsFor("prun-listing-refresh-0001"),
-		},
-		{
-			Name:       "memory-groom-propose",
-			Repo:       "jerryfane/gitmoot",
-			Group:      "Gitmoot System",
-			Enabled:    true,
-			Mode:       "scheduled 24h",
-			Interval:   "24h",
-			StageCount: 3,
-			LastRunID:  "prun-memory-groom-propose-0001",
-			LastStatus: "succeeded",
-			LastRunAt:  fakeChartsNow.Add(-4 * time.Hour).UnixMilli(),
-			NextDueAt:  fut(3*time.Hour + 36*time.Minute),
-			Recent: []PipelineRunSummary{{
-				ID:         "prun-memory-groom-propose-0001",
-				Trigger:    "schedule",
-				State:      "succeeded",
-				StartedAt:  fakeChartsNow.Add(-4 * time.Hour).UnixMilli(),
-				FinishedAt: fakeChartsNow.Add(-4*time.Hour + 4*time.Minute).UnixMilli(),
-				Duration:   int64(4 * time.Minute / time.Millisecond),
-			}},
-		},
-		{
-			Name:       "memory-ingest-sweep",
-			Repo:       "jerryfane/gitmoot",
-			Group:      "Gitmoot System",
-			Enabled:    true,
-			Mode:       "after: memory-groom-propose",
-			StageCount: 2,
-			LastRunID:  "prun-memory-ingest-sweep-0001",
-			LastStatus: "succeeded",
-			LastRunAt:  fakeChartsNow.Add(-4*time.Hour + 7*time.Minute).UnixMilli(),
-			Recent: []PipelineRunSummary{{
-				ID:         "prun-memory-ingest-sweep-0001",
-				Trigger:    "schedule",
-				State:      "succeeded",
-				StartedAt:  fakeChartsNow.Add(-4*time.Hour + 7*time.Minute).UnixMilli(),
-				FinishedAt: fakeChartsNow.Add(-4*time.Hour + 17*time.Minute).UnixMilli(),
-				Duration:   int64(10 * time.Minute / time.Millisecond),
-			}},
-		},
-		{
-			Name:       "nightly-deploy",
-			Repo:       "acme/webapp",
-			Group:      "Release Automation",
-			Enabled:    true,
-			Mode:       "email-triggered (bound), scheduled 24h",
-			Interval:   "24h",
-			Jitter:     "15m",
-			StageCount: 3,
-			LastRunID:  "prun-nightly-deploy-0001",
-			LastStatus: "succeeded",
-			LastRunAt:  runs["prun-nightly-deploy-0001"].StartedAt,
-			NextDueAt:  fut(7 * time.Hour),
-			Recent:     runsFor("prun-nightly-deploy-0002", "prun-nightly-deploy-0001", "prun-nightly-deploy-0000"),
-		},
-		{
-			Name: "noted-search-index",
-			Repo: "jerryfane/noted",
-			// A second spec with no explicit group, resolved by the server to Repo.
-			Group:      "jerryfane/noted",
-			Enabled:    true,
-			Mode:       "manual",
-			StageCount: 2,
-			Recent:     []PipelineRunSummary{},
-		},
-	}
-
-	// Sorted by name (deterministic; the UI polls with a signature-skip). Names
-	// are unique, so the sort is fully determined.
-	sort.SliceStable(pipelines, func(i, j int) bool {
-		return pipelines[i].Name < pipelines[j].Name
-	})
-	return pipelines
-}
-
-// Pipelines implements DataSource. It returns the fixed fakePipelines fixture;
-// output is deterministic and byte-stable across calls.
-func (f *FakeDataSource) Pipelines(ctx context.Context) ([]PipelineSummary, error) {
-	return fakePipelines(), nil
-}
-
-// PipelineRun implements DataSource. It returns the fixed detail for a run by id
-// from the fakePipelineRuns fixture; unknown ids return ErrPipelineRunNotFound.
-// Output is deterministic and byte-stable across calls.
-func (f *FakeDataSource) PipelineRun(ctx context.Context, id string) (PipelineRun, error) {
-	run, ok := fakePipelineRuns()[id]
-	if !ok {
-		return PipelineRun{}, ErrPipelineRunNotFound
-	}
-	return run, nil
-}
-
-// fakePipelineHistoryEntry projects a full PipelineRun detail into a run-history
-// entry (gitmoot #708): the run summary plus its per-stage marks in the run's
-// (spec) stage order. Duration is the finished-started span in ms when both are
-// set, else 0 (a still-running or parked run reports 0).
-func fakePipelineHistoryEntry(run PipelineRun) PipelineRunHistoryEntry {
-	var duration int64
-	if run.StartedAt > 0 && run.FinishedAt > run.StartedAt {
-		duration = run.FinishedAt - run.StartedAt
-	}
-	marks := make([]PipelineStageMark, 0, len(run.Stages))
-	for _, st := range run.Stages {
-		marks = append(marks, PipelineStageMark{ID: st.ID, State: st.State})
-	}
-	return PipelineRunHistoryEntry{
-		ID:         run.ID,
-		Trigger:    run.Trigger,
-		State:      run.State,
-		HaltStage:  run.HaltStage,
-		StartedAt:  run.StartedAt,
-		FinishedAt: run.FinishedAt,
-		Duration:   duration,
-		Stages:     marks,
-	}
-}
-
-// fakePipelineDetail builds the fixed click-through detail (gitmoot #708) for one
-// pipeline: its currently declared stage DAG (every stage pending, carrying the
-// spec's deps/cmd/retry) plus the run history newest-first. Every timestamp is
-// anchored on fakeChartsNow (never time.Now()) so the section is byte-stable
-// across polls; each history list is sorted newest-first (StartedAt desc, then
-// ID desc — a unique tie-break) and every run's marks are emitted in spec order.
-// The three declared pipelines exercise the history matrix:
-//   - nightly-deploy: an ~8-run, 8-day history that is mostly succeeded with one
-//     failed run mid-history and the in-flight run (…-0002) present — enough for
-//     a meaningful stage×run matrix and success-rate math.
-//   - listing-refresh: a ~6-run history whose score stage is FLAKY (blocked in
-//     several runs, failed in one, succeeded in others — the "which stage keeps
-//     failing" demo); the newest run is the parked-blocked …-0001.
-//   - bench-suite: a single failed run.
-//
-// Unknown names return (PipelineDetail{}, false).
-func fakePipelineDetail(name string) (PipelineDetail, bool) {
-	const (
-		m = time.Minute
-		d = 24 * time.Hour
-	)
-	ago := func(x time.Duration) int64 { return fakeChartsNow.Add(-x).UnixMilli() }
-	runs := fakePipelineRuns()
-
-	// entry derives a history entry from an existing full run detail (keeps the
-	// history rows byte-consistent with the /api/pipeline/run/{id} endpoint).
-	entry := func(id string) PipelineRunHistoryEntry { return fakePipelineHistoryEntry(runs[id]) }
-
-	// sm is a per-stage mark; mk builds a synthetic history entry with a computed
-	// duration (finished-started, 0 when unfinished/parked).
-	sm := func(id, state string) PipelineStageMark { return PipelineStageMark{ID: id, State: state} }
-	mk := func(id, trigger, state, halt string, started, finished int64, marks ...PipelineStageMark) PipelineRunHistoryEntry {
-		var duration int64
-		if started > 0 && finished > started {
-			duration = finished - started
-		}
-		return PipelineRunHistoryEntry{
-			ID:         id,
-			Trigger:    trigger,
-			State:      state,
-			HaltStage:  halt,
-			StartedAt:  started,
-			FinishedAt: finished,
-			Duration:   duration,
-			Stages:     marks,
-		}
-	}
-
-	// finalize sorts a run history newest-first (StartedAt desc, ID desc) and caps
-	// it at 100 so the view is fully deterministic.
-	finalize := func(pname, description string, declared []PipelineStage, history []PipelineRunHistoryEntry, keys PipelineKeys) PipelineDetail {
-		sort.SliceStable(history, func(i, j int) bool {
-			if history[i].StartedAt != history[j].StartedAt {
-				return history[i].StartedAt > history[j].StartedAt // newest first
-			}
-			return history[i].ID > history[j].ID // ID desc tie-break (unique)
-		})
-		if len(history) > 100 {
-			history = history[:100]
-		}
-		return PipelineDetail{Name: pname, Description: description, Declared: declared, Runs: history, Keys: keys}
-	}
-
-	switch name {
-	case "nightly-deploy":
-		declared := []PipelineStage{
-			{ID: "source", State: "pending", Kind: "shell", Deps: []string{}, Cmd: "git fetch --all && git checkout main"},
-			{ID: "build", State: "pending", Kind: "agent_ask", AgentRuntime: "codex", Deps: []string{"source"}, Cmd: "make build"},
-			{ID: "deploy", State: "pending", Kind: "gate", Deps: []string{"build"}, Cmd: "./scripts/deploy.sh --env prod"},
-		}
-		ok := []PipelineStageMark{sm("source", "succeeded"), sm("build", "succeeded"), sm("deploy", "succeeded")}
-		history := []PipelineRunHistoryEntry{
-			entry("prun-nightly-deploy-0001"), // succeeded, 6h ago (newest)
-			entry("prun-nightly-deploy-0002"), // running (in-flight), 30h ago
-			entry("prun-nightly-deploy-0000"), // failed, 3d ago (mid-history)
-			mk("prun-nightly-deploy-0100", "schedule", "succeeded", "", ago(2*d), ago(2*d-12*m), ok...),
-			mk("prun-nightly-deploy-0101", "schedule", "succeeded", "", ago(4*d), ago(4*d-11*m), ok...),
-			mk("prun-nightly-deploy-0102", "schedule", "succeeded", "", ago(5*d), ago(5*d-14*m), ok...),
-			mk("prun-nightly-deploy-0103", "schedule", "succeeded", "", ago(6*d), ago(6*d-12*m), ok...),
-			mk("prun-nightly-deploy-0104", "schedule", "succeeded", "", ago(8*d), ago(8*d-13*m), ok...),
-		}
-		keys := PipelineKeys{
-			EnvFile: PipelineEnvFileStatus{Path: "/home/gitmoot/.config/gitmoot/pipelines/nightly-deploy.env", Status: "ok"},
-			Stages: []PipelineStageKeys{
-				{ID: "source", Kind: "shell", Keys: []PipelineKeyEntry{}, UnresolvedSelectors: []string{}},
-				{ID: "build", Kind: "agent_ask", Keys: []PipelineKeyEntry{{Name: "BUILD_PROFILE", Source: "default", Mode: "injected"}}, UnresolvedSelectors: []string{}},
-				{ID: "deploy", Kind: "gate", Keys: []PipelineKeyEntry{
-					{Name: "TELEGRAM_BOT_TOKEN", Source: "own", Mode: "injected"},
-					{Name: "TELEGRAM_CHAT_ID", Source: "own", Mode: "injected"},
-				}, UnresolvedSelectors: []string{}},
-			},
-		}
-		return finalize("nightly-deploy", "Builds and deploys the web application after the nightly source refresh.", declared, history, keys), true
-
-	case "listing-refresh":
-		declared := []PipelineStage{
-			{ID: "fetch", State: "pending", Kind: "shell", Deps: []string{}, Cmd: "gitmoot listings fetch --source noted"},
-			{ID: "score", State: "pending", Kind: "agent_ask", AgentRuntime: "codex", Deps: []string{"fetch"}, Cmd: "gitmoot listings score --model r2", Retry: 2},
-			{ID: "dedupe", State: "pending", Kind: "shell", Deps: []string{"fetch"}, Cmd: "gitmoot listings dedupe"},
-			{ID: "publish", State: "pending", Kind: "gate", Deps: []string{"score", "dedupe"}, Cmd: "gitmoot listings publish"},
-		}
-		// okRun returns a fresh all-succeeded diamond in spec order.
-		okRun := func() []PipelineStageMark {
-			return []PipelineStageMark{sm("fetch", "succeeded"), sm("score", "succeeded"), sm("dedupe", "succeeded"), sm("publish", "succeeded")}
-		}
-		// Deliberately declared OUT of chronological order so finalize()'s
-		// newest-first sort is load-bearing (a regression that drops the sort
-		// fails TestHandlePipelineDetail's descending assertion).
-		history := []PipelineRunHistoryEntry{
-			mk("prun-listing-refresh-0103", "schedule", "succeeded", "", ago(3*d), ago(3*d-9*m), okRun()...),
-			mk("prun-listing-refresh-0105", "manual", "succeeded", "", ago(5*d), ago(5*d-7*m), okRun()...),
-			entry("prun-listing-refresh-0001"), // blocked on score, 2h ago (newest)
-			mk("prun-listing-refresh-0102", "manual", "failed", "score", ago(2*d), ago(2*d-5*m),
-				sm("fetch", "succeeded"), sm("score", "failed"), sm("dedupe", "succeeded"), sm("publish", "skipped")),
-			mk("prun-listing-refresh-0104", "schedule", "blocked", "score", ago(4*d), 0,
-				sm("fetch", "succeeded"), sm("score", "blocked"), sm("dedupe", "succeeded"), sm("publish", "skipped")),
-			mk("prun-listing-refresh-0101", "schedule", "succeeded", "", ago(1*d), ago(1*d-8*m), okRun()...),
-		}
-		keys := PipelineKeys{
-			EnvFile: PipelineEnvFileStatus{Path: "/home/gitmoot/.config/gitmoot/pipelines/listing-refresh.env", Status: "missing"},
-			Stages: []PipelineStageKeys{
-				{ID: "fetch", Kind: "shell", Keys: []PipelineKeyEntry{}, UnresolvedSelectors: []string{}},
-				{ID: "score", Kind: "agent_ask", Keys: []PipelineKeyEntry{}, UnresolvedSelectors: []string{"R2_*", "MODEL_*"}},
-				{ID: "dedupe", Kind: "shell", Keys: []PipelineKeyEntry{}, UnresolvedSelectors: []string{}},
-				{ID: "publish", Kind: "gate", Keys: []PipelineKeyEntry{}, UnresolvedSelectors: []string{}},
-			},
-		}
-		return finalize("listing-refresh", "Refreshes the public listings index from Noted.\nScores, deduplicates, and gates publication.", declared, history, keys), true
-
-	case "bench-suite":
-		declared := []PipelineStage{
-			{ID: "setup", State: "pending", Kind: "shell", Deps: []string{}, Cmd: "make bench-setup"},
-			{ID: "bench", State: "pending", Kind: "shell", Deps: []string{"setup"}, Cmd: `./scripts/bench.sh --filter "p<95> && q>1"`, Retry: 2},
-			{ID: "report", State: "pending", Kind: "shell", Deps: []string{"bench"}, Cmd: "./scripts/report.sh"},
-		}
-		history := []PipelineRunHistoryEntry{
-			entry("prun-bench-suite-0001"), // the single failed run
-		}
-		return finalize("bench-suite", "", declared, history, PipelineKeys{}), true
-	}
-
-	return PipelineDetail{}, false
-}
-
-// PipelineDetail implements DataSource. It returns the fixed detail for a
-// pipeline by name from the fakePipelineDetail fixture; unknown names return
-// ErrPipelineNotFound. Output is deterministic and byte-stable across calls.
-func (f *FakeDataSource) PipelineDetail(ctx context.Context, name string) (PipelineDetail, error) {
-	detail, ok := fakePipelineDetail(name)
-	if !ok {
-		return PipelineDetail{}, ErrPipelineNotFound
-	}
-	return detail, nil
 }
 
 // fakeVerdictRun is the SkillOpt eval run id the fake binary-verdicts fixture is

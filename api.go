@@ -237,7 +237,7 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 // statusForError maps a DataSource error to an HTTP status code: not-found
 // sentinels become 404, everything else 500.
 func statusForError(err error) int {
-	if errors.Is(err, ErrRunNotFound) || errors.Is(err, ErrJobNotFound) || errors.Is(err, ErrAgentNotFound) || errors.Is(err, ErrPipelineRunNotFound) || errors.Is(err, ErrPipelineNotFound) || errors.Is(err, ErrOrgRoleNotFound) || errors.Is(err, ErrWorkflowNotFound) {
+	if errors.Is(err, ErrRunNotFound) || errors.Is(err, ErrJobNotFound) || errors.Is(err, ErrAgentNotFound) || errors.Is(err, ErrOrgRoleNotFound) || errors.Is(err, ErrWorkflowNotFound) {
 		return http.StatusNotFound
 	}
 	return http.StatusInternalServerError
@@ -411,9 +411,6 @@ func (s *server) handleOverview(w http.ResponseWriter, r *http.Request) {
 	if o.Today.Notable == nil {
 		o.Today.Notable = []OverviewNotable{}
 	}
-	if o.Scheduled == nil {
-		o.Scheduled = []OverviewScheduled{}
-	}
 	if o.Fleet == nil {
 		o.Fleet = []OverviewFleet{}
 	}
@@ -442,12 +439,6 @@ func (s *server) handleOverview(w http.ResponseWriter, r *http.Request) {
 	if len(o.Today.Notable) > 5 {
 		o.Today.Notable = o.Today.Notable[:5]
 	}
-	sort.SliceStable(o.Scheduled, func(i, j int) bool {
-		if o.Scheduled[i].NextInS != o.Scheduled[j].NextInS {
-			return o.Scheduled[i].NextInS < o.Scheduled[j].NextInS
-		}
-		return o.Scheduled[i].Name < o.Scheduled[j].Name
-	})
 	sort.SliceStable(o.Fleet, func(i, j int) bool {
 		if o.Fleet[i].Running != o.Fleet[j].Running {
 			return o.Fleet[i].Running
@@ -859,11 +850,6 @@ func (s *server) handleConfig(w http.ResponseWriter, r *http.Request) {
 	if c.Keychain.Keys == nil {
 		c.Keychain.Keys = []KeychainKeyView{}
 	}
-	for i := range c.Keychain.Keys {
-		if c.Keychain.Keys[i].Grants == nil {
-			c.Keychain.Keys[i].Grants = []KeychainGrantView{}
-		}
-	}
 	writeJSON(w, http.StatusOK, c)
 }
 
@@ -888,91 +874,6 @@ func (s *server) handleLearningSkills(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	writeJSON(w, http.StatusOK, skills)
-}
-
-// handlePipelines serves GET /api/pipelines -> []PipelineSummary, the declared
-// pipelines with their schedule state and recent run outcomes. Mirrors
-// handleRuns; the list and every element's Recent are coerced non-nil so the
-// client always sees JSON arrays.
-func (s *server) handlePipelines(w http.ResponseWriter, r *http.Request) {
-	pipelines, err := s.ds.Pipelines(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if pipelines == nil {
-		pipelines = []PipelineSummary{}
-	}
-	for i := range pipelines {
-		if pipelines[i].Recent == nil {
-			pipelines[i].Recent = []PipelineRunSummary{}
-		}
-	}
-	writeJSON(w, http.StatusOK, pipelines)
-}
-
-// handlePipelineDetail serves GET /api/pipelines/{name} -> PipelineDetail, one
-// pipeline's declared stage DAG and its run history (newest-first, capped at
-// 100). Unknown names map to 404 (mirrors handleAgent). Declared, Runs, key
-// stages, stage keys/selectors, and each run's Stages are coerced non-nil so the
-// client always sees JSON arrays. Server-provided order is preserved.
-func (s *server) handlePipelineDetail(w http.ResponseWriter, r *http.Request) {
-	name := r.PathValue("name")
-	if name == "" {
-		http.Error(w, "missing pipeline name", http.StatusBadRequest)
-		return
-	}
-	detail, err := s.ds.PipelineDetail(r.Context(), name)
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if detail.Declared == nil {
-		detail.Declared = []PipelineStage{}
-	}
-	if detail.Runs == nil {
-		detail.Runs = []PipelineRunHistoryEntry{}
-	}
-	if detail.Keys.EnvFile.Status == "" {
-		detail.Keys.EnvFile.Status = "none"
-	}
-	if detail.Keys.Stages == nil {
-		detail.Keys.Stages = []PipelineStageKeys{}
-	}
-	for i := range detail.Keys.Stages {
-		if detail.Keys.Stages[i].Keys == nil {
-			detail.Keys.Stages[i].Keys = []PipelineKeyEntry{}
-		}
-		if detail.Keys.Stages[i].UnresolvedSelectors == nil {
-			detail.Keys.Stages[i].UnresolvedSelectors = []string{}
-		}
-	}
-	for i := range detail.Runs {
-		if detail.Runs[i].Stages == nil {
-			detail.Runs[i].Stages = []PipelineStageMark{}
-		}
-	}
-	writeJSON(w, http.StatusOK, detail)
-}
-
-// handlePipelineRun serves GET /api/pipeline/run/{id} -> PipelineRun, the full
-// detail for a single run. Unknown ids map to 404 (mirrors handleJob). Stages is
-// coerced non-nil so the client always sees a JSON array.
-func (s *server) handlePipelineRun(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	if id == "" {
-		http.Error(w, "missing pipeline run id", http.StatusBadRequest)
-		return
-	}
-	run, err := s.ds.PipelineRun(r.Context(), id)
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if run.Stages == nil {
-		run.Stages = []PipelineStage{}
-	}
-	writeJSON(w, http.StatusOK, run)
 }
 
 // handleAttention serves GET /api/attention -> Attention, the "Needs a human"

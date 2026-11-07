@@ -11,8 +11,7 @@ import (
 // Serve returns an http.Handler serving the read-only dashboard: the embedded
 // static UI (with SPA fallback to index.html) plus the JSON API (handleRuns/
 // handleJobs/handleAgents/handleAgent/handleCharts/handleHealth/
-// handleLearningSkills/handlePipelines/
-// handlePipelineDetail/handlePipelineRun/handleOverview/handleTasks/
+// handleLearningSkills/handleOverview/handleTasks/
 // handleWakeSummary/handleWakes/handleWakeReceipts/
 // handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/
 // handleAttention/handleJobChecks/handleBinaryVerdicts/
@@ -30,9 +29,6 @@ func Serve(ds DataSource) http.Handler {
 	mux.HandleFunc("GET /api/health", s.handleHealth)
 	mux.HandleFunc("GET /api/config", s.handleConfig)
 	mux.HandleFunc("GET /api/learning/skills", s.handleLearningSkills)
-	mux.HandleFunc("GET /api/pipelines", s.handlePipelines)
-	mux.HandleFunc("GET /api/pipelines/{name}", s.handlePipelineDetail)
-	mux.HandleFunc("GET /api/pipeline/run/{id}", s.handlePipelineRun)
 	mux.HandleFunc("GET /api/overview", s.handleOverview)
 	mux.HandleFunc("GET /api/wakes/summary", s.handleWakeSummary)
 	mux.HandleFunc("GET /api/wakes/receipts", s.handleWakeReceipts)
@@ -74,7 +70,7 @@ func newServer(ds DataSource) *server {
 
 // The JSON API handlers (handleRuns/handleJobs/handleAgents/handleAgent/
 // handleCharts/handleHealth/handleLearningSkills/
-// handlePipelines/handlePipelineDetail/handlePipelineRun/handleOverview/handleTasks/
+// handleOverview/handleTasks/
 // handleWakeSummary/handleWakes/handleWakeReceipts/
 // handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/
 // handleAttention/handleJobChecks/handleBinaryVerdicts/
