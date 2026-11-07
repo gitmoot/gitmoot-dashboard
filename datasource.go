@@ -419,14 +419,6 @@ type OverviewToday struct {
 	Notable   []OverviewNotable `json:"notable"`
 }
 
-// OverviewScheduled is one upcoming declared pipeline.
-type OverviewScheduled struct {
-	Name       string `json:"name"`
-	Schedule   string `json:"schedule"`
-	LastStatus string `json:"last_status"`
-	NextInS    int64  `json:"next_in_s"`
-}
-
 // OverviewFleet is one registered agent's compact daily rollup.
 type OverviewFleet struct {
 	Agent     string `json:"agent"`
@@ -437,11 +429,10 @@ type OverviewFleet struct {
 
 // Overview is the additive operator-first landing-page snapshot.
 type Overview struct {
-	NeedsYou  []OverviewNeedsYou  `json:"needs_you"`
-	Activity  OverviewActivity    `json:"activity"`
-	Today     OverviewToday       `json:"today"`
-	Scheduled []OverviewScheduled `json:"scheduled"`
-	Fleet     []OverviewFleet     `json:"fleet"`
+	NeedsYou []OverviewNeedsYou `json:"needs_you"`
+	Activity OverviewActivity   `json:"activity"`
+	Today    OverviewToday      `json:"today"`
+	Fleet    []OverviewFleet    `json:"fleet"`
 }
 
 // OverviewDataSource is an optional extension so older gitmoot bridges remain
@@ -759,21 +750,13 @@ type KeychainFileStatus struct {
 
 // KeychainKeyView is one names-only registry entry. Mode is injected or
 // proxied. ProxyUpstream and ProxyAuth are populated only for configured
-// proxied keys. Grants is deterministic and never nil; CreatedAt is the
-// store-provided timestamp string.
+// proxied keys. CreatedAt is the store-provided timestamp string.
 type KeychainKeyView struct {
-	Name          string              `json:"name"`
-	Mode          string              `json:"mode"`
-	ProxyUpstream string              `json:"proxyUpstream"`
-	ProxyAuth     string              `json:"proxyAuth"`
-	Grants        []KeychainGrantView `json:"grants"`
-	CreatedAt     string              `json:"createdAt"`
-}
-
-// KeychainGrantView names one consumer authorized to use a registry key.
-type KeychainGrantView struct {
-	ConsumerKind string `json:"consumerKind"`
-	ConsumerID   string `json:"consumerID"`
+	Name          string `json:"name"`
+	Mode          string `json:"mode"`
+	ProxyUpstream string `json:"proxyUpstream"`
+	ProxyAuth     string `json:"proxyAuth"`
+	CreatedAt     string `json:"createdAt"`
 }
 
 // ConfigSnapshot is the read-only, sanitized effective configuration consumed
@@ -912,148 +895,6 @@ type Skills struct {
 	Templates      []SkillTemplate `json:"templates"` // sorted: pending-first, then most-recently-promoted
 	ActiveCanaries int             `json:"activeCanaries"`
 	PendingTotal   int             `json:"pendingTotal"`
-}
-
-// Pipelines — the declared shell-stage pipelines (gitmoot #681).
-
-// PipelineSummary is one row of the Pipelines list: a declared pipeline
-// (gitmoot #681) plus its schedule state and recent run outcomes.
-type PipelineSummary struct {
-	Name string `json:"name"`
-	Repo string `json:"repo,omitempty"`
-	// Group is the display section resolved by the server from the pipeline spec's
-	// group, or its repository when the spec leaves group unset. It is never empty.
-	Group      string               `json:"group"`
-	Enabled    bool                 `json:"enabled"`
-	Mode       string               `json:"mode,omitempty"`     // display mode from the server: "email-triggered (bound|pending|error|unbound)[, scheduled <interval>]" | "scheduled <interval>" | "after: <pipeline>" | "manual"
-	Interval   string               `json:"interval,omitempty"` // Go duration, e.g. "24h"
-	Jitter     string               `json:"jitter,omitempty"`
-	StageCount int                  `json:"stageCount"`
-	LastRunID  string               `json:"lastRunId,omitempty"`
-	LastStatus string               `json:"lastStatus,omitempty"` // running | succeeded | blocked | failed | cancelled
-	LastRunAt  int64                `json:"lastRunAt,omitempty"`  // epoch milliseconds
-	NextDueAt  int64                `json:"nextDueAt,omitempty"`  // epoch milliseconds
-	Recent     []PipelineRunSummary `json:"recent"`               // newest-first, capped at 10, never nil
-}
-
-// PipelineRunSummary is a lightweight listing entry for one run of a pipeline.
-type PipelineRunSummary struct {
-	ID         string `json:"id"`
-	Trigger    string `json:"trigger,omitempty"` // manual | schedule | bridge (bridge = fired through the gitmoot bridge, e.g. by an email trigger)
-	State      string `json:"state"`             // running | succeeded | blocked | failed | cancelled
-	HaltStage  string `json:"haltStage,omitempty"`
-	StartedAt  int64  `json:"startedAt,omitempty"`  // epoch milliseconds
-	FinishedAt int64  `json:"finishedAt,omitempty"` // epoch milliseconds
-	Duration   int64  `json:"duration,omitempty"`   // milliseconds (finished-started, 0 while running)
-}
-
-// PipelineRun is the full detail of one run: identity/halt state plus the
-// stage rows in spec (topological) order — the same order the CLI funnel prints.
-type PipelineRun struct {
-	ID         string          `json:"id"`
-	Pipeline   string          `json:"pipeline"`
-	Repo       string          `json:"repo,omitempty"`
-	Trigger    string          `json:"trigger,omitempty"` // manual | schedule | bridge
-	State      string          `json:"state"`             // running | succeeded | blocked | failed | cancelled
-	SpecHash   string          `json:"specHash,omitempty"`
-	HaltStage  string          `json:"haltStage,omitempty"`
-	HaltReason string          `json:"haltReason,omitempty"`
-	Needs      []string        `json:"needs,omitempty"`      // persisted blocked-needs, aggregated at run level
-	StartedAt  int64           `json:"startedAt,omitempty"`  // epoch milliseconds
-	FinishedAt int64           `json:"finishedAt,omitempty"` // epoch milliseconds
-	Stages     []PipelineStage `json:"stages"`               // spec order, never nil
-}
-
-// PipelineStage is one shell stage of a pipeline run. Deps are the DAG
-// dependency edges (the spec's needs list — edges derived client-side, like
-// Node.Deps); Needs are the persisted blocked-needs of a parked stage. The two
-// are deliberately distinct.
-type PipelineStage struct {
-	ID           string   `json:"id"`
-	State        string   `json:"state"`                  // pending | queued | running | succeeded | blocked | failed | skipped | cancelled
-	Kind         string   `json:"kind,omitempty"`         // shell | agent_ask | agent_review | agent_implement | produce | gate | orchestrate
-	AgentRuntime string   `json:"agentRuntime,omitempty"` // runtime backing an agent stage, when known
-	Deps         []string `json:"deps"`                   // DAG dependency IDs in payload order; may be empty
-	Cmd          string   `json:"cmd,omitempty"`
-	JobID        string   `json:"jobId,omitempty"`
-	Attempt      int      `json:"attempt,omitempty"`
-	Retry        int      `json:"retry,omitempty"` // the stage's retry budget from the spec
-	Needs        []string `json:"needs,omitempty"`
-	Summary      string   `json:"summary,omitempty"`
-	// ProgressActivity is the sanitized last output line from gitmoot #816's
-	// latest-only progress event. It is normally absent, and is populated only
-	// for running stages after the 60-second progress threshold.
-	ProgressActivity string `json:"progressActivity,omitempty"`
-	// ProgressAt is the epoch-millisecond time of the #816 progress event.
-	// Like ProgressActivity, its absence is normal before the threshold.
-	ProgressAt int64 `json:"progressAt,omitempty"`
-	StartedAt  int64 `json:"startedAt,omitempty"`  // epoch milliseconds
-	FinishedAt int64 `json:"finishedAt,omitempty"` // epoch milliseconds
-}
-
-// PipelineStageMark is the minimal per-run stage outcome used by the history
-// matrix: which stage, and how it ended (or stands).
-type PipelineStageMark struct {
-	ID    string `json:"id"`
-	State string `json:"state"` // pending | queued | running | succeeded | blocked | failed | skipped | cancelled
-}
-
-// PipelineRunHistoryEntry is one row of a pipeline's run history: the run
-// summary plus its per-stage marks (in that run's stage order).
-type PipelineRunHistoryEntry struct {
-	ID         string              `json:"id"`
-	Trigger    string              `json:"trigger,omitempty"` // manual | schedule | bridge
-	State      string              `json:"state"`             // running | succeeded | blocked | failed | cancelled
-	HaltStage  string              `json:"haltStage,omitempty"`
-	StartedAt  int64               `json:"startedAt,omitempty"`  // epoch milliseconds
-	FinishedAt int64               `json:"finishedAt,omitempty"` // epoch milliseconds
-	Duration   int64               `json:"duration,omitempty"`   // milliseconds (finished-started, 0 while running)
-	Stages     []PipelineStageMark `json:"stages"`               // never nil
-}
-
-// PipelineDetail is the click-through detail for one pipeline: its currently
-// declared stage DAG (from the stored spec, every stage pending) plus the run
-// history, newest-first, capped at 100 runs.
-type PipelineDetail struct {
-	Name string `json:"name"`
-	// Description is optional free-form display text from the pipeline spec. It
-	// may be absent when the pipeline has no declared description.
-	Description string                    `json:"description,omitempty"`
-	Declared    []PipelineStage           `json:"declared"` // current spec DAG, state "pending"; never nil
-	Runs        []PipelineRunHistoryEntry `json:"runs"`     // newest-first, capped at 100; never nil
-	Keys        PipelineKeys              `json:"keys"`     // names-only credential projection; never contains secret values
-}
-
-// PipelineKeys is the names-only credential view for a pipeline. Stages stay in
-// spec order and are never nil.
-type PipelineKeys struct {
-	EnvFile PipelineEnvFileStatus `json:"envFile"`
-	Stages  []PipelineStageKeys   `json:"stages"`
-}
-
-// PipelineEnvFileStatus reports validation metadata without exposing file
-// contents. Status is none | ok | missing | bad_mode | bad_owner |
-// bad_location | invalid.
-type PipelineEnvFileStatus struct {
-	Path   string `json:"path"`
-	Status string `json:"status"`
-}
-
-// PipelineStageKeys is one stage's ordered, names-only credential projection.
-// Keys and UnresolvedSelectors are never nil.
-type PipelineStageKeys struct {
-	ID                  string             `json:"id"`
-	Kind                string             `json:"kind"`
-	Keys                []PipelineKeyEntry `json:"keys"`
-	UnresolvedSelectors []string           `json:"unresolvedSelectors"`
-}
-
-// PipelineKeyEntry identifies one credential by name, source, and delivery
-// mode. Source is own | shared | default; Mode is injected | proxied.
-type PipelineKeyEntry struct {
-	Name   string `json:"name"`
-	Source string `json:"source"`
-	Mode   string `json:"mode"`
 }
 
 // Attention + binary checks — surfacing evaluator output and human gates where a
@@ -1204,18 +1045,6 @@ type DataSource interface {
 	// the page renders real data, whereas Knowledge and Chat were backed by tables
 	// gitmoot retired and could only ever answer empty.
 	Skills(ctx context.Context) (Skills, error)
-	// Pipelines returns every declared pipeline with its schedule state and recent
-	// run outcomes (newest-first, capped at 10), sorted by name. Ordering must be
-	// deterministic (the UI polls with a signature-skip).
-	Pipelines(ctx context.Context) ([]PipelineSummary, error)
-	// PipelineRun returns the full detail for a single run by run id, stages in
-	// spec (topological) order. Unknown ids return ErrPipelineRunNotFound.
-	PipelineRun(ctx context.Context, id string) (PipelineRun, error)
-	// PipelineDetail returns one pipeline's declared stage DAG and its run history
-	// (newest-first, capped at 100 runs, each with per-stage marks). Unknown names
-	// return ErrPipelineNotFound. Ordering must be deterministic (the UI polls with
-	// a signature-skip).
-	PipelineDetail(ctx context.Context, name string) (PipelineDetail, error)
 	// Attention returns the "Needs a human" view (gitmoot #528): blocked job
 	// gates, pending synth approvals and template candidates awaiting promotion.
 	// Ordering must be deterministic (the UI polls with a signature-skip).

@@ -30,11 +30,7 @@
  .gm-copy{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;line-height:1;cursor:pointer;padding:4px 9px;transition:background .15s ease,color .15s ease;background:rgba(160,168,220,0.1);color:#a8aecf}
  .gm-copy:hover{background:rgba(160,168,220,0.16);color:#c7c9e5}
  .gm-copy.done{background:rgba(158,206,106,0.16);color:#c5f882}
- .gm-aplink{display:inline-flex;align-items:center;gap:6px;text-decoration:none;padding:5px 10px;border-radius:7px;border:1px solid rgba(160,168,220,0.16);background:rgba(160,168,220,0.06);color:#c7c9e5;font-family:Inter,system-ui,sans-serif;font-size:12px;font-weight:600;line-height:1;white-space:nowrap;transition:background .15s ease,border-color .15s ease,color .15s ease}
- .gm-aplink:hover{background:rgba(158,206,106,0.12);border-color:rgba(158,206,106,0.35);color:#eef0ff}
- .gm-aplink svg{flex:none}
- .gm-aplink .ext{opacity:.55}
- .ov-scroll,.wfi-scroll,.wfd-scroll,.tk-col-body,.tk-detail-body,.pl-list-scroll,.pl-main-body,.pl-runs,.jb-tablewrap,.jd-body,.ag-list,.ag-pane,.gd-body,.ch-scroll,.at-scroll,.hl-body,.cfg-scroll,.xd-body,#lr-skills,.gm-graph-detail-body,.gm-more-sheet,.gm-runs-list{overscroll-behavior-y:contain}
+ .ov-scroll,.wfi-scroll,.wfd-scroll,.tk-col-body,.tk-detail-body,.jb-tablewrap,.jd-body,.ag-list,.ag-pane,.gd-body,.ch-scroll,.at-scroll,.hl-body,.cfg-scroll,.xd-body,#lr-skills,.gm-graph-detail-body,.gm-more-sheet,.gm-runs-list{overscroll-behavior-y:contain}
  .ov-fleet-list{overscroll-behavior-x:contain}
  .gm-ptr-indicator{position:fixed;left:0;top:0;z-index:120;height:0;display:flex;justify-content:center;overflow:visible;pointer-events:none;opacity:0;transform:translateY(-18px);transition:opacity .14s ease,transform .14s ease}
  .gm-ptr-indicator span{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border:1px solid rgba(160,168,220,.14);border-radius:12px;background:rgba(13,15,28,.94);box-shadow:0 5px 18px rgba(0,0,0,.28);color:#7b82aa;font:9px 'JetBrains Mono',monospace;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
@@ -47,7 +43,7 @@
  .gm-skewtitle{font-weight:600}.gm-skewpair{margin-left:8px;color:#a88a55;font:10px 'JetBrains Mono',monospace}.gm-skewhint{margin-left:8px}
  .gm-skew-dismiss{width:44px;height:44px;flex:none;margin:-8px -12px -8px 0;padding:0;border:0;background:none;color:#a88a55;font-size:16px;cursor:pointer;pointer-events:auto}
  @media (pointer:coarse){html,body,.gm-shell{overscroll-behavior:none}}
- @media (max-width:768px){.gm-aplink{display:none!important}.gm-ptr-scroll{overscroll-behavior-y:none}.tk-tabs,.pl-runs,.wfd-stats{overscroll-behavior-x:contain}}
+ @media (max-width:768px){.gm-ptr-scroll{overscroll-behavior-y:none}.tk-tabs,.wfd-stats{overscroll-behavior-x:contain}}
  @media (max-width:768px){.gm-skewbar{left:0;right:0;top:auto;bottom:calc(60px + env(safe-area-inset-bottom));border-bottom:0;border-top:1px solid rgba(224,175,104,.42);z-index:59}}
 </style>
 </helmet>
@@ -67,11 +63,6 @@
       <span style="font-family:'JetBrains Mono';font-size:12.5px;color:#eef0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ crumbTitle }}</span>
     </div>
     <div style="margin-left:auto;display:flex;align-items:center;gap:14px;flex:none">
-      <a href="https://activepieces.themartian.app" target="_blank" rel="noopener noreferrer" class="gm-aplink" title="Open Activepieces (activepieces.themartian.app) - the flow builder that drives gitmoot pipelines through the bridge.">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13l7-9-1 6h4l-7 9 1-6z"/></svg>
-        <span>Activepieces</span>
-        <svg class="ext" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>
-      </a>
       <span style="{{ daemonTextStyle }}">{{ daemonText }}</span>
       <div style="{{ liveBadgeStyle }}">
         <span style="{{ liveDotStyle }}"></span>
@@ -111,11 +102,6 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 6h11M8 12h11M8 18h11"/><circle cx="4" cy="6" r="1.1"/><circle cx="4" cy="12" r="1.1"/><circle cx="4" cy="18" r="1.1"/></svg>
       <span style="flex:1">Jobs</span>
       <span style="{{ jobsNavDotStyle }}"></span>
-    </div>
-    <div onClick="{{ showPipelines }}" title="Declared pipelines + run history + stage DAG" style="{{ pipelinesNavStyle }}">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M7 7l9 4M7 17l9-4"/></svg>
-      <span style="flex:1">Pipelines</span>
-      <span style="{{ pipelinesNavDotStyle }}"></span>
     </div>
 
     <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:14px 10px 7px">FLEET</div>
@@ -294,7 +280,7 @@
     <div class="gm-more-sheet" style="position:fixed;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom));max-height:calc(100vh - 86px);max-height:calc(100dvh - 86px);overflow-y:auto;z-index:66;background:#0e1020;border-top:1px solid rgba(160,168,220,0.14);border-radius:16px 16px 0 0;padding:8px 12px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -18px 40px rgba(0,0,0,0.55)">
       <div style="width:36px;height:4px;border-radius:2px;background:rgba(160,168,220,0.2);margin:4px auto 10px"></div>
       <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:2px 8px 5px">WORK</div>
-      <div onClick="{{ showOverviewFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Overview</div><div onClick="{{ showTasksFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Tasks</div><div onClick="{{ showWorkflowsFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Workflows</div><div onClick="{{ showJobsFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Jobs</div><div onClick="{{ showPipelinesFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Pipelines</div>
+      <div onClick="{{ showOverviewFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Overview</div><div onClick="{{ showTasksFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Tasks</div><div onClick="{{ showWorkflowsFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Workflows</div><div onClick="{{ showJobsFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Jobs</div>
       <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:12px 8px 5px">FLEET</div>
       <div onClick="{{ showAgentsFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Agents</div><div onClick="{{ showOrgFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Org</div>
       <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:12px 8px 5px">INSIGHT</div>
@@ -346,7 +332,6 @@ class Component extends DCLogic {
       this.state.view = r.view;
       if (r.view === 'jobs' && r.agent) this._jobsFacetAgent = r.agent;
       if (r.view === 'agents' && r.agent) this._pendingAgentDetail = r.agent;
-      if (r.view === 'pipelines') this._pendingPipelineDetail = r.name || null;
       if (r.view === 'workflows') this._pendingWorkflowLabel = r.name || null;
       // Normalize unknown paths to '/' (Overview). Also tidy a non-canonical known
       // path (e.g. a trailing slash). Never rewrite a graph URL, so a
@@ -387,13 +372,6 @@ class Component extends DCLogic {
     if (p === '/learning') return { view: 'learning', tab: 'skills' };
     if (p === '/learning/skills') return { view: 'learning', tab: 'skills' };
     if (p === '/jobs') { const a = this._routeQueryAgent(search); return a ? { view: 'jobs', agent: a } : { view: 'jobs' }; }
-    if (p === '/pipelines') return { view: 'pipelines' };
-    if (p.indexOf('/pipelines/') === 0) {
-      const raw = p.slice(11); // '/pipelines/'.length
-      let name = raw;
-      try { name = decodeURIComponent(raw); } catch (e) { name = raw; }
-      return name ? { view: 'pipelines', name: name } : { view: 'pipelines' };
-    }
     if (p === '/workflows') return { view: 'workflows' };
     if (p.indexOf('/workflows/') === 0) {
       const raw = p.slice(11); // '/workflows/'.length
@@ -433,7 +411,6 @@ class Component extends DCLogic {
       case 'tasks': return '/tasks';
       case 'galaxy': return '/galaxy';
       case 'jobs':   return opts.agent ? '/jobs?agent=' + encodeURIComponent(opts.agent) : '/jobs';
-      case 'pipelines': return opts.name ? '/pipelines/' + encodeURIComponent(opts.name) : '/pipelines';
       case 'workflows': return opts.name ? '/workflows/' + encodeURIComponent(opts.name) : '/workflows';
       case 'agents': return opts.agent ? '/agents/' + encodeURIComponent(opts.agent) : '/agents';
       case 'org': return '/org';
@@ -462,7 +439,6 @@ class Component extends DCLogic {
       case 'tasks': return 'gitmoot · tasks';
       case 'galaxy': return 'gitmoot · galaxy';
       case 'jobs':   return opts.agent ? 'gitmoot · jobs · ' + opts.agent : 'gitmoot · jobs';
-      case 'pipelines': return opts.name ? 'gitmoot · pipelines · ' + opts.name : 'gitmoot · pipelines';
       case 'workflows': return opts.name ? 'gitmoot · workflow · ' + opts.name : 'gitmoot · workflows';
       case 'agents': return opts.agent ? 'gitmoot · agents · ' + opts.agent : 'gitmoot · agents';
       case 'org': return 'gitmoot · org';
@@ -499,16 +475,7 @@ class Component extends DCLogic {
     this._routing = true;
     try {
       try { document.title = this._routeTitle(r.view, { agent: r.agent, tab: r.tab, name: r.name }); } catch (e) {}
-      if (r.view === 'pipelines') {
-        if (this._pipelinesRoot) {
-          // pipelines already mounted (possibly hidden): open/close detail in place.
-          if (r.name) { if (this._plDetailName !== r.name) this.openPipelineDetail(r.name); }
-          else if (this._plDetailName) this.closePipelineDetail();
-        } else {
-          // not mounted yet: applyView opens the detail after it mounts.
-          this._pendingPipelineDetail = r.name || null;
-        }
-      } else if (r.view === 'workflows') {
+      if (r.view === 'workflows') {
         this._workflowLabel = r.name || '';
         if (this.state.view === 'workflows' && this._workflowRoot && r.name) {
           this._pendingWorkflowLabel = null;
@@ -556,7 +523,7 @@ class Component extends DCLogic {
     // Nav "needs you" amber dots (repurposed from the old you-are-here dot). Each is
     // seeded once on load (_navSeed), piggybacks the matching view's poll while open,
     // and re-seeds every 60s.
-    healthAttn: false, learningAttn: false, pipelinesAttn: false, workflowsAttn: false, tasksAttn: false, attnAttn: false,
+    healthAttn: false, learningAttn: false, workflowsAttn: false, tasksAttn: false, attnAttn: false,
     // Mobile: the "More" bottom sheet (Galaxy/Charts/Learning). Transient, not persisted.
     moreOpen: false,
     // Mobile responsiveness: seeded from matchMedia so the very first render is
@@ -620,7 +587,6 @@ class Component extends DCLogic {
           if (this.state.view === 'jobs') this.renderJobsTable();
           if (this.state.view === 'agents') { this._agApplyMobileClass(); this.renderAgentsPane(true); }
           if (this.state.view === 'org' && this._orgData) { this._orgForceFitToken = (this._orgForceFitToken || 0) + 1; this.renderOrg(this._orgData); }
-          if (this.state.view === 'pipelines' && this._plDetailName) { this._plLayout(); this._plUpdateScrollCue(); }
           if (this.state.view === 'charts' && this._chartsLoaded) this.renderCharts(false);
           if (this.state.view === 'overview' && this._overviewData) this.renderOverview(this._overviewData);
           if (this.state.view === 'tasks' && this._tasksData) this.renderTasks(this._tasksData);
@@ -654,7 +620,7 @@ class Component extends DCLogic {
     // (the selected run's graph already streams via SSE); background refresh.
     this._runsPoll = setInterval(() => this.loadRuns(), 15000);
     // Seed the persistent top bar (daemon liveness) + the needs-you nav dots
-    // (health/pipelines/learning/attention) from a light batch fetch, then re-seed
+    // (health/learning/attention) from a light batch fetch, then re-seed
     // every 60s so the background stays live without adding per-view polls.
     this._navSeed();
     this._navSeedTimer = setInterval(() => this._navSeed(), 60000);
@@ -673,9 +639,6 @@ class Component extends DCLogic {
     this.stopConfigPoll();
     this.stopAttentionPoll();
     this.stopSkillsPoll();
-    this.stopPipelinesPoll();
-    this.stopPipelineRunPoll();
-    this.stopPipelineDetailPoll();
     this.stopWorkflowPoll();
     this.stopOverviewPoll();
     this.stopTasksPoll();
@@ -694,7 +657,6 @@ class Component extends DCLogic {
     try { document.removeEventListener('keydown', this._orgKeydown); } catch (e) {}
     try { document.removeEventListener('keydown', this._healthKeydown); } catch (e) {}
     try { document.removeEventListener('keydown', this._attentionKeydown); } catch (e) {}
-    try { document.removeEventListener('keydown', this._pipelinesKeydown); } catch (e) {}
     try { document.removeEventListener('keydown', this._workflowKeydown); } catch (e) {}
     try { document.removeEventListener('keydown', this._tasksKeydown); } catch (e) {}
     try { if (this._orgReactRoot) this._orgReactRoot.unmount(); } catch (e) {}
@@ -707,7 +669,6 @@ class Component extends DCLogic {
     try { if (this._configRoot) this._configRoot.remove(); } catch (e) {}
     try { if (this._attentionRoot) this._attentionRoot.remove(); } catch (e) {}
     try { if (this._learningRoot) this._learningRoot.remove(); } catch (e) {}
-    try { if (this._pipelinesRoot) this._pipelinesRoot.remove(); } catch (e) {}
     try { if (this._workflowRoot) this._workflowRoot.remove(); } catch (e) {}
     try { if (this._workflowStrip) this._workflowStrip.remove(); } catch (e) {}
     try { if (this._overviewRoot) this._overviewRoot.remove(); } catch (e) {}
@@ -842,11 +803,7 @@ class Component extends DCLogic {
     else if (view === 'config') this.fetchConfig(true);
     else if (view === 'attention') this.fetchAttention(true);
     else if (view === 'learning') this.fetchSkills(true);
-    else if (view === 'pipelines') {
-      this.fetchPipelines(true);
-      if (this._plDetailName) this.fetchPipelineDetailData(this._plDetailName, true);
-      if (this._plDetailName && this._plSelectedRun) this.fetchPipelineRun(this._plSelectedRun, true);
-    } else if (view === 'graph') {
+    else if (view === 'graph') {
       this.loadState();
       this.loadRuns();
     }
@@ -885,7 +842,6 @@ class Component extends DCLogic {
       health: ['#health-root .hl-body'],
       config: ['#config-root .cfg-scroll'],
       learning: ['#learning-root #lr-skills'],
-      pipelines: ['#pipelines-root .pl-list-scroll', '#pipelines-root .pl-main-body'],
       graph: ['.gm-runs-list']
     };
     return selectors[this.state.view] || [];
@@ -1181,30 +1137,6 @@ class Component extends DCLogic {
       this.stopSkillsPoll();
       if (this._learningRoot) this._learningRoot.style.display = 'none';
     }
-    // Pipelines overlay (declared pipelines list + run detail + hand-rolled stage DAG).
-    if (v === 'pipelines') {
-      const root = this.ensurePipelinesDom();
-      root.style.display = 'block';
-      if (this._plDetailName) this._plLayout(); // reflow the workbench (rail width / mobile strip)
-      this.startPipelinesPoll();
-      this.fetchPipelines(false);
-      // Deep-link intent (/pipelines/<name>): open the detail once the list loads
-      // (fetchPipelines completes any pending open). If the data is already cached,
-      // open it now; also restart the run poll for an already-open detail.
-      if (this._pendingPipelineDetail && this._pipelinesByName && this._pipelinesByName[this._pendingPipelineDetail]) {
-        const nm = this._pendingPipelineDetail; this._pendingPipelineDetail = null; this.openPipelineDetail(nm);
-      } else if (this._plDetailName) {
-        // re-entering an already-open detail: refresh its data + restart both polls.
-        this.fetchPipelineDetailData(this._plDetailName, false);
-        this.startPipelineDetailPoll();
-        if (this._plSelectedRun) this.startPipelineRunPoll();
-      }
-    } else {
-      this.stopPipelinesPoll();
-      this.stopPipelineRunPoll();
-      this.stopPipelineDetailPoll();
-      if (this._pipelinesRoot) this._pipelinesRoot.style.display = 'none';
-    }
     this._queuePullToRefreshSync();
   }
 
@@ -1232,10 +1164,9 @@ class Component extends DCLogic {
       "#overview-root .ov-today-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:6px 0 12px}.ov-tile{padding:10px;border:1px solid rgba(160,168,220,.12);border-radius:7px;background:#0f1120}.ov-tile b{display:block;font:600 18px 'JetBrains Mono';color:#9ece6a}.ov-tile.fail b{color:#f7768e}.ov-tile.cancel b{color:#8b90b8}.ov-tile.wake b{color:#5a6088}.ov-tile.wake.problem{border-color:rgba(224,175,104,.35);background:rgba(224,175,104,.065)}.ov-tile.wake.problem b{color:#e0af68}.ov-tile.wake.aging{border-color:rgba(247,118,142,.52);background:rgba(247,118,142,.09)}.ov-tile.wake.aging b{color:#f7768e}.ov-tile span{display:block;margin-top:4px;color:#555c83;font:8px 'JetBrains Mono';letter-spacing:.1em;text-transform:uppercase}.ov-bars{height:66px;display:flex;align-items:flex-end;gap:3px;border-bottom:1px solid rgba(160,168,220,.07)}.ov-bar{flex:1;min-width:2px;background:#7da357;border-radius:2px 2px 0 0}.ov-bar-axis{display:flex;justify-content:space-between;margin-top:5px;color:#41486d;font:8px 'JetBrains Mono'}.ov-token{margin-top:12px;color:#7c83aa;font:9.5px 'JetBrains Mono'}.ov-token b{color:#cabff2;font-size:13px}",
       "#overview-root .ov-wake-shell{margin-top:16px;padding:13px 14px 14px}.ov-wake-shell.problem{border-color:rgba(224,175,104,.3)}.ov-wake-shell.aging{border-color:rgba(247,118,142,.44);background:rgba(247,118,142,.025)}.ov-wake-dot{width:8px;height:8px;border-radius:50%;background:#5a6088}.ov-wake-shell.problem .ov-wake-dot{background:#e0af68}.ov-wake-shell.aging .ov-wake-dot{background:#f7768e}.ov-wake-rollup{margin-left:auto;display:flex;align-items:center;gap:6px;color:#62698f;font:9px 'JetBrains Mono';letter-spacing:0;text-transform:none}.ov-wake-chip{padding:2px 7px;border:1px solid rgba(160,168,220,.14);border-radius:5px;background:#0f1120}.ov-wake-chip.bad{color:#f7768e;border-color:rgba(247,118,142,.28);background:rgba(247,118,142,.07)}.ov-wake-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(330px,.8fr);gap:14px;margin-top:8px}.ov-wake-pane{min-width:0;border:1px solid rgba(160,168,220,.1);border-radius:8px;background:#0c0e1a;overflow:hidden}.ov-wake-pane-head{min-height:36px;display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(160,168,220,.08);color:#8b90b8;font:600 9px 'JetBrains Mono';letter-spacing:.1em;text-transform:uppercase}.ov-wake-pane-head .muted{color:#4f567f;font-weight:400;letter-spacing:0;text-transform:none}.ov-wake-controls{margin-left:auto;display:flex;gap:6px}.ov-wake-controls select{height:26px;max-width:128px;padding:0 24px 0 8px;border:1px solid rgba(160,168,220,.14);border-radius:6px;background:#0f1120;color:#a8aecf;font:9px 'JetBrains Mono'}.ov-wake-list{max-height:286px;overflow:auto}.ov-wake-row{display:grid;grid-template-columns:92px minmax(130px,1fr) 116px 58px 88px 48px;gap:8px;align-items:center;min-height:47px;padding:7px 10px;border-bottom:1px solid rgba(160,168,220,.06);font:9.5px 'JetBrains Mono'}.ov-wake-row:last-child{border-bottom:0}.ov-wake-row.urgent{background:rgba(247,118,142,.055);box-shadow:inset 3px 0 #f7768e}.ov-wake-role{color:#eef0ff;font-weight:600;overflow:hidden;text-overflow:ellipsis}.ov-wake-source{min-width:0;color:#8b90b8}.ov-wake-source b{display:block;color:#c7c9e5;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-wake-source span{display:block;margin-top:3px;color:#555c83;font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-wake-state{display:inline-flex;width:max-content;max-width:100%;padding:3px 6px;border:1px solid rgba(160,168,220,.16);border-radius:5px;color:#8b90b8;background:rgba(160,168,220,.05);overflow:hidden;text-overflow:ellipsis}.ov-wake-state.delivery_unknown,.ov-wake-state.stalled{color:#f7768e;border-color:rgba(247,118,142,.32);background:rgba(247,118,142,.1)}.ov-wake-state.pending,.ov-wake-state.attempted{color:#e0af68;border-color:rgba(224,175,104,.28);background:rgba(224,175,104,.07)}.ov-wake-state.failed{color:#ff9e64;border-color:rgba(255,158,100,.28)}.ov-wake-attempt,.ov-wake-age{text-align:right;color:#697099}.ov-wake-error{color:#e0af68;font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-receipt-row{display:grid;grid-template-columns:86px minmax(92px,1fr) 48px 74px;gap:8px;align-items:center;min-height:43px;padding:7px 10px;border-bottom:1px solid rgba(160,168,220,.06);font:9.5px 'JetBrains Mono'}.ov-receipt-row:last-child{border-bottom:0}.ov-receipt-kind{min-width:0;color:#c7c9e5}.ov-receipt-kind span{display:block;margin-top:3px;color:#555c83;font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-receipt-ok{color:#9ece6a;text-align:right}.ov-wake-empty{padding:18px 10px;color:#596087;font:10px 'JetBrains Mono'}.ov-wake-note{padding:8px 10px;border-top:1px solid rgba(160,168,220,.06);color:#4f567f;font:8.5px 'JetBrains Mono';line-height:1.45}",
       "#overview-root .ov-wake-cols{display:grid;grid-template-columns:92px minmax(130px,1fr) 116px 58px 88px 48px;gap:8px;padding:6px 10px;border-bottom:1px solid rgba(160,168,220,.06);color:#444b70;font:8px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase}.ov-wake-cols span:nth-last-child(-n+3){text-align:right}",
-      "#overview-root .ov-sched-row{display:grid;grid-template-columns:minmax(0,1fr) auto 72px;gap:9px;align-items:center;min-height:49px;border-bottom:1px solid rgba(160,168,220,.06);font:9.5px 'JetBrains Mono'}.ov-sched-row:last-child{border-bottom:0}.ov-sched-name{color:#eef0ff;font-size:11px}.ov-sched-sub{margin-top:4px;color:#555c83;font-size:8.5px}.ov-status{padding:2px 7px;border:1px solid rgba(160,168,220,.18);border-radius:5px;color:#8b90b8}.ov-status.succeeded{color:#9ece6a;border-color:rgba(158,206,106,.28)}.ov-status.failed{color:#f7768e;border-color:rgba(247,118,142,.28)}.ov-next{text-align:right;color:#c7c9e5}.ov-next small{display:block;color:#555c83}",
       "#overview-root .ov-fleet{grid-column:1/-1}.ov-fleet-list{display:flex;gap:9px;overflow-x:auto}.ov-fleet-item{display:flex;align-items:center;gap:7px;min-width:210px;padding:9px 11px;border:1px solid rgba(160,168,220,.12);border-radius:7px;background:#0f1120;font:9.5px 'JetBrains Mono'}.ov-fleet-item b{color:#eef0ff}.ov-runtime{padding:2px 6px;border:1px solid rgba(160,168,220,.16);border-radius:4px}.ov-runtime.claude{color:#cabff2;background:rgba(187,154,247,.1)}.ov-runtime.codex{color:#8fd3ff;background:rgba(110,198,255,.1)}.ov-runtime.kimi{color:#e8c58a;background:rgba(224,175,104,.1)}.ov-fleet-jobs{margin-left:auto;color:#596087}",
       "#overview-root .ov-shimmer{height:140px;border-radius:9px;background:#0d0f1c;position:relative;overflow:hidden}.ov-shimmer:after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(187,154,247,.08),transparent);animation:ovsh 1.35s infinite}@keyframes ovsh{to{transform:translateX(100%)}}.ov-loading{display:grid;grid-template-columns:1.45fr .9fr;gap:16px}.ov-loading .wide{grid-column:1/-1}",
-      "@media(max-width:768px){#overview-root{left:0!important;top:54px!important;bottom:calc(60px + env(safe-area-inset-bottom))!important}.ov-scroll{padding:14px 15px 24px!important}.ov-needs-list{display:grid!important;overflow:visible!important}.ov-need{width:auto!important;min-width:0!important;min-height:122px!important}.ov-grid{display:block!important;margin-top:13px!important}.ov-stack{display:block!important}.ov-panel{margin-bottom:13px}.ov-notable.empty-mobile,.ov-scheduled.empty-mobile,.ov-fleet.empty-mobile{display:none}.ov-activity-row{grid-template-columns:9px minmax(0,1fr) auto 38px!important}.ov-notable-row{grid-template-columns:22px 92px minmax(0,1fr) 38px!important}.ov-notable-row .elapsed{display:none}.ov-today-tiles{grid-template-columns:repeat(2,1fr)!important}.ov-wake-shell{padding:11px!important}.ov-wake-shell .ov-head{height:auto!important;min-height:28px;flex-wrap:wrap}.ov-wake-rollup{width:100%;margin-left:15px!important;overflow-x:auto;padding-bottom:3px}.ov-wake-grid{grid-template-columns:1fr!important}.ov-wake-list{max-height:none!important}.ov-wake-cols{display:none!important}.ov-wake-row{grid-template-columns:76px minmax(100px,1fr) 104px!important;gap:7px!important;min-height:64px!important}.ov-wake-row .ov-wake-attempt,.ov-wake-row .ov-wake-error,.ov-wake-row .ov-wake-age{grid-row:2}.ov-wake-row .ov-wake-attempt{text-align:left}.ov-wake-row .ov-wake-error{grid-column:2}.ov-wake-row .ov-wake-age{grid-column:3}.ov-receipt-row{grid-template-columns:72px minmax(90px,1fr) 42px 62px!important}.ov-wake-pane-head .muted{display:none}.ov-wake-controls{width:100%;margin-left:0!important}.ov-wake-controls select{flex:1;max-width:none!important}.ov-loading{display:grid!important;grid-template-columns:1fr!important}.ov-loading .wide{grid-column:auto}.ov-fresh{display:block!important;text-align:center;color:#4f567f;font:9.5px 'JetBrains Mono';padding:12px 0 6px}}"
+      "@media(max-width:768px){#overview-root{left:0!important;top:54px!important;bottom:calc(60px + env(safe-area-inset-bottom))!important}.ov-scroll{padding:14px 15px 24px!important}.ov-needs-list{display:grid!important;overflow:visible!important}.ov-need{width:auto!important;min-width:0!important;min-height:122px!important}.ov-grid{display:block!important;margin-top:13px!important}.ov-stack{display:block!important}.ov-panel{margin-bottom:13px}.ov-notable.empty-mobile,.ov-fleet.empty-mobile{display:none}.ov-activity-row{grid-template-columns:9px minmax(0,1fr) auto 38px!important}.ov-notable-row{grid-template-columns:22px 92px minmax(0,1fr) 38px!important}.ov-notable-row .elapsed{display:none}.ov-today-tiles{grid-template-columns:repeat(2,1fr)!important}.ov-wake-shell{padding:11px!important}.ov-wake-shell .ov-head{height:auto!important;min-height:28px;flex-wrap:wrap}.ov-wake-rollup{width:100%;margin-left:15px!important;overflow-x:auto;padding-bottom:3px}.ov-wake-grid{grid-template-columns:1fr!important}.ov-wake-list{max-height:none!important}.ov-wake-cols{display:none!important}.ov-wake-row{grid-template-columns:76px minmax(100px,1fr) 104px!important;gap:7px!important;min-height:64px!important}.ov-wake-row .ov-wake-attempt,.ov-wake-row .ov-wake-error,.ov-wake-row .ov-wake-age{grid-row:2}.ov-wake-row .ov-wake-attempt{text-align:left}.ov-wake-row .ov-wake-error{grid-column:2}.ov-wake-row .ov-wake-age{grid-column:3}.ov-receipt-row{grid-template-columns:72px minmax(90px,1fr) 42px 62px!important}.ov-wake-pane-head .muted{display:none}.ov-wake-controls{width:100%;margin-left:0!important}.ov-wake-controls select{flex:1;max-width:none!important}.ov-loading{display:grid!important;grid-template-columns:1fr!important}.ov-loading .wide{grid-column:auto}.ov-fresh{display:block!important;text-align:center;color:#4f567f;font:9.5px 'JetBrains Mono';padding:12px 0 6px}}"
     ].join('\n');
     document.head.appendChild(st);
     const root=document.createElement('div'); root.id='overview-root'; root.style.cssText='position:fixed;left:216px;top:54px;right:0;bottom:0;z-index:42;display:none;flex-direction:column';
@@ -1328,17 +1259,16 @@ class Component extends DCLogic {
     if(!this._overviewRoot)return;const box=this._overviewRoot.querySelector('#ov-content');
     if(status==='unsupported'){box.innerHTML='<div class="ov-empty" style="padding:48px 10px">Overview requires a newer gitmoot build. Jobs, Workflows, and the run graph remain available.</div>';return;}
     if(!data){box.innerHTML=status==='error'?'<div class="ov-empty" style="padding:48px 10px">Overview is temporarily unavailable.</div>':'<div class="ov-loading"><div class="ov-shimmer wide"></div><div class="ov-shimmer"></div><div class="ov-shimmer"></div><div class="ov-shimmer wide"></div></div>';return;}
-    const esc=this._ovEsc.bind(this),needs=Array.isArray(data.needs_you)?data.needs_you:[],act=data.activity||{},workflows=Array.isArray(act.workflows)?act.workflows:[],today=data.today||{},notable=Array.isArray(today.notable)?today.notable:[],scheduled=Array.isArray(data.scheduled)?data.scheduled:[],fleet=Array.isArray(data.fleet)?data.fleet:[],wake=this._wakeLedgerData||{status:'loading',summary:{}},wakeSummary=wake.summary||{},wakeOutstanding=Math.max(0,Number(wakeSummary.outstanding||0)),wakeAging=wakeOutstanding>0&&Number(wakeSummary.aged_attempted||0)>0,wakeProblem=wakeOutstanding>0||Number(wakeSummary.delivery_unknown||0)>0||Number(wakeSummary.stalled||0)>0;
+    const esc=this._ovEsc.bind(this),needs=Array.isArray(data.needs_you)?data.needs_you:[],act=data.activity||{},workflows=Array.isArray(act.workflows)?act.workflows:[],today=data.today||{},notable=Array.isArray(today.notable)?today.notable:[],fleet=Array.isArray(data.fleet)?data.fleet:[],wake=this._wakeLedgerData||{status:'loading',summary:{}},wakeSummary=wake.summary||{},wakeOutstanding=Math.max(0,Number(wakeSummary.outstanding||0)),wakeAging=wakeOutstanding>0&&Number(wakeSummary.aged_attempted||0)>0,wakeProblem=wakeOutstanding>0||Number(wakeSummary.delivery_unknown||0)>0||Number(wakeSummary.stalled||0)>0;
     const needHTML=needs.length?'<section class="ov-panel ov-needs"><div class="ov-head"><span class="ov-dot warn"></span>Needs you <span class="ov-count">'+needs.length+'</span><span class="right">stalled workflows · PRs to merge · blocked jobs · groom proposals</span></div><div class="ov-needs-list">'+needs.map(n=>{const stalled=n.kind==='stalled_workflow',badge=stalled?'STALLED':n.kind==='pr_awaiting_merge'?'PR '+(n.ref||''):n.kind==='blocked_job'?'BLOCKED '+(n.ref||''):'GROOM '+(n.ref||''),ci=n.ci?'<span class="ov-ci '+esc(n.ci)+'">CI '+(n.ci==='green'?'✓':n.ci==='red'?'✗':'…')+'</span>':'';return '<a class="ov-need '+(stalled?'stalled':'')+'" href="'+esc(n.link||'#')+'" data-ov-link><div class="ov-need-top"><span class="ov-badge">'+esc(badge)+'</span><span style="margin-left:auto">'+esc(this._ovDur(n.age_s))+'</span></div>'+(stalled?'<div class="ov-need-label">'+this._wfLabelHTML(n.label||'')+'</div>':'')+'<div class="ov-need-title">'+esc(n.title||'Needs attention')+'</div><div class="ov-need-meta">'+(stalled?'pane '+esc(n.pane||'-')+' · sess '+esc(n.session_id||'-')+(n.last_note?'<br>last note · '+esc(n.last_note):''):esc(n.repo||''))+ci+'</div></a>';}).join('')+'</div></section>':'<div class="ov-clear"><span>✓</span><b>Nothing needs you</b><span>0 PRs · 0 blocked · 0 proposals · 0 stalled workflows</span></div>';
     const activity='<section class="ov-panel ov-pad"><div class="ov-head"><span class="ov-dot"></span>Live fleet activity <span style="color:#555c83;letter-spacing:0;text-transform:none">by workflow</span><span class="right">'+Number(act.queued||0)+' queued · <a href="/workflows" data-ov-link>Workflows ↗</a></span></div>'+(workflows.length?workflows.map(w=>{const p=this._wfSplitLabel(w.label||'');return '<div class="ov-activity-row"><span class="ov-dot"></span><div><div class="ov-label">'+(p.namespace?'<span class="ns">'+esc(p.namespace)+'/</span>':'')+esc(p.campaign)+'</div><div class="ov-agents">'+esc((w.agents||[]).join(', '))+'</div></div><span class="ov-running">▶ '+Number(w.running||0)+' running</span><span class="ov-age">'+esc(this._ovDur(w.started_ago_s))+'</span></div>';}).join('')+(act.unattended_note?'<div class="ov-unattended">unattended · '+esc(act.unattended_note)+'</div>':''):'<div class="ov-empty"><span class="ov-muted-dot" style="display:inline-block;margin-right:8px"></span>Fleet idle · no jobs yet · '+Number(act.queued||0)+' queued</div>')+'</section>';
     const notableHTML='<section class="ov-panel ov-pad ov-notable '+(notable.length?'':'empty-mobile')+'"><div class="ov-head">Notable completions <span class="right">last 5 finished</span></div>'+(notable.length?notable.map(n=>'<div class="ov-notable-row"><span class="ov-outcome '+esc(n.outcome)+'">'+(n.outcome==='succeeded'?'✓':n.outcome==='failed'?'✗':'⊘')+'</span><span class="ov-agent">'+esc(n.agent||'agent')+'</span><span class="ov-job-title">'+esc(n.title||'job')+'</span><span class="ov-num elapsed">'+esc(n.elapsed_s?this._ovDur(n.elapsed_s):'-')+'</span><span class="ov-num">'+esc(this._ovDur(n.age_s))+'</span></div>').join(''):'<div class="ov-empty">No jobs have finished in the last 24h.</div>')+'</section>';
     const hours=Array.isArray(today.per_hour)?today.per_hour:[],max=Math.max(1,...hours.map(Number)),bars=hours.some(Number)?'<div class="ov-bars">'+hours.map(v=>'<span class="ov-bar" style="height:'+Math.max(4,Math.round(Number(v||0)/max*58))+'px"></span>').join('')+'</div><div class="ov-bar-axis"><span>24h ago</span><span>jobs / hour</span><span>now</span></div>':'';
     const wakeTileValue=wake.status==='ready'||(wake.status==='error'&&wake.hasSnapshot)?this._ovNum(wakeOutstanding):'-',wakeTileTitle=wakeOutstanding?' title="oldest '+esc(this._ovDur(wakeSummary.oldest_age_seconds))+'"':'';
     const todayHTML='<section class="ov-panel ov-pad"><div class="ov-head">Today <span class="right">rolling 24h</span></div><div class="ov-today-tiles"><div class="ov-tile"><b>'+this._ovNum(today.completed)+'</b><span>completed</span></div><div class="ov-tile fail"><b>'+this._ovNum(today.failed)+'</b><span>failed</span></div><div class="ov-tile cancel"><b>'+this._ovNum(today.cancelled)+'</b><span>cancelled</span></div><div class="ov-tile wake'+(wakeAging?' aging':wakeProblem?' problem':'')+'"'+wakeTileTitle+'><b>'+wakeTileValue+'</b><span>wake obligations</span></div></div>'+bars+'<div class="ov-token"><b>'+this._ovNum(Number(today.tokens_in||0)+Number(today.tokens_out||0))+'</b> tokens · '+this._ovNum(today.tokens_in)+' in · '+this._ovNum(today.tokens_out)+' out</div></section>';
-    const scheduledHTML='<section class="ov-panel ov-pad ov-scheduled '+(scheduled.length?'':'empty-mobile')+'"><div class="ov-head">Scheduled <span class="right">next pipeline runs</span></div>'+(scheduled.length?scheduled.map(s=>'<div class="ov-sched-row"><div><div class="ov-sched-name">'+esc(s.name)+'</div><div class="ov-sched-sub">'+esc(s.schedule)+'</div></div><span class="ov-status '+esc(s.last_status)+'">'+esc(s.last_status||'-')+'</span><span class="ov-next"><small>next in</small>'+esc(this._ovDur(s.next_in_s))+'</span></div>').join(''):'<div class="ov-empty">No pipelines declared yet.</div>')+'</section>';
     const fleetHTML='<section class="ov-panel ov-pad ov-fleet '+(fleet.length?'':'empty-mobile')+'"><div class="ov-head">Fleet at a glance <span class="right"><a href="/agents" data-ov-link>Agents ↗</a></span></div>'+(fleet.length?'<div class="ov-fleet-list">'+fleet.map(a=>'<div class="ov-fleet-item"><span class="'+(a.running?'ov-dot':'ov-muted-dot')+'"></span><b>'+esc(a.agent)+'</b><span class="ov-runtime '+this._ovRuntime(a.runtime)+'">'+esc(a.runtime||'shell')+'</span><span class="ov-fleet-jobs">'+Number(a.jobs_today||0)+' today</span></div>').join('')+'</div>':'<div class="ov-empty">No agents registered yet.</div>')+'</section>';
-    const fresh=!needs.length&&!workflows.length&&!Number(today.completed||0)&&!Number(today.failed||0)&&!wakeProblem&&!scheduled.length&&!fleet.length;
-    box.innerHTML=needHTML+this._wakeLedgerHTML()+'<div class="ov-grid"><div class="ov-stack">'+activity+notableHTML+'</div><div class="ov-stack">'+todayHTML+scheduledHTML+'</div>'+fleetHTML+'</div>'+(fresh?'<div class="ov-fresh" style="display:none">Fresh install - no pipelines or agents registered yet.</div>':'');
+    const fresh=!needs.length&&!workflows.length&&!Number(today.completed||0)&&!Number(today.failed||0)&&!wakeProblem&&!fleet.length;
+    box.innerHTML=needHTML+this._wakeLedgerHTML()+'<div class="ov-grid"><div class="ov-stack">'+activity+notableHTML+'</div><div class="ov-stack">'+todayHTML+'</div>'+fleetHTML+'</div>'+(fresh?'<div class="ov-fresh" style="display:none">Fresh install - no agents registered yet.</div>':'');
   }
 
   // ============================================================
@@ -1555,7 +1485,7 @@ class Component extends DCLogic {
   }
   renderWorkflowIndexLoading() { this._wfShowIndex(); this._workflowRoot.querySelector('#wfi-summary').textContent='loading'; this._workflowRoot.querySelector('#wfi-content').innerHTML='<div class="wfi-skeleton">'+Array.from({length:7},()=>'<div class="wf-shimmer"></div>').join('')+'</div>'; }
   renderWorkflowIndexError() { this._wfShowIndex(); this._workflowRoot.querySelector('#wfi-summary').textContent='0 in range'; this._workflowRoot.querySelector('#wfi-content').innerHTML=this._wfEmptyIndexHTML(); }
-  _wfEmptyIndexHTML() { return '<div class="wf-empty"><div class="wf-empty-icon">☷</div><div class="wf-empty-title">No workflows yet</div><div class="wf-empty-copy">Every run joins a workflow. Label one to start a campaign - unlabeled runs stay on the Jobs page; pipeline runs live on the Pipelines page.</div><div class="wf-command"><code>gitmoot run &lt;prompt&gt; --workflow <span style="color:#9ece6a">fable/my-campaign</span></code><button class="wf-copy" data-wf-copy="gitmoot run &lt;prompt&gt; --workflow fable/my-campaign">copy</button></div></div>'; }
+  _wfEmptyIndexHTML() { return '<div class="wf-empty"><div class="wf-empty-icon">☷</div><div class="wf-empty-title">No workflows yet</div><div class="wf-empty-copy">Every run joins a workflow. Label one to start a campaign - unlabeled runs stay on the Jobs page.</div><div class="wf-command"><code>gitmoot run &lt;prompt&gt; --workflow <span style="color:#9ece6a">fable/my-campaign</span></code><button class="wf-copy" data-wf-copy="gitmoot run &lt;prompt&gt; --workflow fable/my-campaign">copy</button></div></div>'; }
   _wfSyncIndexControls(entries) {
     const namespaces=Array.from(new Set(entries.map(w=>w.namespace||this._wfSplitLabel(w.label).namespace).filter(Boolean))).sort();
     const repos=Array.from(new Set(entries.flatMap(w=>Array.isArray(w.repos)?w.repos:[]).filter(Boolean))).sort();
@@ -2804,7 +2734,6 @@ class Component extends DCLogic {
   showConfig = () => { this.setState({ view: 'config' }); this._navRoute('config'); };
   showAttention = () => { this.setState({ view: 'attention' }); this._navRoute('attention'); };
   showLearning = () => { this.setState({ view: 'learning' }); this._navRoute('learning'); };
-  showPipelines = () => { this.setState({ view: 'pipelines' }); this._navRoute('pipelines', { name: this._plDetailName || undefined }); };
 
   startJobsPoll() {
     if (this._jobsPoll) return;
@@ -5789,8 +5718,6 @@ class Component extends DCLogic {
       "#config-root .cfg-keychain-proxy{display:grid;gap:3px;max-width:300px}",
       "#config-root .cfg-keychain-upstream{overflow-wrap:anywhere;color:#a8aecf}",
       "#config-root .cfg-keychain-auth{color:#5f678f;font-size:9px}",
-      "#config-root .cfg-keychain-grants{display:flex;gap:5px;flex-wrap:wrap;min-width:180px}",
-      "#config-root .cfg-keychain-grant{display:inline-flex;padding:2px 6px;border:1px solid rgba(110,198,255,.2);border-radius:5px;background:rgba(110,198,255,.06);color:#8fbfe0;font:9px 'JetBrains Mono',monospace;white-space:nowrap}",
       "#config-root .cfg-keychain-created{color:#69719a;white-space:nowrap}",
       "#config-root .cfg-keychain-dash{color:#4f567c}",
       "#config-root .cfg-agent-wrap{border:1px solid rgba(160,168,220,.11);border-radius:8px;overflow:auto;max-height:310px;background:#0a0c17}",
@@ -5936,9 +5863,7 @@ class Component extends DCLogic {
     const allKeys = Array.isArray(projection.keys) ? projection.keys : [];
     const headerMatch = !q || ['keychain', path, rawStatus, statusLabel].join(' ').toLowerCase().indexOf(q) >= 0;
     const filteredKeys = headerMatch ? allKeys : allKeys.filter(key => {
-      const grants = Array.isArray(key && key.grants) ? key.grants : [];
       return [key && key.name, key && key.mode, key && key.proxyUpstream, key && key.proxyAuth, key && key.createdAt]
-        .concat(grants.map(grant => String(grant && grant.consumerKind || '') + ':' + String(grant && grant.consumerID || '')))
         .join(' ').toLowerCase().indexOf(q) >= 0;
     });
     if (q && !headerMatch && !filteredKeys.length) return null;
@@ -5957,11 +5882,9 @@ class Component extends DCLogic {
         const proxy = upstream || auth
           ? '<div class="cfg-keychain-proxy">' + (upstream ? '<span class="cfg-keychain-upstream">' + esc(upstream) + '</span>' : '') + (auth ? '<span class="cfg-keychain-auth">' + esc(auth) + '</span>' : '') + '</div>'
           : '<span class="cfg-keychain-dash">-</span>';
-        const grants = Array.isArray(key && key.grants) ? key.grants : [];
-        const grantHTML = grants.length ? grants.map(grant => '<span class="cfg-keychain-grant">' + esc(grant && grant.consumerKind || '') + ':' + esc(grant && grant.consumerID || '') + '</span>').join('') : '<span class="cfg-keychain-dash">-</span>';
-        return '<tr><td class="cfg-keychain-name">' + esc(key && key.name || '') + '</td><td><span class="cfg-keychain-mode ' + modeClass + '">' + esc(mode || '-') + '</span></td><td>' + proxy + '</td><td><div class="cfg-keychain-grants">' + grantHTML + '</div></td><td class="cfg-keychain-created">' + esc(key && key.createdAt || '-') + '</td></tr>';
+        return '<tr><td class="cfg-keychain-name">' + esc(key && key.name || '') + '</td><td><span class="cfg-keychain-mode ' + modeClass + '">' + esc(mode || '-') + '</span></td><td>' + proxy + '</td><td class="cfg-keychain-created">' + esc(key && key.createdAt || '-') + '</td></tr>';
       }).join('');
-      body = '<div class="cfg-keychain-table-wrap"><table class="cfg-keychain-table"><thead><tr><th>Name</th><th>Mode</th><th>Upstream / Auth</th><th>Grants</th><th>Created</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+      body = '<div class="cfg-keychain-table-wrap"><table class="cfg-keychain-table"><thead><tr><th>Name</th><th>Mode</th><th>Upstream / Auth</th><th>Created</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
     } else if (q && allKeys.length) {
       body = '<div class="cfg-keychain-empty">No keychain entries match “' + esc(query) + '”.</div>';
     } else {
@@ -5971,7 +5894,7 @@ class Component extends DCLogic {
       id: id,
       label: 'Keychain',
       count: filteredKeys.length,
-      html: '<section id="' + id + '" class="cfg-section" data-cfg-section><div class="cfg-section-head">Keychain <span class="cfg-section-meta">names and grants only · values never serialized</span></div>' + header + body + '</section>'
+      html: '<section id="' + id + '" class="cfg-section" data-cfg-section><div class="cfg-section-head">Keychain <span class="cfg-section-meta">names only · values never serialized</span></div>' + header + body + '</section>'
     };
   }
 
@@ -6470,1383 +6393,14 @@ class Component extends DCLogic {
   // and a 60px bottom tab bar appears, so the roots dock to left:0 and stop above
   // the tab bar. Shared here so the creation-time cssText and the breakpoint
   // re-dock can never drift.
-  // ============================================================
-  // Pipelines view: declared pipelines (gitmoot #681) with schedule
-  // state + recent run outcomes (LIST) and a per-run stage DAG (DETAIL),
-  // built IMPERATIVELY into a body-appended overlay (same pattern as
-  // Jobs/Learning). The stage DAG is a hand-rolled inline-SVG funnel
-  // (depth-column layout from stage deps) — no ELK / force-graph. Stages
-  // that carry a jobId open the shared job-detail panel (_jobDetailHTML).
-  // ============================================================
-  startPipelinesPoll() {
-    if (!this._plLiveTick) {
-      // Stage progress ages are derived locally. Keep them moving even when the
-      // 12s API poll receives an identical response and skips a full re-render.
-      this._plLiveTick = setInterval(() => {
-        if (this.state.view === 'pipelines') this.refreshPipelineStageProgress();
-      }, 1000);
-    }
-    if (!this._pipelinesPoll) {
-      this._pipelinesPoll = setInterval(() => {
-        if (this.state.view !== 'pipelines') return;
-        this.fetchPipelines(true);
-        // next-due countdowns are derived from a fixed epoch, so the signature-skip
-        // would freeze them; refresh them every tick regardless of a data change.
-        this.refreshPipelineCountdowns();
-      }, 12000);
-    }
-  }
-  stopPipelinesPoll() {
-    try { clearInterval(this._pipelinesPoll); } catch (e) {}
-    try { clearInterval(this._plLiveTick); } catch (e) {}
-    this._pipelinesPoll = null;
-    this._plLiveTick = null;
-  }
-  // Second poll: while a run detail is open, refresh JUST that run so an in-flight
-  // run's stages flip live. Self-guarded (no-ops on the list / other views).
-  startPipelineRunPoll() {
-    if (this._plRunPoll) return;
-    this._plRunPoll = setInterval(() => {
-      if (this.state.view !== 'pipelines' || !this._plDetailName || !this._plSelectedRun) return;
-      this.fetchPipelineRun(this._plSelectedRun, true);
-    }, 12000);
-  }
-  stopPipelineRunPoll() { try { clearInterval(this._plRunPoll); } catch (e) {} this._plRunPoll = null; }
-
-  // Stage state colors: reuse the canonical run map, plus the two stage-only
-  // states the DAG must dim — pending (not started) and skipped (never ran).
-  _plStageColor(state) {
-    if (state === 'pending') return '#5a6088';
-    if (state === 'skipped') return '#3b3f5c';
-    return this._galaxyStateColor(state);
-  }
-  _fmtEta(d) {
-    const s = Math.round(d / 1000);
-    if (s < 60) return s + 's';
-    const m = Math.floor(s / 60);
-    if (m < 60) return m + 'm';
-    const h = Math.floor(m / 60), rm = m % 60;
-    if (h < 24) return rm ? (h + 'h ' + rm + 'm') : (h + 'h');
-    const days = Math.floor(h / 24), rh = h % 24;
-    return rh ? (days + 'd ' + rh + 'h') : (days + 'd');
-  }
-  _plFmtLiveAge(d) {
-    const total = Math.max(0, Math.floor(d / 1000));
-    const s = total % 60;
-    const m = Math.floor(total / 60);
-    if (m < 60) return m ? (m + 'm ' + s + 's') : (s + 's');
-    const h = Math.floor(m / 60), rm = m % 60;
-    return h + 'h ' + rm + 'm ' + s + 's';
-  }
-  _plFmtCountdown(ms, now) {
-    if (!ms || ms <= 0) return '-';
-    const d = ms - (now || Date.now());
-    if (d <= 0) return 'due now';
-    return 'due in ' + this._fmtEta(d);
-  }
-  refreshPipelineCountdowns() {
-    if (!this._pipelinesRoot) return;
-    const now = Date.now();
-    this._pipelinesRoot.querySelectorAll('.pl-due').forEach(el => {
-      const due = +el.getAttribute('data-due');
-      el.textContent = this._plFmtCountdown(due, now);
-    });
-    this._pipelinesRoot.querySelectorAll('.pl-ledger-due').forEach(el => {
-      const due = +el.getAttribute('data-due');
-      el.textContent = this._plFmtLedgerDue(due, now);
-    });
-    // the RUNS-rail footer carries a "next run in …" countdown of its own.
-    this._pipelinesRoot.querySelectorAll('.pl-nextdue').forEach(el => {
-      const due = +el.getAttribute('data-due');
-      el.textContent = this._plNextRunLabel(due, now);
-    });
-  }
-  refreshPipelineStageProgress() {
-    if (!this._pipelinesRoot) return;
-    const stages = (this._plRun && Array.isArray(this._plRun.stages)) ? this._plRun.stages : [];
-    const byId = {};
-    stages.forEach(stage => { if (stage && stage.id) byId[stage.id] = stage; });
-    const now = Date.now();
-    this._pipelinesRoot.querySelectorAll('.pl-node-progress').forEach(el => {
-      const node = el.closest && el.closest('.pl-node');
-      const stage = node && byId[node.getAttribute('data-stage')];
-      if (!stage || stage.state !== 'running') { el.textContent = ''; return; }
-      const activity = typeof stage.progressActivity === 'string' ? stage.progressActivity : '';
-      const progressAt = Number(stage.progressAt) || 0;
-      if (activity) {
-        const ageMs = progressAt > 0 ? Math.max(0, now - progressAt) : 0;
-        const stale = progressAt > 0 && ageMs > 90000;
-        const age = progressAt > 0 ? (this._plFmtLiveAge(ageMs) + ' ago') : 'unknown';
-        el.textContent = 'last activity ' + age + (stale ? ' (stale)' : '') + ': ' + activity;
-        el.classList.toggle('stale', stale);
-        return;
-      }
-      el.classList.remove('stale');
-      el.textContent = stage.startedAt > 0 ? ('running ' + this._plFmtLiveAge(Math.max(0, now - stage.startedAt))) : '';
-    });
-  }
-
-  ensurePipelinesDom() {
-    if (this._pipelinesRoot) return this._pipelinesRoot;
-    // Runs-rail collapse pref (persisted; the Graph runsOpen pattern) + default tab.
-    if (this._plRunsOpen == null) { let v = true; try { const s = localStorage.getItem('gitmoot.plRunsOpen'); if (s != null) v = s === '1'; } catch (e) {} this._plRunsOpen = v; }
-    if (!(this._plExpandedGroups instanceof Set)) this._plExpandedGroups = this._plLoadExpandedGroups();
-    if (!this._plTab) this._plTab = 'dag';
-    const st = document.createElement('style');
-    st.textContent = [
-      "#pipelines-root{font-family:Inter,system-ui,sans-serif;color:#c8cce6;overflow:hidden}",
-      "#pipelines-root #pl-list{height:100%;overflow:hidden;box-sizing:border-box;display:flex;flex-direction:column;min-height:0}",
-      "#pipelines-root #pl-list .pl-list-head{height:72px;flex:none;display:flex;align-items:center;gap:14px;padding:0 26px;border-bottom:1px solid rgba(160,168,220,.09)}",
-      "#pipelines-root #pl-list .pl-list-title{font:700 23px 'Space Grotesk',sans-serif;color:#eef0ff}#pipelines-root #pl-list .pl-list-title i{font-style:normal;color:#bb9af7}",
-      "#pipelines-root #pl-list .pl-list-summary{font:10.5px 'JetBrains Mono',monospace;color:#5a6088;white-space:nowrap}",
-      "#pipelines-root #pl-list .pl-list-scroll{flex:1;min-height:0;overflow-y:auto;padding:18px 26px 36px;scrollbar-gutter:stable}",
-      "#pipelines-root #pl-list .pl-group{margin-bottom:20px}",
-      "#pipelines-root #pl-list .pl-group-toggle{appearance:none;width:100%;height:28px;display:grid;grid-template-columns:minmax(0,1fr) 104px 132px 92px 96px;align-items:center;gap:14px;padding:0;border:0;border-radius:7px;background:transparent;color:inherit;text-align:left;cursor:pointer}",
-      "#pipelines-root #pl-list .pl-group-toggle:hover{background:rgba(202,191,242,.03)}",
-      "#pipelines-root #pl-list .pl-group-toggle:focus-visible{outline:1px solid rgba(202,191,242,.42);outline-offset:-1px}",
-      "#pipelines-root #pl-list .pl-group-chev{display:inline-block;width:12px;text-align:center;font-size:10px;line-height:1;color:#697099;transition:transform .18s ease,color .18s ease}",
-      "#pipelines-root #pl-list .pl-group-toggle[aria-expanded=true] .pl-group-chev{transform:rotate(90deg);color:#cabff2}",
-      "#pipelines-root #pl-list .pl-group-main{display:flex;align-items:center;gap:8px;min-width:0;color:#8b90b8;font:600 10.5px 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase}",
-      "#pipelines-root #pl-list .pl-group-marker{width:7px;height:7px;border-radius:50%;flex:none;background:#697099}",
-      "#pipelines-root #pl-list .pl-group-name{color:inherit;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
-      "#pipelines-root #pl-list .pl-group.system .pl-group-name{color:#8b90b8}",
-      "#pipelines-root #pl-list .pl-built-in{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.11em;text-transform:uppercase;color:#5a6088;border:1px solid rgba(160,168,220,.14);padding:1px 5px;border-radius:4px;white-space:nowrap;flex:none}",
-      "#pipelines-root #pl-list .pl-group-count{padding:1px 6px;border-radius:9px;background:rgba(160,168,220,.1);color:#a8aecf;font-size:9px;letter-spacing:0;white-space:nowrap;flex:none}",
-      "#pipelines-root #pl-list .pl-group-on{font-family:'JetBrains Mono',monospace;font-size:11.5px;text-align:right;white-space:nowrap;color:#565d80}",
-      "#pipelines-root #pl-list .pl-group-on b{font-weight:400;color:#9cc470}",
-      "#pipelines-root #pl-list .pl-group-on.zero b{color:#6b7192}",
-      "#pipelines-root #pl-list .pl-group-dots{display:flex;gap:3px;align-items:center;justify-content:flex-start}",
-      "#pipelines-root #pl-list .pl-group-dot{width:11px;height:11px;border-radius:3px;flex:none}",
-      "#pipelines-root #pl-list .pl-group-activity{font-family:'JetBrains Mono',monospace;font-size:11px;color:#6b7192;text-align:right;white-space:nowrap}",
-      "#pipelines-root #pl-list .pl-group-due{text-align:right}",
-      "#pipelines-root #pl-list .pl-ledger-due{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8fbd68;white-space:nowrap;letter-spacing:.01em}",
-      "#pipelines-root #pl-list .pl-ledger-none{font-family:'JetBrains Mono',monospace;font-size:11px;color:#3f4568}",
-      "#pipelines-root #pl-list .pl-group-rows{display:grid;gap:8px;padding:0;animation:plExpand .2s ease}",
-      "#pipelines-root #pl-list .pl-row{display:grid;grid-template-columns:minmax(150px,1.4fr) 92px minmax(140px,1.1fr) 118px 84px 186px;align-items:start;gap:12px;padding:12px 14px;border:1px solid rgba(160,168,220,.13);border-radius:8px;background:#0f1120;cursor:pointer;transition:background .15s,border-color .15s}",
-      "#pipelines-root #pl-list .pl-row:hover{background:#12152a}",
-      "#pipelines-root #pl-list .pl-row-cell{min-width:0;overflow:hidden}",
-      "#pipelines-root #pl-list .pl-name{font-family:Inter,system-ui,sans-serif;font-weight:600;font-size:13.5px;color:#dfe1f2;letter-spacing:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
-      "#pipelines-root .pl-repo{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#565d80;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
-      "#pipelines-root .pl-mono{font-family:'JetBrains Mono',monospace;font-size:12px;color:#a8aecf}",
-      "#pipelines-root #pl-list .pl-chip{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:400;line-height:1.5;padding:2px 8px;border-radius:6px}",
-      "#pipelines-root #pl-list .pl-chip.on{color:#9cc470;background:rgba(140,190,90,.05);border:1px solid rgba(140,190,90,.30)}",
-      "#pipelines-root #pl-list .pl-chip.off{color:#6b7192;background:transparent;border:1px solid rgba(160,168,220,.16)}",
-      "#pipelines-root #pl-list .pl-modechip{display:inline-flex;align-items:center;max-width:100%;box-sizing:border-box;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:400;line-height:1.5;padding:3px 9px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid rgba(160,168,220,.13)}",
-      "#pipelines-root #pl-list .pl-modechip.bound{color:#9ece6a;background:rgba(158,206,106,0.10);border-color:rgba(158,206,106,0.28)}",
-      "#pipelines-root #pl-list .pl-modechip.warn{color:#e0af68;background:rgba(224,175,104,0.11);border-color:rgba(224,175,104,0.30)}",
-      "#pipelines-root #pl-list .pl-modechip.error{color:#f7768e;background:rgba(247,118,142,0.10);border-color:rgba(247,118,142,0.30)}",
-      "#pipelines-root #pl-list .pl-modechip.muted{color:#6b7192;background:transparent;border-color:rgba(160,168,220,.16)}",
-      "#pipelines-root #pl-list .pl-modechip.after{color:#8b90b8;background:rgba(255,255,255,.02);border-color:rgba(160,168,220,.13)}",
-      "#pipelines-root .pl-statechip{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:7px}",
-      "#pipelines-root #pl-list .pl-due{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8fbd68;white-space:nowrap}",
-      "#pipelines-root .pl-nohist{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#3f4568}",
-      "#pipelines-root #pl-list .pl-strip{display:flex;align-items:center;gap:3px;flex-wrap:wrap}",
-      "#pipelines-root #pl-list .pl-pip{width:9px;height:9px;border-radius:2px;flex:none}",
-      "#pipelines-root .pl-empty{padding:60px 20px;text-align:center;color:#5a6088;font-size:13px}",
-      "#pipelines-root .pl-empty code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#c7c9e5;background:#0a0b16;border:1px solid rgba(160,168,220,0.14);border-radius:6px;padding:2px 7px}",
-      "@keyframes plExpand{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}",
-      // ---- detail workbench: [ RUNS rail | main ] ----
-      "#pipelines-root #pl-detail{height:100%;min-width:0;min-height:0;background:#0b0d16}",
-      // left RUNS rail
-      "#pipelines-root .pl-rail{flex:none;width:280px;background:#0a0b16;border-right:1px solid rgba(160,168,220,0.08);display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}",
-      "#pipelines-root .pl-rail-full{display:flex;flex-direction:column;min-height:0;min-width:0;flex:1}",
-      "#pipelines-root .pl-rail-mini{display:none;flex-direction:column;align-items:center;padding-top:14px;gap:12px;flex:1}",
-      "#pipelines-root .pl-rail-mini .pl-vlabel{writing-mode:vertical-rl;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.16em;color:#5a6088}",
-      "#pipelines-root .pl-rail-head{display:flex;align-items:center;padding:15px 14px 10px;flex:none}",
-      "#pipelines-root .pl-rail-title{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.15em;color:#868db5;font-weight:600}",
-      "#pipelines-root .pl-rail-count{margin-left:7px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#5a6088}",
-      "#pipelines-root .pl-icbtn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;background:rgba(160,168,220,0.06);border:1px solid rgba(160,168,220,0.14);border-radius:7px;color:#868db5;font-size:14px;line-height:1;cursor:pointer;padding:0;flex:none}",
-      "#pipelines-root .pl-icbtn:hover{border-color:rgba(125,207,255,0.4);color:#c8f0ff}",
-      "#pipelines-root .pl-runs{flex:1;overflow-y:auto;min-height:0;padding:0 6px 10px}",
-      "#pipelines-root .pl-runrow{display:flex;flex-direction:column;gap:6px;padding:9px 11px;margin:2px 4px;border-radius:9px;cursor:pointer;border:1px solid transparent}",
-      "#pipelines-root .pl-runrow:hover{background:rgba(160,168,220,0.05)}",
-      "#pipelines-root .pl-runrow.sel{background:rgba(158,206,106,0.09);border-color:rgba(158,206,106,0.22)}",
-      "#pipelines-root .pl-runrow-top{display:flex;align-items:center;gap:9px}",
-      "#pipelines-root .pl-runrow-dot{width:8px;height:8px;border-radius:50%;flex:none}",
-      "#pipelines-root .pl-runrow-id{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#eef0ff;font-weight:600}",
-      "#pipelines-root .pl-runrow-tg{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;flex:none}",
-      "#pipelines-root .pl-runrow-tg.manual{color:#bb9af7;background:rgba(187,154,247,0.14)}",
-      "#pipelines-root .pl-runrow-tg.schedule{color:#7dcfff;background:rgba(125,207,255,0.14)}",
-      "#pipelines-root .pl-runrow-tg.bridge{color:#9ece6a;background:rgba(158,206,106,0.14)}",
-      "#pipelines-root .pl-runrow-ago{font-family:'JetBrains Mono',monospace;font-size:10px;color:#5a6088;margin-left:auto;flex:none}",
-      "#pipelines-root .pl-runrow-sub{display:flex;align-items:center;gap:6px;padding-left:17px}",
-      "#pipelines-root .pl-runrow-dur{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#7c83a8}",
-      "#pipelines-root .pl-runs-empty{padding:24px 12px;text-align:center;color:#5a6088;font-family:'JetBrains Mono',monospace;font-size:11px}",
-      "#pipelines-root .pl-rail-foot{flex:none;padding:12px 16px;border-top:1px solid rgba(160,168,220,0.08);display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}",
-      "#pipelines-root .pl-rail-foot-dot{width:6px;height:6px;border-radius:50%;background:#7dcfff;box-shadow:0 0 8px rgba(125,207,255,0.6);flex:none}",
-      "#pipelines-root .pl-rail-foot-txt{font-family:'JetBrains Mono',monospace;font-size:11px;color:#868db5;min-width:0;overflow:hidden;text-overflow:ellipsis}",
-      // main column
-      "#pipelines-root .pl-main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}",
-      "#pipelines-root .pl-main-head{flex:none;padding:13px 22px;border-bottom:1px solid rgba(160,168,220,0.08);display:flex;align-items:center;gap:12px}",
-      "#pipelines-root .pl-back-ic{width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:rgba(160,168,220,0.06);border:1px solid rgba(160,168,220,0.14);border-radius:8px;color:#868db5;font-size:15px;line-height:1;cursor:pointer;padding:0;flex:none}",
-      "#pipelines-root .pl-back-ic:hover{border-color:rgba(125,207,255,0.4);color:#c8f0ff}",
-      "#pipelines-root .pl-h-name{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600;color:#eef0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;max-width:40%}",
-      "#pipelines-root .pl-h-repo{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#5a6088;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none}",
-      "#pipelines-root .pl-h-runid{font-family:'JetBrains Mono',monospace;font-size:12px;color:#a8aecf;flex:none}",
-      "#pipelines-root .pl-tabs{display:flex;background:#14172a;border:1px solid rgba(160,168,220,0.14);border-radius:9px;padding:2px;gap:2px;flex:none;margin-left:auto}",
-      "#pipelines-root .pl-tabs button{appearance:none;padding:6px 15px;border:none;border-radius:7px;cursor:pointer;font-family:Inter,sans-serif;font-size:12.5px;font-weight:500;background:transparent;color:#868db5}",
-      "#pipelines-root .pl-tabs button.on{background:rgba(158,206,106,0.14);color:#c5f882}",
-      "#pipelines-root .pl-main-body{flex:1;overflow:auto;min-height:0;padding:22px 24px}",
-      "#pipelines-root .pl-tabbody{display:none}",
-      "#pipelines-root .pl-tabbody.on{display:block}",
-      "#pipelines-root .pl-description{max-width:720px;margin:0 0 18px;color:#7c83aa;font-size:13px;line-height:1.55;white-space:pre-line}",
-      // ---- names-only credential visibility ----
-      "#pipelines-root .pl-keys-env{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 14px;margin-bottom:16px;background:#0f1120;border:1px solid rgba(160,168,220,0.13);border-radius:9px}",
-      "#pipelines-root .pl-keys-env-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.12em;color:#8b90b8}",
-      "#pipelines-root .pl-keys-env-path{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c7c9e5;overflow-wrap:anywhere}",
-      "#pipelines-root .pl-keys-env-none{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#5a6088}",
-      "#pipelines-root .pl-keys-status{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid rgba(160,168,220,0.2);border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.06em;color:#8b90b8;background:rgba(160,168,220,0.07)}",
-      "#pipelines-root .pl-keys-status.ok{color:#9ece6a;border-color:rgba(158,206,106,0.28);background:rgba(158,206,106,0.09)}",
-      "#pipelines-root .pl-keys-status.missing,#pipelines-root .pl-keys-status.invalid{color:#f7768e;border-color:rgba(247,118,142,0.28);background:rgba(247,118,142,0.09)}",
-      "#pipelines-root .pl-keys-status.bad_mode,#pipelines-root .pl-keys-status.bad_owner,#pipelines-root .pl-keys-status.bad_location{color:#e0af68;border-color:rgba(224,175,104,0.28);background:rgba(224,175,104,0.09)}",
-      "#pipelines-root .pl-keys-empty{padding:18px;margin-bottom:16px;background:#090b16;border:1px solid rgba(160,168,220,0.13);border-radius:9px;color:#8b90b8;font-size:12.5px;line-height:1.55}",
-      "#pipelines-root .pl-keys-empty code{font-family:'JetBrains Mono',monospace;color:#c7c9e5;font-size:11.5px}",
-      "#pipelines-root .pl-keys-table-wrap{width:100%;overflow-x:auto;overflow-y:hidden;padding-bottom:6px}",
-      "#pipelines-root .pl-keys-table{width:100%;min-width:720px;border-collapse:collapse;background:#090b16;border:1px solid rgba(160,168,220,0.13);font-size:12.5px}",
-      "#pipelines-root .pl-keys-table th{text-align:left;padding:9px 12px;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.12em;color:#8b90b8;font-weight:600;border-bottom:1px solid rgba(160,168,220,0.13);white-space:nowrap}",
-      "#pipelines-root .pl-keys-table td{padding:10px 12px;color:#a8aecf;border-bottom:1px solid rgba(160,168,220,0.07);vertical-align:top}",
-      "#pipelines-root .pl-keys-table tbody+tbody tr:first-child td{border-top:1px solid rgba(160,168,220,0.18)}",
-      "#pipelines-root .pl-keys-stage{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:600;color:#eef0ff;white-space:nowrap}",
-      "#pipelines-root .pl-keys-kind{font-family:'JetBrains Mono',monospace;font-size:10px;color:#7c83aa;white-space:nowrap}",
-      "#pipelines-root .pl-keys-name{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#c7c9e5;white-space:nowrap}",
-      "#pipelines-root .pl-keys-badge{display:inline-flex;align-items:center;padding:3px 7px;border:1px solid rgba(160,168,220,0.2);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.04em;color:#8b90b8;background:rgba(160,168,220,0.07);white-space:nowrap}",
-      "#pipelines-root .pl-keys-badge.own{color:#7dcfff;border-color:rgba(125,207,255,0.28);background:rgba(125,207,255,0.09)}",
-      "#pipelines-root .pl-keys-badge.default{color:#bb9af7;border-color:rgba(187,154,247,0.28);background:rgba(187,154,247,0.09)}",
-      "#pipelines-root .pl-keys-badge.shared{color:#9ece6a;border-color:rgba(158,206,106,0.28);background:rgba(158,206,106,0.09)}",
-      "#pipelines-root .pl-keys-badge.injected{color:#9ece6a;border-color:rgba(158,206,106,0.24);background:rgba(158,206,106,0.07)}",
-      "#pipelines-root .pl-keys-badge.proxied{color:#e0af68;border-color:rgba(224,175,104,0.24);background:rgba(224,175,104,0.07)}",
-      "#pipelines-root .pl-keys-no-cred{font-family:'JetBrains Mono',monospace;font-size:11px;color:#5a6088;font-style:italic}",
-      "#pipelines-root .pl-keys-warning td{padding:9px 12px;background:rgba(224,175,104,0.06);color:#e0af68;font-size:11.5px}",
-      "#pipelines-root .pl-keys-warning code{display:inline-block;margin-left:5px;padding:2px 6px;border:1px solid rgba(224,175,104,0.22);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#e0af68;background:rgba(224,175,104,0.06)}",
-      "#pipelines-root .pl-history-lbl{font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.12em;color:#5a6088;margin-bottom:8px}",
-      // ---- banner (blocked / failed) : design accent-bar alert ----
-      "#pipelines-root .pl-banner{display:flex;flex-direction:column;gap:12px;border-radius:12px;padding:16px 18px;margin-bottom:18px;border:1px solid;border-left-width:3px}",
-      "#pipelines-root .pl-banner.blocked{background:color-mix(in srgb,#e0af68 9%,#14172a);border-color:rgba(224,175,104,0.30);border-left-color:#e0af68}",
-      "#pipelines-root .pl-banner.failed{background:color-mix(in srgb,#f7768e 9%,#14172a);border-color:rgba(247,118,142,0.30);border-left-color:#f7768e}",
-      "#pipelines-root .pl-banner-head{display:flex;align-items:center;gap:11px;flex-wrap:wrap}",
-      "#pipelines-root .pl-banner-ic{font-size:16px;flex:none}",
-      "#pipelines-root .pl-banner.blocked .pl-banner-ic{color:#e0af68}",
-      "#pipelines-root .pl-banner.failed .pl-banner-ic{color:#f7768e}",
-      "#pipelines-root .pl-banner-title{font-size:15px;font-weight:600;color:#eef0ff}",
-      "#pipelines-root .pl-banner-stage{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:11px}",
-      "#pipelines-root .pl-banner.blocked .pl-banner-stage{color:#e0af68;background:color-mix(in srgb,#e0af68 14%,transparent);border:1px solid rgba(224,175,104,0.30)}",
-      "#pipelines-root .pl-banner.failed .pl-banner-stage{color:#f7768e;background:color-mix(in srgb,#f7768e 14%,transparent);border:1px solid rgba(247,118,142,0.30)}",
-      "#pipelines-root .pl-banner-reason{font-size:12.5px;color:#c8cce6;line-height:1.5}",
-      "#pipelines-root .pl-needs-lbl{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:0.12em;color:#868db5;margin-bottom:8px}",
-      "#pipelines-root .pl-needs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}",
-      "#pipelines-root .pl-needs li{display:flex;align-items:flex-start;gap:9px;font-size:13px;color:#c7c9e5;line-height:1.45}",
-      "#pipelines-root .pl-needs li::before{content:'\\203a';flex:none;margin-top:1px}",
-      "#pipelines-root .pl-banner.blocked .pl-needs li::before{color:#e0af68}",
-      "#pipelines-root .pl-banner.failed .pl-needs li::before{color:#f7768e}",
-      "#pipelines-root .pl-cmd{display:inline-flex;align-items:center;gap:10px;padding:9px 10px 9px 13px;background:#0a0b16;border:1px solid rgba(160,168,220,0.14);border-radius:9px;align-self:flex-start;max-width:100%;box-sizing:border-box}",
-      "#pipelines-root .pl-cmd code{font-family:'JetBrains Mono',monospace;font-size:12px;color:#c5f882;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}",
-      // ---- stage graph (DAG) : design card chips + scroll cue/fade ----
-      "#pipelines-root .pl-sg-lbl{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:0.14em;color:#5a6088;margin-bottom:6px}",
-      "#pipelines-root .pl-sg-cue{color:#5a6088}",
-      "#pipelines-root .pl-sg-wrap{position:relative}",
-      "#pipelines-root .pl-sg-fade{display:none;position:absolute;top:0;right:0;bottom:10px;width:52px;pointer-events:none;background:linear-gradient(90deg,rgba(11,13,22,0),#0b0d16)}",
-      "#pipelines-root .pl-sg-wrap.clip .pl-sg-fade{display:block}",
-      "#pipelines-root .pl-dagwrap{overflow-x:auto;overflow-y:hidden;padding-bottom:10px}",
-      "#pipelines-root .pl-dag{display:block}",
-      "#pipelines-root .pl-node{width:100%;height:100%;box-sizing:border-box;background:#0f1120;border:1px solid rgba(160,168,220,0.13);border-radius:9px;padding:11px 13px;display:flex;flex-direction:column;cursor:pointer;overflow:hidden}",
-      "#pipelines-root .pl-node:hover{border-color:rgba(160,168,220,0.3)}",
-      "#pipelines-root .pl-node.dim{opacity:0.5}",
-      "#pipelines-root .pl-node.running{border-color:rgba(122,162,247,0.28)}",
-      "#pipelines-root .pl-node-top{display:flex;align-items:center;gap:8px}",
-      "#pipelines-root .pl-node-dot{width:9px;height:9px;border-radius:50%;flex:none}",
-      "#pipelines-root .pl-node-kind{font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:800;line-height:1;color:#868db5;background:rgba(134,141,181,0.10);border:1px solid rgba(134,141,181,0.22);border-radius:5px;padding:3px 5px;flex:none;white-space:nowrap}",
-      "#pipelines-root .pl-node-id{font-family:Inter,system-ui,sans-serif;font-size:13.5px;font-weight:600;color:#eef0ff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}",
-      "#pipelines-root .pl-node-runtime{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#7c83a8;font-weight:600}",
-      "#pipelines-root .pl-node-try{font-family:'JetBrains Mono',monospace;font-size:9px;color:#e0af68;background:rgba(224,175,104,0.12);border:1px solid rgba(224,175,104,0.3);border-radius:5px;padding:1px 5px;flex:none;white-space:nowrap}",
-      "#pipelines-root .pl-node-slbl{font-family:'JetBrains Mono',monospace;font-size:8.5px;text-transform:uppercase;letter-spacing:0.05em;flex:none;white-space:nowrap}",
-      "#pipelines-root .pl-node-sum{font-size:11.5px;line-height:1.35;color:#7c83a8;margin-top:6px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}",
-      "#pipelines-root .pl-node-progress{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#868db5;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}",
-      "#pipelines-root .pl-node-progress.stale{color:#5a6088;opacity:0.72}",
-      "#pipelines-root .pl-node-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px}",
-      "#pipelines-root .pl-node-dur{font-family:'JetBrains Mono',monospace;font-size:11px}",
-      "#pipelines-root .pl-node-job{font-family:'JetBrains Mono',monospace;font-size:10px;color:#7dcfff;white-space:nowrap}",
-      // ---- STAGES tally chips + matrix note ----
-      "#pipelines-root .pl-tally{display:flex;align-items:center;gap:9px;margin-top:14px;padding-top:16px;border-top:1px solid rgba(160,168,220,0.08);flex-wrap:wrap}",
-      "#pipelines-root .pl-tally-lbl{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:0.12em;color:#5a6088;margin-right:4px}",
-      "#pipelines-root .pl-tchip{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:11px}",
-      "#pipelines-root .pl-tchip-dot{width:8px;height:8px;border-radius:50%;flex:none}",
-      "#pipelines-root .pl-mxnote{font-family:'JetBrains Mono',monospace;font-size:12px;color:#868db5;padding:8px 2px;line-height:1.6}",
-      // ---- stage x run matrix (v1.6) ----
-      "#pipelines-root .pl-mx-wrap{overflow-x:auto;padding-bottom:8px;margin-bottom:4px}",
-      "#pipelines-root .pl-mx{border-collapse:collapse}",
-      "#pipelines-root .pl-mx td{padding:3px 3px}",
-      "#pipelines-root .pl-mx-lbl{font-family:'JetBrains Mono',monospace;font-size:11px;color:#a8aecf;text-align:right;padding-right:10px;white-space:nowrap;position:sticky;left:0;background:#07080f}",
-      "#pipelines-root .pl-mx-cell{cursor:pointer;text-align:center;width:16px;min-width:16px;border-radius:4px}",
-      "#pipelines-root .pl-mx-cell:hover{background:rgba(160,168,220,0.08)}",
-      "#pipelines-root .pl-mx-cell.sel{background:rgba(122,162,247,0.16)}",
-      "#pipelines-root .pl-mx-dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle}",
-      "#pipelines-root .pl-mx-empty .pl-mx-dot{width:6px;height:6px;background:rgba(90,96,136,0.35)}",
-      // ---- run-history table (v1.6) ----
-      "#pipelines-root .pl-htable{width:100%;border-collapse:collapse;font-size:13px;margin-top:2px}",
-      "#pipelines-root .pl-htable thead th{text-align:left;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:0.1em;color:#5a6088;font-weight:600;border-bottom:1px solid rgba(160,168,220,0.1);white-space:nowrap}",
-      "#pipelines-root .pl-htable tbody tr.pl-htrow{border-bottom:1px solid rgba(160,168,220,0.05);cursor:pointer}",
-      "#pipelines-root .pl-htable tbody tr.pl-htrow:hover{background:rgba(160,168,220,0.04)}",
-      "#pipelines-root .pl-htable tbody tr.pl-htrow.sel{background:rgba(122,162,247,0.08)}",
-      "#pipelines-root .pl-htable td{padding:9px 12px;vertical-align:middle;color:#a8aecf}",
-      "#pipelines-root .pl-ht-note{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#5a6088;margin-top:8px}",
-      "#pipelines-root .pl-tbadge{display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;padding:2px 8px;border-radius:6px;border:1px solid transparent}",
-      "#pipelines-root .pl-tbadge.manual{color:#7dcfff;background:rgba(125,207,255,0.1);border-color:rgba(125,207,255,0.28)}",
-      "#pipelines-root .pl-tbadge.schedule{color:#bb9af7;background:rgba(187,154,247,0.1);border-color:rgba(187,154,247,0.28)}",
-      "#pipelines-root .pl-tbadge.bridge{color:#9ece6a;background:rgba(158,206,106,0.1);border-color:rgba(158,206,106,0.28)}",
-      // ---- list stats glyph (v1.6) ----
-      "#pipelines-root .pl-rate{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#5a6088;margin-top:6px}",
-      // ---- selected-run summary caption + parked note ----
-      "#pipelines-root .pl-runsum{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;font-family:'JetBrains Mono',monospace;font-size:12px}",
-      "#pipelines-root .pl-runsum-t{color:#868db5}",
-      "#pipelines-root .pl-banner-parked{color:#868db5;font-family:'JetBrains Mono',monospace;font-size:11.5px}",
-      // ---- declared-DAG preview (v1.6) ----
-      "#pipelines-root .pl-declared-note{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:#868db5;margin-bottom:12px;display:flex;align-items:center;gap:9px;flex-wrap:wrap}",
-      "#pipelines-root .pl-declared-note code{font-family:'JetBrains Mono',monospace;font-size:11px;color:#c7c9e5;background:#0a0b16;border:1px solid rgba(160,168,220,0.14);border-radius:6px;padding:3px 8px}",
-      "@media (max-width:768px){#pipelines-root #pl-list .pl-list-head{height:auto!important;display:block!important;padding:14px 15px 10px!important}#pipelines-root #pl-list .pl-list-title{font-size:20px!important}#pipelines-root #pl-list .pl-list-summary{float:right;margin-top:-20px}#pipelines-root #pl-list .pl-list-scroll{padding:10px 15px 24px!important}#pipelines-root #pl-list .pl-group-toggle{height:auto;grid-template-columns:minmax(0,1fr) auto;gap:7px 8px;padding:4px 0 8px}#pipelines-root #pl-list .pl-group-main{grid-column:1 / -1}#pipelines-root #pl-list .pl-group-on{grid-column:1;grid-row:2;text-align:left}#pipelines-root #pl-list .pl-group-dots{grid-column:2;grid-row:2;justify-content:flex-end}#pipelines-root #pl-list .pl-group-activity{grid-column:1;grid-row:3;text-align:left}#pipelines-root #pl-list .pl-group-due{grid-column:2;grid-row:3}#pipelines-root #pl-list .pl-row{grid-template-columns:minmax(0,1fr) auto;padding:12px;gap:8px 12px}#pipelines-root #pl-list .pl-row-primary{grid-column:1}#pipelines-root #pl-list .pl-row-enabled{grid-column:2}#pipelines-root #pl-list .pl-row-mode,#pipelines-root #pl-list .pl-row-status,#pipelines-root #pl-list .pl-row-due,#pipelines-root #pl-list .pl-row-recent{grid-column:1 / -1}}",
-      "@media (max-width:768px){#pipelines-root .xd-panel{width:100%;left:0;border-left:none}}",
-      // detail workbench, mobile: the runs rail collapses to a horizontal run-chip strip above the main area
-      "@media (max-width:768px){#pipelines-root #pl-detail{flex-direction:column}#pipelines-root .pl-rail{width:auto!important;flex:none;border-right:none;border-bottom:1px solid rgba(160,168,220,0.08);max-height:120px}#pipelines-root .pl-rail-mini{display:none!important}#pipelines-root .pl-rail-head{display:none}#pipelines-root .pl-rail-foot{display:none}#pipelines-root .pl-runs{flex-direction:row;overflow-x:auto;overflow-y:hidden;padding:9px 8px;gap:8px}#pipelines-root .pl-runrow{flex:none;min-width:134px;margin:0}#pipelines-root .pl-main-head{padding:11px 14px;gap:9px;flex-wrap:wrap}#pipelines-root .pl-h-name{max-width:none}#pipelines-root .pl-main-body{padding:14px}}",
-      "@media (max-width:768px){#pipelines-root .pl-htable,#pipelines-root .pl-htable tbody{display:block}#pipelines-root .pl-htable thead{display:none}#pipelines-root .pl-htable tr.pl-htrow{display:block;background:#0d0f1c;border:1px solid rgba(160,168,220,0.1);border-radius:11px;padding:11px 13px;margin-bottom:8px}#pipelines-root .pl-htable tr.pl-htrow td{display:block;width:auto;padding:4px 0;border:none;white-space:normal}#pipelines-root .pl-mx-lbl{position:static;background:transparent}}",
-      "@media (pointer:coarse){#pipelines-root .xd-panel .xd-close{width:44px;height:44px;font-size:17px}#pipelines-root .pl-icbtn{width:34px;height:34px;font-size:16px}#pipelines-root .pl-back-ic{width:36px;height:36px}}"
-    ].join('\n');
-    document.head.appendChild(st);
-
-    const root = document.createElement('div');
-    root.id = 'pipelines-root';
-    root.style.cssText = 'position:fixed;left:216px;top:54px;right:0;bottom:0;z-index:40;background:#080a14;display:none';
-    root.innerHTML = [
-      '<div id="pl-list">',
-      '  <header class="pl-list-head"><div><div class="pl-list-title">Pipelines<i>.</i></div><div class="pl-list-summary" id="pl-sub"></div></div></header>',
-      '  <div class="pl-list-scroll" id="pl-table"><div class="pl-empty">loading…</div></div>',
-      '</div>',
-      '<div id="pl-detail" style="display:none">',
-      '  <div class="pl-rail">',
-      '    <div class="pl-rail-full">',
-      '      <div class="pl-rail-head"><span class="pl-rail-title">RUNS</span><span class="pl-rail-count" id="pl-rail-count"></span><div style="flex:1"></div><button class="pl-icbtn" data-pl-act="toggle-runs" title="Collapse runs">‹</button></div>',
-      '      <div class="pl-runs" id="pl-runs"></div>',
-      '      <div class="pl-rail-foot" id="pl-rail-foot"></div>',
-      '    </div>',
-      '    <div class="pl-rail-mini"><button class="pl-icbtn" data-pl-act="toggle-runs" title="Expand runs">›</button><span class="pl-vlabel">RUNS</span></div>',
-      '  </div>',
-      '  <div class="pl-main">',
-      '    <div class="pl-main-head">',
-      '      <button class="pl-back-ic" data-pl-act="back" title="Back to pipelines">‹</button>',
-      '      <span class="pl-h-name" id="pl-h-name"></span>',
-      '      <span class="pl-h-repo" id="pl-h-repo"></span>',
-      '      <span class="pl-h-runid" id="pl-h-runid"></span>',
-      '      <span id="pl-h-state"></span>',
-      '      <div class="pl-tabs">',
-      '        <button data-pl-tab="dag" class="on">DAG</button>',
-      '        <button data-pl-tab="keys">Keys</button>',
-      '        <button data-pl-tab="history">History</button>',
-      '        <button data-pl-tab="matrix">Matrix</button>',
-      '      </div>',
-      '    </div>',
-      '    <div class="pl-main-body">',
-      '      <div class="pl-tabbody on" id="pl-tab-dag" data-pl-tab="dag"></div>',
-      '      <div class="pl-tabbody" id="pl-tab-keys" data-pl-tab="keys"></div>',
-      '      <div class="pl-tabbody" id="pl-tab-history" data-pl-tab="history"></div>',
-      '      <div class="pl-tabbody" id="pl-tab-matrix" data-pl-tab="matrix"></div>',
-      '    </div>',
-      '  </div>',
-      '</div>'
-    ].join('\n');
-    document.body.appendChild(root);
-    this._dockOverlay(root); // mobile: left:0 + bottom clears the tab bar
-    this._pipelinesRoot = root;
-
-    // One delegated click listener: copy > rail toggle / back / tab > run row/cell > stage node > list row.
-    root.addEventListener('click', (e) => {
-      const copy = (e.target.closest && e.target.closest('.gm-copy')) || null;
-      if (copy) { e.stopPropagation(); this._gmCopyChip(copy); return; }
-      const act = (e.target.closest && e.target.closest('[data-pl-act]')) || null;
-      if (act) {
-        e.stopPropagation();
-        const a = act.getAttribute('data-pl-act');
-        if (a === 'toggle-runs') this._plToggleRuns();
-        else if (a === 'back') { this.closePipelineDetail(); this._navRoute('pipelines'); }
-        return;
-      }
-      const tab = (e.target.closest && e.target.closest('.pl-tabs button[data-pl-tab]')) || null;
-      if (tab) { this._plSetTab(tab.getAttribute('data-pl-tab')); return; }
-      const rrow = (e.target.closest && e.target.closest('.pl-runrow')) || null;
-      if (rrow) { const rid = rrow.getAttribute('data-run'); if (rid) this.selectPipelineRun(rid); return; }
-      const mxc = (e.target.closest && e.target.closest('.pl-mx-cell')) || null;
-      if (mxc) { const rid = mxc.getAttribute('data-run'); if (rid) this.selectPipelineRun(rid); return; }
-      const htr = (e.target.closest && e.target.closest('.pl-htrow')) || null;
-      if (htr) { const rid = htr.getAttribute('data-run'); if (rid) this.selectPipelineRun(rid); return; }
-      const node = (e.target.closest && e.target.closest('.pl-node')) || null;
-      if (node) { const sid = node.getAttribute('data-stage'); if (sid) this.openPipelineStageDetail(sid); return; }
-      const prow = (e.target.closest && e.target.closest('.pl-row[data-name]')) || null;
-      if (prow && prow.getAttribute('data-name')) { const nm = prow.getAttribute('data-name'); this.openPipelineDetail(nm); this._navRoute('pipelines', { name: nm }); return; }
-      const group = (e.target.closest && e.target.closest('.pl-group-toggle[data-pl-group]')) || null;
-      if (group) { this._plToggleGroup(group.getAttribute('data-pl-group')); return; }
-    });
-    // Escape: close the stage panel first, else back out of the detail.
-    this._pipelinesKeydown = (e) => {
-      if (e.key !== 'Escape' || this.state.view !== 'pipelines') return;
-      if (this._plStagePanel) { this.closePipelineStageDetail(); return; }
-      if (this._plDetailName) { this.closePipelineDetail(); this._navRoute('pipelines'); }
-    };
-    document.addEventListener('keydown', this._pipelinesKeydown);
-    return root;
-  }
-
-  // ---- LIST ------------------------------------------------------------------
-  fetchPipelines(isPoll) {
-    fetch('/api/pipelines', { cache: 'no-store' })
-      .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
-      .then(txt => {
-        if (isPoll && this._pipelinesSig === txt) return; // unchanged — skip the re-render
-        this._pipelinesSig = txt;
-        let json = null; try { json = JSON.parse(txt); } catch (e) { json = null; }
-        this._pipelinesData = Array.isArray(json) ? json : [];
-        this._pipelinesByName = {};
-        this._pipelinesData.forEach(p => { if (p && p.name) this._pipelinesByName[p.name] = p; });
-        this._navApplyPipelines(this._pipelinesData);
-        this._pipelinesLoaded = true;
-        this.renderPipelines();
-        // an open detail: refresh its header/history strip from the new summary.
-        if (this._plDetailName && this._pipelinesByName[this._plDetailName]) {
-          this.renderPipelineDetailShell(this._pipelinesByName[this._plDetailName]);
-        }
-        // a pending deep-link (/pipelines/<name>): open it now the data has landed.
-        if (this._pendingPipelineDetail && this._pipelinesByName[this._pendingPipelineDetail]) {
-          const nm = this._pendingPipelineDetail; this._pendingPipelineDetail = null; this.openPipelineDetail(nm);
-        }
-      })
-      .catch(err => {
-        if (isPoll) return; // keep the current table on a transient poll failure
-        this._pipelinesLoaded = true;
-        const tbl = this._pipelinesRoot && this._pipelinesRoot.querySelector('#pl-table');
-        if (tbl) tbl.innerHTML = '<div class="pl-empty" style="color:#f7768e">could not load /api/pipelines (' + this._galaxyEsc(err && err.message) + ')</div>';
-      });
-  }
-
-  renderPipelines() {
-    if (!this._pipelinesRoot) return;
-    const list = Array.isArray(this._pipelinesData) ? this._pipelinesData : [];
-    const sub = this._pipelinesRoot.querySelector('#pl-sub');
-    if (sub) sub.textContent = list.length ? (list.length + ' declared') : '';
-    const table = this._pipelinesRoot.querySelector('#pl-table');
-    if (!table) return;
-    if (!list.length) {
-      table.innerHTML = '<div class="pl-empty">' + (this._pipelinesLoaded ? 'no pipelines declared yet - <code>gitmoot pipeline add &lt;spec.yaml&gt;</code>' : 'loading…') + '</div>';
-      return;
-    }
-    const groups = {};
-    list.forEach(p => {
-      if (!p) return;
-      // New servers resolve group. The repo fallback keeps older responses legible.
-      const group = (typeof p.group === 'string' && p.group.trim()) || p.repo || 'Other pipelines';
-      (groups[group] = groups[group] || []).push(p);
-    });
-    const names = Object.keys(groups).sort((a, b) => {
-      if (a === 'Gitmoot System') return b === 'Gitmoot System' ? 0 : 1;
-      if (b === 'Gitmoot System') return -1;
-      return a.localeCompare(b);
-    });
-    table.innerHTML = names.map(name => this._pipelineGroupHtml(name, groups[name])).join('');
-    this.refreshPipelineCountdowns();
-  }
-
-  _plLoadExpandedGroups() {
-    try {
-      const value = JSON.parse(localStorage.getItem('gitmoot.pl.expandedGroups.v1') || '[]');
-      return new Set(Array.isArray(value) ? value.filter(name => typeof name === 'string') : []);
-    } catch (e) { return new Set(); }
-  }
-
-  _plToggleGroup(name) {
-    if (!name) return;
-    if (!(this._plExpandedGroups instanceof Set)) this._plExpandedGroups = new Set();
-    if (this._plExpandedGroups.has(name)) this._plExpandedGroups.delete(name);
-    else this._plExpandedGroups.add(name);
-    try { localStorage.setItem('gitmoot.pl.expandedGroups.v1', JSON.stringify(Array.from(this._plExpandedGroups))); } catch (e) {}
-    this.renderPipelines();
-  }
-
-  _plLedgerStateColor(state) {
-    const colors = { succeeded: '#7fa65a', failed: '#bd5f70', running: '#6181c5', blocked: '#b08b56', queued: '#333a5e', cancelled: '#333a5e' };
-    return colors[state] || '#333a5e';
-  }
-
-  _plFmtLedgerDue(ms, now) {
-    return this._plFmtCountdown(ms, now).replace(/^due in /, 'due ');
-  }
-
-  _pipelineGroupHtml(name, members) {
-    const esc = (s) => this._galaxyEsc(s);
-    const pipes = (Array.isArray(members) ? members.slice() : []).sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')));
-    const expanded = this._plExpandedGroups instanceof Set && this._plExpandedGroups.has(name);
-    const enabled = pipes.filter(p => p && p.enabled).length;
-    const latestAt = pipes.reduce((latest, p) => Math.max(latest, Number(p && p.lastRunAt) || 0), 0);
-    const dueAt = pipes.reduce((soonest, p) => {
-      const due = Number(p && p.nextDueAt) || 0;
-      return due > 0 ? Math.min(soonest, due) : soonest;
-    }, Infinity);
-    const countLabel = String(pipes.length);
-    const dots = pipes.map(p => {
-      const state = (p && p.lastStatus) || '';
-      return '<span class="pl-group-dot" style="background:' + this._plLedgerStateColor(state) + '" title="' + esc((p && p.name) || '') + ' · ' + esc(state || 'no runs') + '"></span>';
-    }).join('');
-    const activity = latestAt ? esc(this._relFromMs(latestAt)) : '-';
-    const due = Number.isFinite(dueAt)
-      ? '<span class="pl-ledger-due" data-due="' + dueAt + '">' + esc(this._plFmtLedgerDue(dueAt)) + '</span>'
-      : '<span class="pl-ledger-none">-</span>';
-    const system = name === 'Gitmoot System';
-    const children = expanded ? '<div class="pl-group-rows">' + pipes.map(p => this._pipelineRowHtml(p)).join('') + '</div>' : '';
-    return '<section class="pl-group' + (system ? ' system' : '') + '">' +
-      '<button type="button" class="pl-group-toggle" data-pl-group="' + esc(name) + '" aria-expanded="' + (expanded ? 'true' : 'false') + '">' +
-        '<span class="pl-group-main"><span class="pl-group-marker"></span><span class="pl-group-name">' + esc(name) + '</span>' +
-          (system ? '<span class="pl-built-in">built-in</span>' : '') +
-          '<span class="pl-group-count">' + countLabel + '</span><span class="pl-group-chev" aria-hidden="true">▸</span></span>' +
-        '<span class="pl-group-on' + (enabled ? '' : ' zero') + '"><b>' + enabled + '</b>/' + pipes.length + ' on</span>' +
-        '<span class="pl-group-dots">' + dots + '</span>' +
-        '<span class="pl-group-activity">' + activity + '</span>' +
-        '<span class="pl-group-due">' + due + '</span>' +
-      '</button>' + children +
-    '</section>';
-  }
-
-  _pipelineRowHtml(p) {
-    const esc = (s) => this._galaxyEsc(s);
-    const sched = p.interval ? ('every ' + p.interval + (p.jitter ? ' +' + p.jitter : '')) : 'manual';
-    const mode = (p && typeof p.mode === 'string') ? p.mode.trim() : '';
-    const scheduleCell = this._plModeChip(mode || sched);
-    const enChip = p.enabled ? '<span class="pl-chip on">enabled</span>' : '<span class="pl-chip off">disabled</span>';
-    const lastCol = this._galaxyStateColor(p.lastStatus);
-    let lastChip;
-    if (p.lastStatus) {
-      const chip = '<span class="pl-statechip" style="color:' + lastCol + ';background:color-mix(in srgb,' + lastCol + ' 12%, transparent);border:1px solid color-mix(in srgb,' + lastCol + ' 30%, transparent)">' + esc(p.lastStatus) + '</span>';
-      // recency ("succeeded · 18h ago") + a "@ <stage>" halt annotation when parked.
-      const rel = p.lastRunAt ? this._relFromMs(p.lastRunAt) : '';
-      const rc0 = (Array.isArray(p.recent) && p.recent.length) ? p.recent[0] : null;
-      const halt = (rc0 && (p.lastStatus === 'blocked' || p.lastStatus === 'failed') && rc0.haltStage) ? rc0.haltStage : '';
-      const sub = [halt ? ('@ ' + esc(halt)) : '', rel ? esc(rel) : ''].filter(Boolean).join(' · ');
-      lastChip = chip + (sub ? '<div class="pl-rate">' + sub + '</div>' : '');
-    } else {
-      lastChip = '<span class="pl-nohist">-</span>';
-    }
-    const due = p.nextDueAt ? '<span class="pl-due" data-due="' + p.nextDueAt + '">' + esc(this._plFmtCountdown(p.nextDueAt)) + '</span>' : '<span class="pl-nohist">-</span>';
-    const recent = Array.isArray(p.recent) ? p.recent : [];
-    const strip = recent.length
-      ? '<div class="pl-strip">' + recent.map(r => { const c = this._plLedgerStateColor(r.state); return '<span class="pl-pip" style="background:' + c + '" title="' + esc(r.state) + (r.startedAt ? ' · ' + esc(this._relFromMs(r.startedAt)) : '') + '"></span>'; }).join('') + '</div>'
-      : '<span class="pl-nohist">no runs</span>';
-    // v1.6: success rate + avg duration computed client-side from recent[].
-    const rate = this._plSuccessRate(p.recent);
-    const avg = this._plAvgDuration(p.recent);
-    const stats = (rate || avg) ? '<div class="pl-rate">' + [rate, avg].filter(Boolean).join(' · ') + '</div>' : '';
-    return '<div class="pl-row" data-name="' + esc(p.name) + '" title="open ' + esc(p.name) + '">' +
-      '<div class="pl-row-cell pl-row-primary"><div class="pl-name">' + esc(p.name) + '</div>' + (p.repo ? '<div class="pl-repo">' + esc(p.repo) + '</div>' : '') + '</div>' +
-      '<div class="pl-row-cell pl-row-enabled">' + enChip + '</div>' +
-      '<div class="pl-row-cell pl-row-mode">' + scheduleCell + '</div>' +
-      '<div class="pl-row-cell pl-row-status">' + lastChip + '</div>' +
-      '<div class="pl-row-cell pl-row-due">' + due + '</div>' +
-      '<div class="pl-row-cell pl-row-recent">' + strip + stats + '</div>' +
-    '</div>';
-  }
-
-  _plModeChip(mode) {
-    const esc = (s) => this._galaxyEsc(s);
-    const raw = String(mode || '').trim();
-    if (!raw) return '';
-    const m = raw.toLowerCase();
-    let cls = 'muted';
-    if (m.indexOf('email-triggered') === 0) {
-      if (m.indexOf('(bound)') !== -1) cls = 'bound';
-      else if (m.indexOf('(error)') !== -1) cls = 'error';
-      else cls = 'warn';
-    } else if (m.indexOf('after:') === 0) {
-      cls = 'after';
-    } else if (m.indexOf('pending') !== -1 || m.indexOf('unbound') !== -1) cls = 'warn';
-    return '<span class="pl-modechip ' + cls + '" title="' + esc(raw) + '">' + esc(raw) + '</span>';
-  }
-
-  // ---- DETAIL (workbench: [ RUNS rail | main ]) ------------------------------
-  openPipelineDetail(name) {
-    if (!name) { this.closePipelineDetail(); return; }
-    const summary = this._pipelinesByName && this._pipelinesByName[name];
-    if (!summary) { this._pendingPipelineDetail = name; return; } // opens after fetchPipelines
-    const switching = (this._plDetailName !== name);
-    this._plDetailName = name;
-    if (switching) { this._plSelectedRun = null; this._plRun = null; this._plTab = 'dag'; } // don't carry a prior pipeline's run/tab
-    // reset the detail-data channel so a prior pipeline's rail/matrix/table never flashes.
-    this._plDetail = null; this._plDetailSig = null;
-    const list = this._pipelinesRoot.querySelector('#pl-list');
-    const det = this._pipelinesRoot.querySelector('#pl-detail');
-    if (list) list.style.display = 'none';
-    if (det) det.style.display = 'flex';
-    ['#pl-runs', '#pl-rail-foot', '#pl-tab-dag', '#pl-tab-keys', '#pl-tab-history', '#pl-tab-matrix'].forEach(sel => { const el = this._pipelinesRoot.querySelector(sel); if (el) el.innerHTML = ''; });
-    this._plLayout();
-    this._plApplyTab();
-    this.renderPipelineDetailShell(summary);
-    // second fetch — the pipeline's declared DAG + full run history (own poll).
-    this.fetchPipelineDetailData(name, false);
-    this.startPipelineDetailPoll();
-    const recent = Array.isArray(summary.recent) ? summary.recent : [];
-    const def = summary.lastRunId || (recent[0] && recent[0].id) || '';
-    if (def) this.selectPipelineRun(def);
-    else { this._plSelectedRun = null; this._plRun = null; this.renderPipelineRun(null); this._plRenderMainHead(); }
-  }
-
-  // The shell = the main header (name/repo/selected #id/state chip) + the RUNS rail
-  // (run rows + footer). The selected run's #id + state come from _plRenderMainHead.
-  renderPipelineDetailShell(summary) {
-    if (!this._pipelinesRoot || !summary) return;
-    this._plRenderMainHead();
-    this._plRenderRail();
-  }
-
-  // Main header meta: pipeline name/repo from the summary; the selected run's short
-  // id + state prefer the loaded run detail, else the history/recent entry.
-  _plMainMeta() {
-    const summary = this._pipelinesByName && this._pipelinesByName[this._plDetailName];
-    const name = this._plDetailName || (summary && summary.name) || '';
-    const repo = (summary && summary.repo) || '';
-    const rid = this._plSelectedRun || '';
-    let state = '', shortId = '';
-    if (rid) {
-      shortId = String(rid).split('-').pop();
-      if (this._plRun && this._plRun.id === rid && this._plRun.state) state = this._plRun.state;
-      else {
-        const src = (this._plDetail && Array.isArray(this._plDetail.runs)) ? this._plDetail.runs
-          : ((summary && Array.isArray(summary.recent)) ? summary.recent : []);
-        const e = src.find(r => r && r.id === rid);
-        if (e) state = e.state;
-      }
-    }
-    return { name: name, repo: repo, shortId: shortId, state: state };
-  }
-  _plRenderMainHead() {
-    const root = this._pipelinesRoot; if (!root) return;
-    const esc = (s) => this._galaxyEsc(s);
-    const m = this._plMainMeta();
-    const nameEl = root.querySelector('#pl-h-name'); if (nameEl) nameEl.textContent = m.name;
-    const repoEl = root.querySelector('#pl-h-repo'); if (repoEl) { repoEl.textContent = m.repo; repoEl.style.display = m.repo ? '' : 'none'; }
-    const idEl = root.querySelector('#pl-h-runid'); if (idEl) idEl.textContent = m.shortId ? ('#' + m.shortId) : '';
-    const stEl = root.querySelector('#pl-h-state');
-    if (stEl) {
-      if (m.state) { const c = this._galaxyStateColor(m.state); stEl.innerHTML = '<span class="pl-statechip" style="color:' + c + ';background:color-mix(in srgb,' + c + ' 12%, transparent);border:1px solid color-mix(in srgb,' + c + ' 30%, transparent)">' + esc(m.state) + '</span>'; }
-      else stEl.innerHTML = '';
-    }
-  }
-
-  // RUNS rail: newest-first run rows (state dot · #shortid · M/S · rel time · ⧗ dur)
-  // from the full history (detail.runs) when loaded, else the recent strip; footer =
-  // next-due countdown / manual run command / schedule-paused.
-  _plRenderRail() {
-    const root = this._pipelinesRoot; if (!root) return;
-    const summary = this._pipelinesByName && this._pipelinesByName[this._plDetailName];
-    const runs = (this._plDetail && Array.isArray(this._plDetail.runs) && this._plDetail.runs.length)
-      ? this._plDetail.runs
-      : ((summary && Array.isArray(summary.recent)) ? summary.recent : []);
-    const runsEl = root.querySelector('#pl-runs');
-    if (runsEl) runsEl.innerHTML = runs.length ? runs.map(r => this._plRunrowHtml(r)).join('') : '<div class="pl-runs-empty">no runs yet</div>';
-    const cntEl = root.querySelector('#pl-rail-count');
-    if (cntEl) cntEl.textContent = runs.length ? String(runs.length) : '';
-    const footEl = root.querySelector('#pl-rail-foot');
-    if (footEl) footEl.innerHTML = this._plFooterHtml(summary);
-    this.refreshPipelineCountdowns();
-  }
-  _plRunrowHtml(r) {
-    const esc = (s) => this._galaxyEsc(s);
-    const col = this._galaxyStateColor(r.state);
-    const shortId = String(r.id || '').split('-').pop();
-    const rel = r.startedAt ? this._relFromMs(r.startedAt) : '';
-    const sel = (r.id === this._plSelectedRun) ? ' sel' : '';
-    const trig = (r.trigger === 'manual' || r.trigger === 'schedule' || r.trigger === 'bridge')
-      ? '<span class="pl-runrow-tg ' + r.trigger + '" title="' + esc(r.trigger) + '">' + (r.trigger === 'manual' ? 'M' : (r.trigger === 'schedule' ? 'S' : 'B')) + '</span>' : '';
-    const dur = (r.duration && r.duration > 0) ? this._fmtDur(r.duration) : (r.state === 'running' ? 'running' : '');
-    return '<div class="pl-runrow' + sel + '" data-run="' + esc(r.id) + '" title="' + esc(r.state) + '">' +
-      '<div class="pl-runrow-top"><span class="pl-runrow-dot" style="background:' + col + '"></span>' +
-        '<span class="pl-runrow-id">#' + esc(shortId) + '</span>' + trig +
-        (rel ? '<span class="pl-runrow-ago">' + esc(rel) + '</span>' : '') +
-      '</div>' +
-      (dur ? '<div class="pl-runrow-sub"><span class="pl-runrow-dur">⧗ ' + esc(dur) + '</span></div>' : '') +
-    '</div>';
-  }
-  _plFooterHtml(summary) {
-    const esc = (s) => this._galaxyEsc(s);
-    if (!summary) return '';
-    const interval = (summary.interval || '').trim();
-    if (!interval) {
-      const cmd = 'gitmoot pipeline run ' + (summary.name || '');
-      return '<div class="pl-cmd" style="width:100%"><code>' + esc(cmd) + '</code><button class="gm-copy" data-cmd="' + esc(cmd) + '">copy</button></div>';
-    }
-    if (!summary.enabled) {
-      return '<span class="pl-rail-foot-dot" style="background:#5a6088;box-shadow:none"></span><span class="pl-rail-foot-txt">schedule paused</span>';
-    }
-    const due = summary.nextDueAt || 0;
-    return '<span class="pl-rail-foot-dot"></span><span class="pl-rail-foot-txt pl-nextdue" data-due="' + due + '">' + esc(this._plNextRunLabel(due)) + '</span>';
-  }
-  _plNextRunLabel(ms, now) {
-    if (!ms || ms <= 0) return 'next run -';
-    const d = ms - (now || Date.now());
-    if (d <= 0) return 'next run now';
-    return 'next run in ' + this._fmtEta(d);
-  }
-
-  // ---- rail collapse + segmented tabs + responsive flex reflow ----
-  _plToggleRuns() {
-    if (this.state.isMobile) return; // mobile: the rail is a fixed horizontal strip
-    this._plRunsOpen = !this._plRunsOpen;
-    try { localStorage.setItem('gitmoot.plRunsOpen', this._plRunsOpen ? '1' : '0'); } catch (e) {}
-    this._plLayout();
-  }
-  _plLayout() {
-    const root = this._pipelinesRoot; if (!root) return;
-    const det = root.querySelector('#pl-detail'); if (!det) return;
-    const rail = det.querySelector('.pl-rail');
-    const full = rail && rail.querySelector('.pl-rail-full');
-    const mini = rail && rail.querySelector('.pl-rail-mini');
-    if (this.state.isMobile) {
-      det.style.flexDirection = '';   // the media query lays it out as a column
-      if (rail) rail.style.width = '';
-      if (full) full.style.display = 'flex';
-      if (mini) mini.style.display = 'none';
-      return;
-    }
-    det.style.flexDirection = 'row';
-    const open = this._plRunsOpen;
-    if (rail) rail.style.width = open ? '280px' : '46px';
-    if (full) full.style.display = open ? 'flex' : 'none';
-    if (mini) mini.style.display = open ? 'none' : 'flex';
-  }
-  _plSetTab(tab) {
-    if (!tab || this._plTab === tab) return;
-    this._plTab = tab;
-    this._plApplyTab();
-  }
-  _plApplyTab() {
-    const root = this._pipelinesRoot; if (!root) return;
-    const tab = this._plTab || 'dag';
-    root.querySelectorAll('.pl-tabs button[data-pl-tab]').forEach(b => b.classList.toggle('on', b.getAttribute('data-pl-tab') === tab));
-    root.querySelectorAll('.pl-tabbody').forEach(el => el.classList.toggle('on', el.getAttribute('data-pl-tab') === tab));
-    if (tab === 'dag') this._plUpdateScrollCue();
-  }
-  // Show the right-edge fade + "scroll →" cue only when the stage graph is clipped.
-  _plUpdateScrollCue() {
-    const root = this._pipelinesRoot; if (!root) return;
-    const wrap = root.querySelector('#pl-tab-dag .pl-sg-wrap');
-    const scroller = root.querySelector('#pl-tab-dag .pl-dagwrap');
-    const cue = root.querySelector('#pl-tab-dag .pl-sg-cue');
-    if (!wrap || !scroller) return;
-    const clip = (scroller.scrollWidth - scroller.clientWidth) > 4;
-    wrap.classList.toggle('clip', clip);
-    if (cue) cue.textContent = clip ? ' · scroll →' : '';
-  }
-
-  selectPipelineRun(id) {
-    if (!id) return;
-    this._plSelectedRun = id;
-    if (this._pipelinesRoot) {
-      // keep the rail rows, matrix cells, and history-table rows selection in sync.
-      this._plSyncRunSelection(id);
-      this._plRenderMainHead();
-      const dag = this._pipelinesRoot.querySelector('#pl-tab-dag');
-      if (dag) dag.innerHTML = this._plDescriptionHtml() + '<div class="pl-empty">loading run…</div>';
-    }
-    this.fetchPipelineRun(id, false);
-    this.startPipelineRunPoll();
-  }
-
-  fetchPipelineRun(id, isPoll) {
-    const fid = (this._plRunFetchId = id);
-    fetch('/api/pipeline/run/' + encodeURIComponent(id), { cache: 'no-store' })
-      .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
-      .then(txt => {
-        if (this._plRunFetchId !== fid || this._plSelectedRun !== id) return; // superseded
-        if (isPoll && this._plRunSig === txt && this._plRunSigId === id) return; // unchanged
-        this._plRunSig = txt; this._plRunSigId = id;
-        let run = null; try { run = JSON.parse(txt); } catch (e) { run = null; }
-        this._plRun = run;
-        this.renderPipelineRun(run);
-      })
-      .catch(err => {
-        if (isPoll || this._plRunFetchId !== fid || this._plSelectedRun !== id) return;
-        // when the full run detail is unavailable (e.g. a pruned run), fall back to
-        // the run's per-stage marks overlaid on the declared DAG so the matrix/table
-        // click still shows that run's shape.
-        const fb = this._plRunFromHistory(id);
-        if (fb) { this._plRun = fb; this.renderPipelineRun(fb); return; }
-        const area = this._pipelinesRoot && this._pipelinesRoot.querySelector('#pl-tab-dag');
-        if (area) area.innerHTML = this._plDescriptionHtml() + '<div class="pl-empty" style="color:#f7768e">could not load this run (' + this._galaxyEsc(err && err.message) + ')</div>';
-        this._plRenderMainHead();
-      });
-  }
-
-  _plDescriptionHtml() {
-    const detail = this._plDetail;
-    const description = detail && typeof detail.description === 'string' ? detail.description.trim() : '';
-    return description ? '<div class="pl-description">' + this._galaxyEsc(description) + '</div>' : '';
-  }
-
-  // DAG-tab content: optional description first, then the blocked/failed banner,
-  // run summary caption, stage graph (scroll cue + right-edge fade), and tally.
-  // Renders into #pl-tab-dag; History/Matrix live in their tabs.
-  renderPipelineRun(run) {
-    if (!this._pipelinesRoot) return;
-    const area = this._pipelinesRoot.querySelector('#pl-tab-dag');
-    if (!area) return;
-    const description = this._plDescriptionHtml();
-    if (!run) {
-      // a never-run pipeline shows its DECLARED DAG (all pending) once the detail
-      // data has landed; otherwise the plain empty note.
-      const d = this._plDetail;
-      if (d && (!Array.isArray(d.runs) || !d.runs.length) && Array.isArray(d.declared) && d.declared.length) {
-        area.innerHTML = description + this._plDeclaredDagHtml(d);
-      } else {
-        area.innerHTML = description + '<div class="pl-empty">no runs for this pipeline yet</div>';
-      }
-      this._plRenderMainHead();
-      this._plUpdateScrollCue();
-      return;
-    }
-    const esc = (s) => this._galaxyEsc(s);
-    const stages = Array.isArray(run.stages) ? run.stages : [];
-    const dur = (run.finishedAt > run.startedAt) ? this._fmtDur(run.finishedAt - run.startedAt) : '';
-    const startedAbs = run.startedAt ? this._plFmtAbsTime(run.startedAt) : '';
-    const parkedTs = run.finishedAt > 0 ? run.finishedAt : (run.startedAt || 0);
-    const parked = ((run.state === 'blocked' || run.state === 'failed') && parkedTs > 0) ? this._relFromMs(parkedTs) : '';
-    // _relFromMs/relTime already end with "ago" (or say "just now") — no suffix here.
-    const parkedTag = parked ? '<span class="pl-banner-parked">parked ' + esc(parked) + '</span>' : '';
-    // (a) banner FIRST
-    let banner = '';
-    if (run.state === 'blocked' || run.state === 'failed') {
-      const level = run.state;
-      const haltStg = stages.find(s => s.id === run.haltStage) || stages.find(s => s.state === level);
-      const haltId = run.haltStage || (haltStg && haltStg.id) || '?';
-      const title = (level === 'blocked' ? 'Run halted at ' : 'Run failed at ') + haltId;
-      const needs = Array.isArray(run.needs) ? run.needs : [];
-      let body = '';
-      if (needs.length) body = '<div><div class="pl-needs-lbl">NEEDS</div><ul class="pl-needs">' + needs.map(n => '<li>' + esc(n) + '</li>').join('') + '</ul></div>';
-      else if (run.haltReason) body = '<div class="pl-banner-reason">' + esc(run.haltReason) + '</div>';
-      let cmd = '';
-      if (level === 'blocked') cmd = 'gitmoot pipeline resume ' + (run.id || '');
-      else { const jobId = (haltStg && haltStg.jobId) ? haltStg.jobId : ''; cmd = jobId ? ('gitmoot report bug --job ' + jobId) : ''; }
-      const cmdHtml = cmd ? '<div class="pl-cmd"><code>' + esc(cmd) + '</code><button class="gm-copy" data-cmd="' + esc(cmd) + '">copy</button></div>' : '';
-      banner = '<div class="pl-banner ' + level + '">' +
-        '<div class="pl-banner-head"><span class="pl-banner-ic">⚠</span><span class="pl-banner-title">' + esc(title) + '</span>' +
-          '<span class="pl-banner-stage">stage · ' + esc(haltId) + '</span>' + parkedTag + '</div>' +
-        body + cmdHtml +
-      '</div>';
-    }
-    // (b) run summary caption
-    const capParts = [];
-    if (startedAbs) capParts.push('<span class="pl-runsum-t">' + esc(startedAbs) + '</span>');
-    if (dur) capParts.push('<span class="pl-runsum-t">⏱ ' + esc(dur) + '</span>');
-    const trigB = this._plTriggerBadge(run.trigger) || '';
-    const caption = (trigB || capParts.length) ? '<div class="pl-runsum">' + trigB + capParts.join('') + '</div>' : '';
-    // (c) stage graph + (d) tally
-    const sg = '<div class="pl-sg-lbl">STAGE GRAPH<span class="pl-sg-cue"></span></div>' +
-      '<div class="pl-sg-wrap">' + this._pipelineStageDag(stages) + '<div class="pl-sg-fade"></div></div>';
-    const tally = stages.length ? '<div class="pl-tally">' + this._plTallyHtml(stages) + '</div>' : '';
-    area.innerHTML = description + banner + caption + sg + tally;
-    this.refreshPipelineStageProgress();
-    this._plRenderMainHead();
-    this._plUpdateScrollCue();
-  }
-
-  // STAGES tally: counts by state as design chips (dot + "N label"). "ok" for
-  // succeeded; state-name otherwise. Ordered by severity, extras appended.
-  _plTallyHtml(stages) {
-    const esc = (s) => this._galaxyEsc(s);
-    const list = Array.isArray(stages) ? stages : [];
-    if (!list.length) return '';
-    const order = ['succeeded', 'running', 'blocked', 'failed', 'skipped', 'pending', 'queued', 'cancelled'];
-    const labelMap = { succeeded: 'ok', running: 'running', blocked: 'blocked', failed: 'failed', skipped: 'skipped', pending: 'pending', queued: 'queued', cancelled: 'cancelled' };
-    const counts = {};
-    list.forEach(s => { const st = (s && s.state) || 'pending'; counts[st] = (counts[st] || 0) + 1; });
-    const keys = order.filter(k => counts[k]);
-    Object.keys(counts).forEach(k => { if (keys.indexOf(k) === -1) keys.push(k); });
-    const chips = keys.map(k => {
-      const c = this._plStageColor(k);
-      const lbl = labelMap[k] || k;
-      return '<span class="pl-tchip" style="color:' + c + ';background:color-mix(in srgb,' + c + ' 12%, transparent);border:1px solid color-mix(in srgb,' + c + ' 26%, transparent)"><span class="pl-tchip-dot" style="background:' + c + '"></span>' + counts[k] + ' ' + esc(lbl) + '</span>';
-    }).join('');
-    return '<span class="pl-tally-lbl">STAGES</span>' + chips;
-  }
-
-  // Hand-rolled inline-SVG stage DAG: depth-column layout from stage deps (the
-  // fallbackLayout algorithm), node chips as foreignObjects, bezier edges L->R.
-  _plStageHasProgress(s) {
-    return !!(s && ((typeof s.progressActivity === 'string' && s.progressActivity.length > 0) || Number(s.progressAt) > 0));
-  }
-  _pipelineStageDag(stages) {
-    const list = Array.isArray(stages) ? stages : [];
-    if (!list.length) return '<div class="pl-empty">this run has no stages</div>';
-    const byId = {}, ids = {};
-    list.forEach(s => { byId[s.id] = s; ids[s.id] = true; });
-    const depth = {};
-    const getDepth = (s, seen) => {
-      if (depth[s.id] != null) return depth[s.id];
-      if (seen[s.id]) return 0; // cycle guard
-      seen[s.id] = true;
-      let d = 0;
-      (s.deps || []).forEach(dep => { if (ids[dep] && byId[dep]) d = Math.max(d, getDepth(byId[dep], seen) + 1); });
-      depth[s.id] = d;
-      return d;
-    };
-    list.forEach(s => getDepth(s, {}));
-    const cols = {};
-    list.forEach(s => { (cols[depth[s.id]] = cols[depth[s.id]] || []).push(s.id); }); // spec order within a column
-    const NW = 240, LEGACY_NH = 100, PROGRESS_NH = 118, GX = 66, GY = 26, pad = 16;
-    const nodeH = (s) => (s && s.state === 'running' && this._plStageHasProgress(s)) ? PROGRESS_NH : LEGACY_NH;
-    const depthKeys = Object.keys(cols).map(Number);
-    const maxDepth = Math.max.apply(null, depthKeys);
-    const colHeight = (col) => col.reduce((sum, id) => sum + nodeH(byId[id]), 0) + Math.max(0, col.length - 1) * GY;
-    let totalH = 0; depthKeys.forEach(k => { totalH = Math.max(totalH, colHeight(cols[k])); });
-    const pos = {};
-    depthKeys.forEach(k => {
-      const col = cols[k];
-      let y = pad + (totalH - colHeight(col)) / 2;
-      col.forEach(id => {
-        const h = nodeH(byId[id]);
-        pos[id] = { x: pad + k * (NW + GX), y: y, h: h };
-        y += h + GY;
-      });
-    });
-    const svgW = pad * 2 + (maxDepth + 1) * NW + maxDepth * GX;
-    const svgH = pad * 2 + totalH;
-    let edges = '';
-    list.forEach(s => {
-      (s.deps || []).forEach(dep => {
-        if (!ids[dep] || !pos[dep] || !pos[s.id]) return;
-        const a = pos[dep], b = pos[s.id];
-        const sx = a.x + NW, sy = a.y + a.h / 2, tx = b.x, ty = b.y + b.h / 2;
-        const dx = Math.max(24, (tx - sx) / 2);
-        const running = s.state === 'running';
-        const stroke = running ? '#7aa2f7' : 'rgba(160,168,220,0.2)';
-        const w = running ? 1.9 : 1.3;
-        const extra = running ? ' stroke-dasharray="5 7" style="animation:dashflow 0.8s linear infinite"' : '';
-        edges += '<path d="M' + sx + ' ' + sy + ' C' + (sx + dx) + ' ' + sy + ',' + (tx - dx) + ' ' + ty + ',' + tx + ' ' + ty + '" fill="none" stroke="' + stroke + '" stroke-width="' + w + '"' + extra + '/>';
-      });
-    });
-    let nodes = '';
-    list.forEach(s => {
-      const p = pos[s.id]; if (!p) return;
-      nodes += '<foreignObject x="' + p.x + '" y="' + p.y + '" width="' + NW + '" height="' + p.h + '">' + this._pipelineStageChip(s) + '</foreignObject>';
-    });
-    return '<div class="pl-dagwrap"><svg class="pl-dag" width="' + svgW + '" height="' + svgH + '" viewBox="0 0 ' + svgW + ' ' + svgH + '" xmlns="http://www.w3.org/2000/svg">' + edges + nodes + '</svg></div>';
-  }
-
-  _pipelineStageChip(s) {
-    const esc = (v) => this._galaxyEsc(v);
-    const state = s.state || 'pending';
-    const col = this._plStageColor(state);
-    const running = state === 'running';
-    const dim = (state === 'pending' || state === 'skipped');
-    // Attempt is 0-based (verified against the gitmoot bridge: job ids a0/a1/a2,
-    // resume does row.Attempt+1); Retry is the spec budget, so max attempts =
-    // retry+1. Surface the badge only once a retry has been consumed (att>0),
-    // reading "attempt N/M" (1-based) when a budget exists, else a plain count.
-    const att = (s.attempt && s.attempt > 0) ? s.attempt : 0;
-    const ret = (s.retry && s.retry > 0) ? s.retry : 0;
-    // Full label for the tooltip; a compact glyph ("3/3" or "×2") on the crowded card.
-    const tryFull = att ? (ret ? ('attempt ' + (att + 1) + '/' + (ret + 1)) : ('attempt ' + (att + 1))) : '';
-    const tryLabel = att ? (ret ? ((att + 1) + '/' + (ret + 1)) : ('×' + (att + 1))) : '';
-    let elapsed = '';
-    if (s.startedAt > 0) {
-      const end = s.finishedAt > 0 ? s.finishedAt : (running ? Date.now() : 0);
-      if (end > 0) elapsed = this._fmtDur(Math.max(0, end - s.startedAt));
-    }
-    const summary = s.summary || s.cmd || '';
-    const clickable = !!s.jobId;
-    const kind = this._plStageKindBadge(s.kind);
-    const runtime = (s && typeof s.agentRuntime === 'string') ? s.agentRuntime.trim() : '';
-    const stageLabel = esc(s.id) + (runtime ? ' <span class="pl-node-runtime">(' + esc(runtime) + ')</span>' : '');
-    // Design card: header row (dot · name · [attempt] · STATE label), summary line,
-    // footer (duration in state color + a "job ▸" affordance opening the slide-in).
-    return '<div class="pl-node' + (running ? ' running' : '') + (dim ? ' dim' : '') + '" data-stage="' + esc(s.id) + '">' +
-      '<div class="pl-node-top">' +
-        '<span class="pl-node-dot" style="background:' + col + (running ? ';animation:dotpulse 1.4s ease-in-out infinite' : '') + '"></span>' +
-        (kind ? '<span class="pl-node-kind" title="' + esc(s.kind) + '">' + esc(kind) + '</span>' : '') +
-        '<span class="pl-node-id">' + stageLabel + '</span>' +
-        (tryLabel ? '<span class="pl-node-try" title="' + esc(tryFull) + '">' + esc(tryLabel) + '</span>' : '') +
-        '<span class="pl-node-slbl" style="color:' + col + '">' + esc(state) + '</span>' +
-      '</div>' +
-      '<div class="pl-node-sum">' + esc(summary) + '</div>' +
-      (running && this._plStageHasProgress(s) ? '<div class="pl-node-progress"></div>' : '') +
-      '<div class="pl-node-foot">' +
-        '<span class="pl-node-dur" style="color:' + col + '">' + esc(elapsed || '-') + '</span>' +
-        (clickable ? '<span class="pl-node-job">job ▸</span>' : '') +
-      '</div>' +
-    '</div>';
-  }
-
-  _plStageKindBadge(kind) {
-    const k = String(kind || '').trim();
-    if (!k) return '';
-    const map = {
-      shell: 'SHELL',
-      agent_ask: 'ASK',
-      agent_review: 'REVIEW',
-      agent_implement: 'IMPLEMENT',
-      produce: 'PRODUCE',
-      gate: 'GATE',
-      orchestrate: 'ORCH'
-    };
-    return map[k] || k.replace(/^agent_/, '').replace(/_/g, ' ').toUpperCase();
-  }
-
-  closePipelineDetail() {
-    this._plDetailName = null;
-    this._plSelectedRun = null;
-    this._plRun = null;
-    this._plDetail = null; this._plDetailSig = null;
-    this.stopPipelineRunPoll();
-    this.stopPipelineDetailPoll();
-    this.closePipelineStageDetail();
-    if (this._pipelinesRoot) {
-      const det = this._pipelinesRoot.querySelector('#pl-detail');
-      const list = this._pipelinesRoot.querySelector('#pl-list');
-      if (det) det.style.display = 'none';
-      if (list) list.style.display = '';
-      try { this._pipelinesRoot.scrollTop = 0; } catch (e) {}
-    }
-  }
-
-  // ---- stage -> job slide-in (reuses the shared _jobDetailHTML; Galaxy pattern) ----
-  openPipelineStageDetail(stageId) {
-    const run = this._plRun;
-    if (!run) return;
-    const stage = (Array.isArray(run.stages) ? run.stages : []).find(s => s.id === stageId);
-    if (!stage) return;
-    this._ensureDetailStyles();
-    if (stage.jobId) {
-      const summary = { id: stage.jobId, title: stage.id, state: stage.state };
-      this.renderPipelineStagePanel(this._jobDetailHTML(summary, null, 'loading'));
-      const fid = (this._plStageFetchId = stage.jobId);
-      fetch('/api/job/' + encodeURIComponent(stage.jobId), { cache: 'no-store' })
-        .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
-        .then(job => { if (this._plStageFetchId === fid) this.renderPipelineStagePanel(this._jobDetailHTML(summary, job || {}, 'ok')); })
-        .catch(() => { if (this._plStageFetchId === fid) this.renderPipelineStagePanel(this._jobDetailHTML(summary, null, 'error')); });
-    } else {
-      this._plStageFetchId = null;
-      this.renderPipelineStagePanel(this._pipelineStageCardHTML(stage));
-    }
-  }
-  renderPipelineStagePanel(html) {
-    if (!this._pipelinesRoot) return;
-    if (!this._plStagePanel || !this._plStagePanel.parentNode) {
-      const el = document.createElement('div');
-      el.className = 'xd-panel';
-      this._pipelinesRoot.appendChild(el);
-      this._plStagePanel = el;
-    }
-    this._plStagePanel.innerHTML = html;
-    const c = this._plStagePanel.querySelector('.xd-close');
-    if (c) c.addEventListener('click', () => this.closePipelineStageDetail());
-  }
-  closePipelineStageDetail() {
-    this._plStageFetchId = null;
-    try { if (this._plStagePanel) this._plStagePanel.remove(); } catch (e) {}
-    this._plStagePanel = null;
-  }
-  // Minimal stage card for stages with no job (pending / skipped). Reuses the
-  // shared .xd-* panel styles so it matches the job-detail panel.
-  _pipelineStageCardHTML(stage) {
-    const esc = (s) => this._galaxyEsc(s);
-    const state = stage.state || 'pending';
-    const col = this._plStageColor(state);
-    const deps = Array.isArray(stage.deps) ? stage.deps : [];
-    const needs = Array.isArray(stage.needs) ? stage.needs : [];
-    return [
-      '<div class="xd-head"><div class="xd-hrow">',
-      '<span class="xd-dot" style="background:' + col + ';box-shadow:0 0 10px ' + col + '"></span>',
-      '<div style="flex:1;min-width:0"><div class="xd-title">' + esc(stage.id) + '</div><div class="xd-sub">stage · ' + esc(state) + '</div></div>',
-      '<button class="xd-close" title="close">✕</button>',
-      '</div><div class="xd-badges">',
-      '<span class="xd-badge" style="color:' + col + ';background:color-mix(in srgb,' + col + ' 12%, transparent);border:1px solid color-mix(in srgb,' + col + ' 30%, transparent)">' + esc(state) + '</span>',
-      '<span class="xd-badge mut">no job yet</span>',
-      '</div></div>',
-      '<div class="xd-body">',
-      '<div class="xd-sec">Command</div><div class="xd-block">' + esc(stage.cmd || '-') + '</div>',
-      (deps.length ? '<div class="xd-sec">Depends on</div><div class="xd-block">' + esc(deps.join(', ')) + '</div>' : ''),
-      (needs.length ? '<div class="xd-sec">Needs</div><div class="xd-block">' + esc(needs.join('\n')) + '</div>' : ''),
-      (stage.summary ? '<div class="xd-sec">Summary</div><div class="xd-block">' + esc(stage.summary) + '</div>' : ''),
-      '</div>'
-    ].join('');
-  }
-
-  // ==========================================================================
-  // Pipeline detail data (declared DAG + full run history) — a SECOND fetch against
-  // /api/pipelines/<name>, its own 12s signature-skip poll while a detail is open.
-  // Drives the RUNS rail (full history), the History and Matrix tabs, and the
-  // never-run declared preview. Every new member is _pl-prefixed (the v1.5 shadow
-  // lesson: a duplicate member name silently overrides an existing one).
-  // ==========================================================================
-
-  // Absolute local time (month/day + HH:MM), matching the Jobs/Health idiom.
-  _plFmtAbsTime(ms) {
-    if (!ms || ms <= 0) return '-';
-    try { return new Date(ms).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }); }
-    catch (e) { return '-'; }
-  }
-
-  // Trigger badge (manual | schedule | bridge) — an empty string for anything else.
-  _plTriggerBadge(trigger) {
-    const t = (trigger === 'manual' || trigger === 'schedule' || trigger === 'bridge') ? trigger : '';
-    if (!t) return '';
-    return '<span class="pl-tbadge ' + t + '">' + t + '</span>';
-  }
-
-  // "8/10 ✓" success rate over finished (non-running) recent runs; "" when none.
-  _plSuccessRate(recent) {
-    const list = Array.isArray(recent) ? recent : [];
-    let finished = 0, ok = 0;
-    list.forEach(r => { if (r && r.state && r.state !== 'running') { finished++; if (r.state === 'succeeded') ok++; } });
-    if (!finished) return '';
-    return ok + '/' + finished + ' ✓';
-  }
-
-  // "~4m" average duration over finished recent runs with a duration; "" when none.
-  _plAvgDuration(recent) {
-    const list = Array.isArray(recent) ? recent : [];
-    let sum = 0, n = 0;
-    list.forEach(r => { if (r && r.duration && r.duration > 0) { sum += r.duration; n++; } });
-    if (!n) return '';
-    return '~' + this._fmtDur(Math.round(sum / n));
-  }
-
-  startPipelineDetailPoll() {
-    if (this._plDetailPoll) return;
-    this._plDetailPoll = setInterval(() => {
-      if (this.state.view !== 'pipelines' || !this._plDetailName) return;
-      this.fetchPipelineDetailData(this._plDetailName, true);
-    }, 12000);
-  }
-  stopPipelineDetailPoll() { try { clearInterval(this._plDetailPoll); } catch (e) {} this._plDetailPoll = null; }
-
-  fetchPipelineDetailData(name, isPoll) {
-    if (!name) return;
-    const fname = (this._plDetailFetchName = name);
-    fetch('/api/pipelines/' + encodeURIComponent(name), { cache: 'no-store' })
-      .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
-      .then(txt => {
-        if (this._plDetailFetchName !== fname || this._plDetailName !== name) return; // superseded
-        if (isPoll && this._plDetailSig === txt) return; // unchanged — skip re-render
-        this._plDetailSig = txt;
-        let detail = null; try { detail = JSON.parse(txt); } catch (e) { detail = null; }
-        this._plDetail = detail;
-        this.renderPipelineDetailData();
-      })
-      .catch(err => {
-        // the detail data is supplementary (the header + selected run render from
-        // the list + run endpoints); a first-load failure clears the Keys,
-        // History, and Matrix tabs, while a poll failure keeps what's on screen.
-        if (isPoll || this._plDetailFetchName !== fname || this._plDetailName !== name) return;
-        ['#pl-tab-keys', '#pl-tab-history', '#pl-tab-matrix'].forEach(sel => { const el = this._pipelinesRoot && this._pipelinesRoot.querySelector(sel); if (el) el.innerHTML = ''; });
-      });
-  }
-
-  // Render the detail-data driven panes: the RUNS rail (full history), Keys,
-  // History, and Matrix tabs, then re-apply the run selection, visible tab, and
-  // live countdown labels.
-  renderPipelineDetailData() {
-    if (!this._pipelinesRoot) return;
-    const detail = this._plDetail;
-    const runs = (detail && Array.isArray(detail.runs)) ? detail.runs : [];
-    // the rail rows + run count now come from the full history endpoint.
-    this._plRenderRail();
-    this._plRenderMainHead();
-    const tb = this._pipelinesRoot.querySelector('#pl-tab-history');
-    if (tb) tb.innerHTML = runs.length ? this._plHistoryTableHtml(detail) : '<div class="pl-mxnote">no runs yet.</div>';
-    const mx = this._pipelinesRoot.querySelector('#pl-tab-matrix');
-    // The matrix compares stages ACROSS runs — with fewer than 2 runs it would be a
-    // one-column duplicate of the DAG, so show a note instead of hiding silently.
-    if (mx) mx.innerHTML = runs.length >= 2 ? this._plMatrixHtml(detail)
-      : '<div class="pl-mxnote">The stage &times; run matrix needs at least 2 runs to compare - this pipeline has ' + runs.length + '.</div>';
-    this._plRenderKeysTab(detail);
-    if (runs.length && !this._plSelectedRun) {
-      // the list's recent strip was empty/stale but history has runs: pick newest.
-      this.selectPipelineRun(runs[0].id);
-    } else if (!runs.length && !this._plSelectedRun) {
-      // never-run pipeline: paint the declared DAG preview.
-      this.renderPipelineRun(null);
-    }
-    if (this._plSelectedRun) {
-      this._plSyncRunSelection(this._plSelectedRun);
-      // A run response may arrive before its detail payload. Repaint so the
-      // description appears as soon as the detail endpoint has supplied it.
-      if (this._plRun && this._plRun.id === this._plSelectedRun) this.renderPipelineRun(this._plRun);
-    }
-    this._plApplyTab();
-    this.refreshPipelineCountdowns();
-  }
-
-  _plRenderKeysTab(detail) {
-    const pane = this._pipelinesRoot && this._pipelinesRoot.querySelector('#pl-tab-keys');
-    if (!pane) return;
-    const esc = (s) => this._galaxyEsc(s);
-    const projection = detail && detail.keys && typeof detail.keys === 'object' ? detail.keys : {};
-    const envFile = projection.envFile && typeof projection.envFile === 'object' ? projection.envFile : {};
-    const rawStatus = typeof envFile.status === 'string' && envFile.status ? envFile.status : 'none';
-    const statuses = ['none', 'ok', 'missing', 'bad_mode', 'bad_owner', 'bad_location', 'invalid'];
-    const statusClass = statuses.indexOf(rawStatus) !== -1 ? rawStatus : 'invalid';
-    const statusLabels = { none: 'none', ok: 'ok', missing: 'missing', bad_mode: 'bad mode', bad_owner: 'bad owner', bad_location: 'bad location', invalid: 'invalid' };
-    const statusLabel = statusLabels[rawStatus] || rawStatus;
-    const path = typeof envFile.path === 'string' ? envFile.path : '';
-    const pathHTML = path ? '<code class="pl-keys-env-path">' + esc(path) + '</code>' : '<span class="pl-keys-env-none">not declared</span>';
-    const envHTML = '<div class="pl-keys-env"><span class="pl-keys-env-label">env_file</span>' + pathHTML +
-      '<span class="pl-keys-status ' + statusClass + '">' + esc(statusLabel) + '</span></div>';
-
-    const stages = Array.isArray(projection.stages) ? projection.stages : [];
-    let keyCount = 0;
-    const groups = stages.map(stage => {
-      const entries = Array.isArray(stage && stage.keys) ? stage.keys : [];
-      const selectors = Array.isArray(stage && stage.unresolvedSelectors) ? stage.unresolvedSelectors : [];
-      keyCount += entries.length;
-      const stageID = stage && stage.id != null ? String(stage.id) : '';
-      const kind = stage && stage.kind != null ? String(stage.kind) : '';
-      const kindLabel = this._plStageKindBadge(kind) || kind || '-';
-      let rows = '';
-      if (entries.length) {
-        entries.forEach((entry, index) => {
-          const source = entry && entry.source != null ? String(entry.source) : '';
-          const mode = entry && entry.mode != null ? String(entry.mode) : '';
-          const sourceClass = ['own', 'shared', 'default'].indexOf(source) !== -1 ? source : '';
-          const modeClass = ['injected', 'proxied'].indexOf(mode) !== -1 ? mode : '';
-          rows += '<tr>' + (index === 0 ? '<td class="pl-keys-stage" rowspan="' + entries.length + '">' + esc(stageID) + '</td>' +
-            '<td class="pl-keys-kind" rowspan="' + entries.length + '">' + esc(kindLabel) + '</td>' : '') +
-            '<td class="pl-keys-name">' + esc(entry && entry.name != null ? entry.name : '') + '</td>' +
-            '<td><span class="pl-keys-badge ' + sourceClass + '">' + esc(source || '-') + '</span></td>' +
-            '<td><span class="pl-keys-badge ' + modeClass + '">' + esc(mode || '-') + '</span></td></tr>';
-        });
-      } else {
-        rows = '<tr><td class="pl-keys-stage">' + esc(stageID) + '</td><td class="pl-keys-kind">' + esc(kindLabel) +
-          '</td><td class="pl-keys-no-cred" colspan="3">no credentials</td></tr>';
-      }
-      if (selectors.length) {
-        rows += '<tr class="pl-keys-warning"><td colspan="5">Unresolved selectors for <strong>' + esc(stageID) + '</strong>:' +
-          selectors.map(selector => '<code>' + esc(selector) + '</code>').join('') + '</td></tr>';
-      }
-      return '<tbody>' + rows + '</tbody>';
-    }).join('');
-
-    const emptyHTML = rawStatus === 'none' && keyCount === 0
-      ? '<div class="pl-keys-empty">No credentials are declared; under #968 deny-by-default, stages receive nothing unless their <code>env_keys</code> explicitly allow access.</div>'
-      : '';
-    const tableHTML = stages.length ? '<div class="pl-keys-table-wrap"><table class="pl-keys-table"><thead><tr>' +
-      '<th>Stage</th><th>Kind</th><th>Key</th><th>Source</th><th>Delivery</th></tr></thead>' + groups + '</table></div>' : '';
-    pane.innerHTML = envHTML + emptyHTML + tableHTML;
-  }
-
-  // Stage x run matrix: rows = stage ids (declared order, then any history-only
-  // ids appended), columns = last <=15 runs oldest->newest (newest rightmost,
-  // aligned with the outcomes strip). Cells are state dots; a cell click selects
-  // the run. Horizontal scroll on overflow.
-  _plMatrixHtml(detail) {
-    const esc = (s) => this._galaxyEsc(s);
-    const runs = (Array.isArray(detail.runs) ? detail.runs.slice(0, 15) : []).reverse(); // oldest -> newest
-    if (runs.length < 2) return ''; // cross-run comparison needs at least two runs
-    const declared = Array.isArray(detail.declared) ? detail.declared : [];
-    const order = [], seen = {};
-    declared.forEach(s => { if (s && s.id && !seen[s.id]) { seen[s.id] = true; order.push(s.id); } });
-    runs.forEach(r => (Array.isArray(r.stages) ? r.stages : []).forEach(m => { if (m && m.id && !seen[m.id]) { seen[m.id] = true; order.push(m.id); } }));
-    if (!order.length) return '';
-    const rowsHtml = order.map(sid => {
-      let cells = '';
-      runs.forEach(r => {
-        const marks = Array.isArray(r.stages) ? r.stages : [];
-        const mk = marks.find(m => m && m.id === sid);
-        const shortId = String(r.id || '').split('-').pop();
-        const rel = r.startedAt ? this._relFromMs(r.startedAt) : '';
-        const state = mk ? mk.state : '-';
-        const tip = '#' + shortId + (rel ? ' · ' + rel : '') + ' · ' + sid + ': ' + state;
-        if (mk) {
-          const col = this._plStageColor(mk.state);
-          cells += '<td class="pl-mx-cell" data-run="' + esc(r.id) + '" title="' + esc(tip) + '"><span class="pl-mx-dot" style="background:' + col + '"></span></td>';
-        } else {
-          cells += '<td class="pl-mx-cell pl-mx-empty" data-run="' + esc(r.id) + '" title="' + esc(tip) + '"><span class="pl-mx-dot"></span></td>';
-        }
-      });
-      return '<tr><td class="pl-mx-lbl">' + esc(sid) + '</td>' + cells + '</tr>';
-    }).join('');
-    return '<div class="pl-history-lbl">stage × run</div>' +
-      '<div class="pl-mx-wrap"><table class="pl-mx"><tbody>' + rowsHtml + '</tbody></table></div>';
-  }
-
-  // Run-history table: started (absolute + relative) · trigger · state · duration
-  // · halt stage. Newest-first, capped at 100 (server) with a note at the cap; a
-  // row click selects the run. Reuses the .pl- table idiom + mobile card reflow.
-  _plHistoryTableHtml(detail) {
-    const esc = (s) => this._galaxyEsc(s);
-    const runs = Array.isArray(detail.runs) ? detail.runs : [];
-    if (!runs.length) return '';
-    const rows = runs.map(r => {
-      const col = this._galaxyStateColor(r.state);
-      const shortId = String(r.id || '').split('-').pop();
-      const abs = r.startedAt ? this._plFmtAbsTime(r.startedAt) : '-';
-      const rel = r.startedAt ? this._relFromMs(r.startedAt) : '';
-      const dur = (r.finishedAt > r.startedAt) ? this._fmtDur(r.finishedAt - r.startedAt) : (r.state === 'running' ? 'running' : '-');
-      const halt = r.haltStage ? esc(r.haltStage) : '-';
-      const stateChip = '<span class="pl-statechip" style="color:' + col + ';background:color-mix(in srgb,' + col + ' 12%, transparent);border:1px solid color-mix(in srgb,' + col + ' 30%, transparent)">' + esc(r.state) + '</span>';
-      const sel = (r.id === this._plSelectedRun) ? ' sel' : '';
-      const trig = this._plTriggerBadge(r.trigger) || '<span class="pl-nohist">-</span>';
-      return '<tr class="pl-htrow' + sel + '" data-run="' + esc(r.id) + '" title="open #' + esc(shortId) + '">' +
-        '<td><div class="pl-mono">' + esc(abs) + '</div>' + (rel ? '<div class="pl-repo">' + esc(rel) + '</div>' : '') + '</td>' +
-        '<td>' + trig + '</td>' +
-        '<td>' + stateChip + '</td>' +
-        '<td class="pl-mono">' + esc(dur) + '</td>' +
-        '<td class="pl-mono">' + halt + '</td>' +
-      '</tr>';
-    }).join('');
-    const note = (runs.length >= 100) ? '<div class="pl-ht-note">showing last 100 runs</div>' : '';
-    return '<div class="pl-history-lbl">run history</div>' +
-      '<table class="pl-htable"><thead><tr><th>started</th><th>trigger</th><th>state</th><th>duration</th><th>halt</th></tr></thead><tbody>' + rows + '</tbody></table>' + note;
-  }
-
-  // Never-run pipeline: render the DECLARED DAG (all pending, dimmed by the chip's
-  // pending styling) with a copyable run command.
-  _plDeclaredDagHtml(detail) {
-    const esc = (s) => this._galaxyEsc(s);
-    const declared = Array.isArray(detail.declared) ? detail.declared : [];
-    if (!declared.length) return '<div class="pl-empty">no stages declared for this pipeline</div>';
-    const name = detail.name || this._plDetailName || '';
-    const cmd = 'gitmoot pipeline run ' + name;
-    const note = '<div class="pl-declared-note">never run yet - <code>' + esc(cmd) + '</code>' +
-      '<button class="gm-copy" data-cmd="' + esc(cmd) + '">copy</button></div>';
-    return note + this._pipelineStageDag(declared);
-  }
-
-  // Toggle the selection highlight across all three run selectors (rail rows,
-  // matrix columns, history-table rows) for the given run id.
-  _plSyncRunSelection(id) {
-    if (!this._pipelinesRoot) return;
-    this._pipelinesRoot.querySelectorAll('.pl-runrow').forEach(c => c.classList.toggle('sel', c.getAttribute('data-run') === id));
-    this._pipelinesRoot.querySelectorAll('.pl-htrow').forEach(r => r.classList.toggle('sel', r.getAttribute('data-run') === id));
-    this._pipelinesRoot.querySelectorAll('.pl-mx-cell').forEach(c => c.classList.toggle('sel', c.getAttribute('data-run') === id));
-  }
-
-  // Fallback run detail synthesized from the history entry's per-stage marks
-  // overlaid on the declared DAG (deps/cmd by stage id) — used when the full
-  // /api/pipeline/run/<id> detail is unavailable so a matrix/table click still
-  // shows that run's shape. Returns null when the run is not in the history.
-  _plRunFromHistory(id) {
-    const detail = this._plDetail;
-    if (!detail || !Array.isArray(detail.runs)) return null;
-    const e = detail.runs.find(r => r && r.id === id);
-    if (!e) return null;
-    const declBy = {};
-    (Array.isArray(detail.declared) ? detail.declared : []).forEach(s => { if (s && s.id) declBy[s.id] = s; });
-    const stages = (Array.isArray(e.stages) ? e.stages : []).map(m => {
-      const d = declBy[m.id] || {};
-      return { id: m.id, state: m.state, deps: Array.isArray(d.deps) ? d.deps : [], cmd: d.cmd || '' };
-    });
-    return { id: e.id, pipeline: detail.name, trigger: e.trigger, state: e.state, haltStage: e.haltStage, startedAt: e.startedAt, finishedAt: e.finishedAt, stages: stages };
-  }
-
   // ---- Persistent top bar + nav "needs you" dots ----------------------------
   // One light batch fetch that feeds the always-visible signals (daemon liveness
-  // for the top bar; amber needs-you dots for Health/Pipelines/Learning/Attention).
+  // for the top bar; amber needs-you dots for Health/Learning/Attention).
   // Runs once on load and every 60s; the per-view fetches also call the same
   // _*Apply* updaters so an open view keeps its own dot live between seeds.
   _navSeed() {
     const healthSeq = ++this._healthFetchSeq;
     fetch('/api/health', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (j && healthSeq === this._healthFetchSeq) this._tbApplyHealth(j); }).catch(() => {});
-    fetch('/api/pipelines', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (Array.isArray(j)) this._navApplyPipelines(j); }).catch(() => {});
     fetch('/api/workflows', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (Array.isArray(j)) this._navApplyWorkflows(j); }).catch(() => {});
     fetch('/api/tasks', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (Array.isArray(j)) this._navApplyTasks(j); }).catch(() => {});
     fetch('/api/learning/skills', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (j) this._navApplySkills(j); }).catch(() => {});
@@ -7883,10 +6437,6 @@ class Component extends DCLogic {
     }
     if (attn !== this.state.healthAttn) patch.healthAttn = attn;
     if (Object.keys(patch).length) this.setState(patch);
-  }
-  _navApplyPipelines(arr) {
-    const bad = (Array.isArray(arr) ? arr : []).some(p => p && (p.lastStatus === 'failed' || p.lastStatus === 'blocked'));
-    if (bad !== this.state.pipelinesAttn) this.setState({ pipelinesAttn: bad });
   }
   _navApplyWorkflows(arr) {
     const stalled = (Array.isArray(arr) ? arr : []).some(w => w && w.state === 'stalled');
@@ -7925,14 +6475,13 @@ class Component extends DCLogic {
   _navMoreCharts = () => { this.setState({ moreOpen: false }); this.showCharts(); };
   _navMoreLearning = () => { this.setState({ moreOpen: false }); this.showLearning(); };
   _navMoreConfig = () => { this.setState({ moreOpen: false }); this.showConfig(); };
-  _navMorePipelines = () => { this.setState({ moreOpen: false }); this.showPipelines(); };
   _navMoreAgents = () => { this.setState({ moreOpen: false }); this.showAgents(); };
   _navMoreOrg = () => { this.setState({ moreOpen: false }); this.showOrg(); };
   _navMoreAttention = () => { this.setState({ moreOpen: false }); this.showAttention(); };
   _navMoreHealth = () => { this.setState({ moreOpen: false }); this.showHealth(); };
 
   // ---- Shared copy chip -----------------------------------------------------
-  // Unified copy affordance (Learning / Agents / Pipelines). Reads the command from
+  // Unified copy affordance (Learning / Agents). Reads the command from
   // data-cmd, or takes an explicit text override (Agents copies a prompt's text),
   // writes to the clipboard, and flashes "✓ copied" via the global .gm-copy.done class.
   _gmCopyChip(btn, textOverride) {
@@ -7953,7 +6502,7 @@ class Component extends DCLogic {
     el.style.bottom = this._overlayBottom();
   }
   _redockOverlays() {
-    [this._overviewRoot, this._tasksRoot, this._galaxyRoot, this._workflowRoot, this._jobsRoot, this._agentsRoot, this._orgRoot, this._chartsRoot, this._healthRoot, this._configRoot, this._learningRoot, this._pipelinesRoot]
+    [this._overviewRoot, this._tasksRoot, this._galaxyRoot, this._workflowRoot, this._jobsRoot, this._agentsRoot, this._orgRoot, this._chartsRoot, this._healthRoot, this._configRoot, this._learningRoot]
       .forEach(r => this._dockOverlay(r));
   }
 
@@ -8561,7 +7110,6 @@ class Component extends DCLogic {
     const isConfig = view === 'config';
     const isAttention = view === 'attention';
     const isLearning = view === 'learning';
-    const isPipelines = view === 'pipelines';
     const isWorkflows = view === 'workflows';
     // shared nav-item base; active items pick up the green highlight
     const navBase = { display: 'flex', alignItems: 'center', gap: '11px', padding: '9px 11px', borderRadius: '9px', fontSize: '13.5px', fontWeight: 500, cursor: 'pointer', marginTop: '2px' };
@@ -8575,7 +7123,6 @@ class Component extends DCLogic {
     const tasksNavStyle = { ...navActive(isTasks), position: 'relative' };
     const galaxyNavStyle = { ...navActive(isGalaxy), position: 'relative' };
     const jobsNavStyle = { ...navActive(isJobs), position: 'relative' };
-    const pipelinesNavStyle = { ...navActive(isPipelines), position: 'relative' };
     const workflowsNavStyle = { ...navActive(isWorkflows), position: 'relative' };
     const agentsNavStyle = { ...navActive(isAgents), position: 'relative' };
     const orgNavStyle = { ...navActive(isOrg), position: 'relative' };
@@ -8589,7 +7136,6 @@ class Component extends DCLogic {
     const needsDot = (on, color) => { const c=color||'#e0af68'; return { width: '6px', height: '6px', borderRadius: '50%', flex: 'none', background: on ? c : 'transparent', boxShadow: on ? '0 0 8px '+c : 'none' }; };
     const healthAttn = !!this.state.healthAttn;
     const learningAttn = !!this.state.learningAttn;
-    const pipelinesAttn = !!this.state.pipelinesAttn;
     const workflowsAttn = !!this.state.workflowsAttn;
     const tasksAttn = !!this.state.tasksAttn;
     const attnAttn = !!this.state.attnAttn;
@@ -8637,17 +7183,16 @@ class Component extends DCLogic {
 
     // ---- top-bar breadcrumb: "section › entity", or "group › section" when no entity ----
     // Graph keeps its repo › run-title (and the run-state dot); every other view shows
-    // its section + a cheaply-available selected entity (pipeline / agent),
+    // its section + a cheaply-available selected entity (agent / workflow),
     // falling back to its nav group + section name.
-    const NAV_GROUP = { overview: 'work', tasks: 'work', graph: 'work', jobs: 'work', pipelines: 'work', workflows: 'work', agents: 'fleet', org: 'fleet', galaxy: 'insight', charts: 'insight', learning: 'insight', attention: 'system', health: 'system', config: 'system' };
-    const SECT = { overview: 'overview', tasks: 'tasks', graph: 'graph', jobs: 'jobs', pipelines: 'pipelines', workflows: 'workflows', agents: 'agents', org: 'org', galaxy: 'galaxy', charts: 'charts', learning: 'learning', attention: 'attention', health: 'health', config: 'config' };
+    const NAV_GROUP = { overview: 'work', tasks: 'work', graph: 'work', jobs: 'work', workflows: 'work', agents: 'fleet', org: 'fleet', galaxy: 'insight', charts: 'insight', learning: 'insight', attention: 'system', health: 'system', config: 'system' };
+    const SECT = { overview: 'overview', tasks: 'tasks', graph: 'graph', jobs: 'jobs', workflows: 'workflows', agents: 'agents', org: 'org', galaxy: 'galaxy', charts: 'charts', learning: 'learning', attention: 'attention', health: 'health', config: 'config' };
     let crumbRoot, crumbLeaf, crumbShowDot = isOrg;
     if (isGraph) {
       crumbRoot = activeRun.repo || 'graph'; crumbLeaf = activeRun.title || 'run'; crumbShowDot = true;
     } else {
       let entity = '';
-      if (isPipelines && this._plDetailName) entity = this._plDetailName;
-      else if (isAgents && this._agentsSelected) entity = this._agentsSelected;
+      if (isAgents && this._agentsSelected) entity = this._agentsSelected;
       else if (isJobs && this._jobsFacetAgent) entity = this._jobsFacetAgent;
       else if (isWorkflows && this._workflowLabel) entity = this._workflowLabel;
       else if (view === 'learning') entity = 'skills';
@@ -8666,23 +7211,23 @@ class Component extends DCLogic {
       showGraph: this.showGraph, showOverview: this.showOverview, showTasks: this.showTasks, showGalaxy: this.showGalaxy,
       showJobs: this.showJobs, showAgents: this.showAgents, showOrg: this.showOrg,
       showCharts: this.showCharts, showHealth: this.showHealth, showConfig: this.showConfig, showLearning: this.showLearning,
-      showPipelines: this.showPipelines, showWorkflows: this.showWorkflows, showAttention: this.showAttention,
-      graphNavStyle, overviewNavStyle, tasksNavStyle, galaxyNavStyle, jobsNavStyle, pipelinesNavStyle, workflowsNavStyle, agentsNavStyle, orgNavStyle, chartsNavStyle, healthNavStyle, configNavStyle, attentionNavStyle, learningNavStyle,
+      showWorkflows: this.showWorkflows, showAttention: this.showAttention,
+      graphNavStyle, overviewNavStyle, tasksNavStyle, galaxyNavStyle, jobsNavStyle, workflowsNavStyle, agentsNavStyle, orgNavStyle, chartsNavStyle, healthNavStyle, configNavStyle, attentionNavStyle, learningNavStyle,
       graphNavDotStyle: needsDot(false), galaxyNavDotStyle: needsDot(false),
       jobsNavDotStyle: needsDot(false), agentsNavDotStyle: needsDot(false), orgNavDotStyle: needsDot(false),
       chartsNavDotStyle: needsDot(false), healthNavDotStyle: needsDot(healthAttn && !isHealth),
       configNavDotStyle: needsDot(false),
       attentionNavDotStyle: needsDot(attnAttn && !isAttention, '#f7768e'),
       tasksNavDotStyle: needsDot(tasksAttn && !isTasks),
-      learningNavDotStyle: needsDot(false), pipelinesNavDotStyle: needsDot(pipelinesAttn && !isPipelines),
+      learningNavDotStyle: needsDot(false),
       workflowsNavDotStyle: needsDot(workflowsAttn && !isWorkflows),
-      tabPipesAttnStyle: tabPip(pipelinesAttn), tabHealthAttnStyle: tabPip(healthAttn),
+      tabHealthAttnStyle: tabPip(healthAttn),
       tabAttnAttnStyle: tabPip(attnAttn, '#f7768e'), tabTasksAttnStyle: tabPip(tasksAttn && !isTasks), tabWorkflowsAttnStyle: tabPip(workflowsAttn && !isWorkflows),
-      tabMoreAttnStyle: tabPip(pipelinesAttn || healthAttn || attnAttn),
+      tabMoreAttnStyle: tabPip(healthAttn || attnAttn),
       moreSheetVisible, closeMoreSheet: this._navCloseMore, showMore: this._navOpenMore,
       showOverviewFromMore: this._navMoreOverview, showTasksFromMore: this._navMoreTasks, showWorkflowsFromMore: this._navMoreWorkflows, showJobsFromMore: this._navMoreJobs,
       showGalaxyFromMore: this._navMoreGalaxy, showChartsFromMore: this._navMoreCharts, showLearningFromMore: this._navMoreLearning,
-      showConfigFromMore: this._navMoreConfig, showPipelinesFromMore: this._navMorePipelines,
+      showConfigFromMore: this._navMoreConfig,
       showAgentsFromMore: this._navMoreAgents, showOrgFromMore: this._navMoreOrg, showAttentionFromMore: this._navMoreAttention, showHealthFromMore: this._navMoreHealth,
       moreLearnDotStyle: needsDot(learningAttn),
       daemonText, daemonTextStyle, liveWord, liveBadgeStyle, liveDotStyle,
@@ -8691,8 +7236,7 @@ class Component extends DCLogic {
       tabGraphStyle: tabStyle(isGraph), tabOverviewStyle: tabStyle(isOverview), tabTasksStyle: { ...tabStyle(isTasks), position: 'relative' }, tabJobsStyle: tabStyle(isJobs), tabWorkflowsStyle: { ...tabStyle(isWorkflows), position: 'relative' }, tabAgentsStyle: tabStyle(isAgents),
             tabHealthStyle: { ...tabStyle(isHealth), position: 'relative' },
       tabAttentionStyle: { ...tabStyle(isAttention), position: 'relative' },
-            tabPipelinesStyle: { ...tabStyle(isPipelines), position: 'relative' },
-      tabMoreStyle: { ...tabStyle(isGraph || isJobs || isGalaxy || isCharts || isLearning || isConfig || isPipelines || isAgents || isOrg || isAttention || isHealth), position: 'relative' },
+      tabMoreStyle: { ...tabStyle(isGraph || isJobs || isGalaxy || isCharts || isLearning || isConfig || isAgents || isOrg || isAttention || isHealth), position: 'relative' },
       crumbRepoStyle, crumbSepStyle, liveTextStyle, detailAsideStyle, zoomCtrlStyle, footerStyle,
       crumbRepo: crumbRoot, crumbTitle: crumbLeaf,
       crumbDotStyle: crumbShowDot ? { width: '8px', height: '8px', borderRadius: '50%', flex: 'none', background: isOrg ? '#bb9af7' : crumbCol.c, boxShadow: isOrg ? '0 0 8px rgba(187,154,247,.6)' : (activeRun.state === 'running' ? '0 0 8px ' + crumbCol.g : 'none'), animation: (!isOrg && activeRun.state === 'running') ? 'dotpulse 1.4s ease-in-out infinite' : 'none' } : { display: 'none' },
