@@ -47,6 +47,35 @@ func TestServeSPAFallback(t *testing.T) {
 	}
 }
 
+// TestRemovedAPIRoutesNotFound pins that endpoints removed from the contract
+// (the wake ledger and the SkillOpt verdicts stub, gitmoot/gitmoot#2593) and
+// any other unknown /api/ path answer 404 instead of the 200 SPA shell.
+func TestRemovedAPIRoutesNotFound(t *testing.T) {
+	srv := httptest.NewServer(Serve(NewFakeDataSource()))
+	defer srv.Close()
+
+	for _, path := range []string{
+		"/api/wakes",
+		"/api/wakes/summary",
+		"/api/wakes/receipts",
+		"/api/run/eval-reviewer-0007/verdicts",
+		"/api/no-such-endpoint",
+		"/api",
+	} {
+		resp, err := http.Get(srv.URL + path)
+		if err != nil {
+			t.Fatalf("GET %s: %v", path, err)
+		}
+		resp.Body.Close()
+		if resp.StatusCode != http.StatusNotFound {
+			t.Fatalf("GET %s status = %d, want 404", path, resp.StatusCode)
+		}
+		if ct := resp.Header.Get("Content-Type"); strings.HasPrefix(ct, "text/html") {
+			t.Fatalf("GET %s served the HTML shell (Content-Type %q)", path, ct)
+		}
+	}
+}
+
 // TestStateRouteRegistered asserts the /api/state route is wired into the mux
 // and served by the JSON handler (not the static SPA fallback, which would
 // return an HTML index).

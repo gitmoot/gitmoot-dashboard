@@ -12,9 +12,8 @@ import (
 // static UI (with SPA fallback to index.html) plus the JSON API (handleRuns/
 // handleJobs/handleAgents/handleAgent/handleCharts/handleHealth/
 // handleLearningSkills/handleOverview/handleTasks/
-// handleWakeSummary/handleWakes/handleWakeReceipts/
 // handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/
-// handleAttention/handleJobChecks/handleBinaryVerdicts/
+// handleAttention/handleJobChecks/
 // handleState/handleJob/handleGraph/handleChangeEvents in api.go) and the
 // run-state SSE stream (handleEvents in sse.go).
 func Serve(ds DataSource) http.Handler {
@@ -30,9 +29,6 @@ func Serve(ds DataSource) http.Handler {
 	mux.HandleFunc("GET /api/config", s.handleConfig)
 	mux.HandleFunc("GET /api/learning/skills", s.handleLearningSkills)
 	mux.HandleFunc("GET /api/overview", s.handleOverview)
-	mux.HandleFunc("GET /api/wakes/summary", s.handleWakeSummary)
-	mux.HandleFunc("GET /api/wakes/receipts", s.handleWakeReceipts)
-	mux.HandleFunc("GET /api/wakes", s.handleWakes)
 	mux.HandleFunc("GET /api/tasks", s.handleTasks)
 	mux.HandleFunc("GET /api/org", s.handleOrg)
 	mux.HandleFunc("GET /api/org/role/{name}", s.handleOrgRole)
@@ -40,7 +36,6 @@ func Serve(ds DataSource) http.Handler {
 	mux.HandleFunc("GET /api/workflow/{label}", s.handleWorkflow)
 	mux.HandleFunc("GET /api/attention", s.handleAttention)
 	mux.HandleFunc("GET /api/job/{id}/checks", s.handleJobChecks)
-	mux.HandleFunc("GET /api/run/{id}/verdicts", s.handleBinaryVerdicts)
 	mux.HandleFunc("GET /api/state", s.handleState)
 	mux.HandleFunc("GET /api/job/{id}", s.handleJob)
 	mux.HandleFunc("GET /api/graph", s.handleGraph)
@@ -71,15 +66,15 @@ func newServer(ds DataSource) *server {
 // The JSON API handlers (handleRuns/handleJobs/handleAgents/handleAgent/
 // handleCharts/handleHealth/handleLearningSkills/
 // handleOverview/handleTasks/
-// handleWakeSummary/handleWakes/handleWakeReceipts/
 // handleOrg/handleOrgRole/handleWorkflows/handleWorkflow/
-// handleAttention/handleJobChecks/handleBinaryVerdicts/
+// handleAttention/handleJobChecks/
 // handleState/handleJob/handleGraph/handleChangeEvents) live in api.go and the
 // run-state SSE handler (handleEvents) lives in sse.go.
 
 // staticHandler serves the embedded web/dist assets. Requests that do not map
 // to an existing file fall back to index.html so the client-side router can
-// take over.
+// take over — except under /api/, where an unknown or removed endpoint must
+// answer 404 rather than a 200 HTML shell a client would try to parse as JSON.
 func (s *server) staticHandler() http.Handler {
 	dist := webDistFS()
 	fileServer := http.FileServer(http.FS(dist))
@@ -95,6 +90,10 @@ func (s *server) staticHandler() http.Handler {
 		upath := strings.TrimPrefix(path.Clean(r.URL.Path), "/")
 		if upath == "" {
 			upath = "index.html"
+		}
+		if upath == "api" || strings.HasPrefix(upath, "api/") {
+			http.NotFound(w, r)
+			return
 		}
 		if f, err := dist.Open(upath); err == nil {
 			f.Close()

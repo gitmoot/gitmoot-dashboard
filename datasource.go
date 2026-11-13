@@ -368,7 +368,7 @@ type WorkflowDataSource interface {
 // Link is either a dashboard path or an external URL. Stalled workflow cards
 // additionally carry the read-only coordinator handoff fields.
 type OverviewNeedsYou struct {
-	Kind      string `json:"kind"` // pr_awaiting_merge | blocked_job | groom_proposal | stalled_workflow
+	Kind      string `json:"kind"` // pr_awaiting_merge | blocked_job | unlabeled_jobs | stalled_workflow
 	Repo      string `json:"repo,omitempty"`
 	Ref       string `json:"ref,omitempty"`
 	Title     string `json:"title"`
@@ -441,77 +441,6 @@ type OverviewDataSource interface {
 	Overview(ctx context.Context) (Overview, error)
 }
 
-// WakeSummary is the operator-facing rollup served by GET /api/wakes/summary.
-type WakeSummary struct {
-	Outstanding      int `json:"outstanding"`
-	Pending          int `json:"pending"`
-	AgedAttempted    int `json:"aged_attempted"`
-	DeliveryUnknown  int `json:"delivery_unknown"`
-	Stalled          int `json:"stalled"`
-	OldestAgeSeconds int `json:"oldest_age_seconds"`
-	// Rows is the candidate wake set. The public handler applies the canonical
-	// outstanding-state classifier and derives Outstanding from the result.
-	Rows []WakeRow `json:"rows"`
-}
-
-// WakeRow is one metadata-only wake obligation. Data sources may populate
-// LastError with untrusted transport text; handleWakes replaces it with a fixed
-// error class before serialization on the public API.
-type WakeRow struct {
-	ID           string  `json:"id"`
-	TargetRole   string  `json:"target_role"`
-	SourceKind   string  `json:"source_kind"`
-	SourceID     string  `json:"source_id"`
-	State        string  `json:"state"` // pending | attempted | delivered | stalled | failed | delivery_unknown
-	AttemptCount int     `json:"attempt_count"`
-	LastError    string  `json:"last_error"`
-	AgeSeconds   int     `json:"age_seconds"`
-	CreatedAt    string  `json:"created_at"`   // RFC3339
-	AttemptedAt  *string `json:"attempted_at"` // RFC3339 or null
-}
-
-// WakeRows is the non-null list envelope served by GET /api/wakes.
-type WakeRows struct {
-	Rows []WakeRow `json:"rows"`
-}
-
-// WakeReceipt is one metadata-only delivered wake record.
-type WakeReceipt struct {
-	ID           string `json:"id"`
-	TargetRole   string `json:"target_role"`
-	SourceKind   string `json:"source_kind"`
-	State        string `json:"state"` // delivered
-	AttemptCount int    `json:"attempt_count"`
-	DeliveredAt  string `json:"delivered_at"` // RFC3339
-}
-
-// WakeReceipts is the non-null list envelope served by GET /api/wakes/receipts.
-type WakeReceipts struct {
-	Rows []WakeReceipt `json:"rows"`
-}
-
-// WakeQuery is the validated GET /api/wakes query.
-type WakeQuery struct {
-	State string
-	Role  string
-	Limit int
-}
-
-// WakeReceiptQuery is the validated GET /api/wakes/receipts query.
-type WakeReceiptQuery struct {
-	Role  string
-	Since string
-	Limit int
-}
-
-// WakeDataSource is the optional read-only wake-ledger extension. Keeping it
-// separate preserves the core DataSource contract for older bridges.
-type WakeDataSource interface {
-	WakeSummary(ctx context.Context) (WakeSummary, error)
-	Wakes(ctx context.Context, query WakeQuery) (WakeRows, error)
-	WakeReceipts(ctx context.Context, query WakeReceiptQuery) (WakeReceipts, error)
-}
-
 // TaskSummary is one read-only lifecycle card on GET /api/tasks. UpdatedAt is
 // epoch milliseconds; AgeS is the server-computed display age. Merged entries
 // are limited to the most recent seven days by the data source.
@@ -519,7 +448,7 @@ type TaskSummary struct {
 	ID            string `json:"id"`
 	Title         string `json:"title"`
 	Repo          string `json:"repo"`
-	State         string `json:"state"` // planned | implementing | pr_open | blocked | merged
+	State         string `json:"state"` // pr_open | blocked | merged
 	Agent         string `json:"agent,omitempty"`
 	PRNumber      int    `json:"pr_number,omitempty"`
 	CI            string `json:"ci,omitempty"` // green | red | pending | ""
@@ -897,7 +826,7 @@ type Skills struct {
 	PendingTotal   int             `json:"pendingTotal"`
 }
 
-// Attention + binary checks — surfacing evaluator output and human gates where a
+// Attention + result checks — surfacing evaluator output and human gates where a
 // human (or the planned Slack/media bridge, gitmoot #519) manages work
 // (gitmoot #528).
 
@@ -921,28 +850,6 @@ type JobChecks struct {
 	Failed []ResultCheck `json:"failed"` // failed checks, insertion order; never nil
 }
 
-// BinaryVerdict is one per-question verdict from a SkillOpt binary evaluation
-// (gitmoot #714 skillopt_binary_verdicts): a yes/no answer to a decomposed
-// question with the evaluator's explanation. Pass mirrors Verdict == "yes".
-type BinaryVerdict struct {
-	QuestionID  string  `json:"questionId"`
-	Dimension   string  `json:"dimension,omitempty"`
-	Verdict     string  `json:"verdict"` // yes | no
-	Pass        bool    `json:"pass"`
-	Explanation string  `json:"explanation,omitempty"`
-	Weight      float64 `json:"weight,omitempty"`
-}
-
-// BinaryVerdicts is the per-run binary-check breakdown (gitmoot #714): the
-// verdicts ordered by (dimension, questionId) plus pass/fail headline counts.
-// An unknown run yields zero counts and an empty (never nil) list.
-type BinaryVerdicts struct {
-	RunID    string          `json:"runId"`
-	Passed   int             `json:"passed"`
-	Failed   int             `json:"failed"`
-	Verdicts []BinaryVerdict `json:"verdicts"` // ordered (dimension, questionId); never nil
-}
-
 // AttentionGate is a blocked job waiting on a human-satisfiable gate (gitmoot
 // #693 job_gates): one open (unsatisfied) need on a job.
 type AttentionGate struct {
@@ -956,42 +863,14 @@ type AttentionGate struct {
 	CreatedAt int64     `json:"createdAt,omitempty"` // epoch ms
 }
 
-// AttentionSynthItem is a synthesized SkillOpt review item awaiting the human
-// approval gate (gitmoot skillopt_synth_items, status pending_human_approval).
-type AttentionSynthItem struct {
-	ID          string  `json:"id"`
-	TemplateID  string  `json:"templateId,omitempty"`
-	Repo        string  `json:"repo,omitempty"`
-	Question    string  `json:"question,omitempty"`
-	Gap         float64 `json:"gap,omitempty"`
-	WeakAgent   string  `json:"weakAgent,omitempty"`
-	StrongAgent string  `json:"strongAgent,omitempty"`
-	JudgeAgent  string  `json:"judgeAgent,omitempty"`
-	CreatedAt   int64   `json:"createdAt,omitempty"` // epoch ms
-}
-
-// AttentionCandidate is an agent-template candidate version awaiting human
-// promotion (a template version in the "pending" state). Score passes through
-// the review's stored form (a decimal, or empty when unscored).
-type AttentionCandidate struct {
-	TemplateID string `json:"templateId"`
-	Name       string `json:"name,omitempty"`
-	VersionID  string `json:"versionId"`
-	Number     int    `json:"number"`
-	Score      string `json:"score,omitempty"`
-	CreatedAt  int64  `json:"createdAt,omitempty"` // epoch ms
-}
-
-// Attention is the "Needs a human" view (gitmoot #528): the three kinds of item
-// that require an explicit human decision — blocked job gates, pending synth
-// approvals and template candidates awaiting promotion — plus a headline total.
-// Every list is non-nil and deterministically ordered (the UI polls with a
-// signature-skip).
+// Attention is the "Needs a human" view (gitmoot #528): blocked job gates that
+// require an explicit human decision, plus a headline total. Gates is non-nil and
+// deterministically ordered (the UI polls with a signature-skip).
 type Attention struct {
-	Gates      []AttentionGate      `json:"gates"`      // open job gates, oldest-first
-	SynthItems []AttentionSynthItem `json:"synthItems"` // pending synth approvals, newest-first
-	Candidates []AttentionCandidate `json:"candidates"` // versions awaiting promotion, (templateId, number)
-	Total      int                  `json:"total"`      // gates + synthItems + candidates
+	Gates []AttentionGate `json:"gates"` // open job gates, oldest-first
+	// Total is the headline count: the gates plus any other waiting items the
+	// data source counts (gitmoot adds stale notifications).
+	Total int `json:"total"`
 }
 
 // ChangeCursorDataSource is the optional liveness extension behind
@@ -1046,16 +925,12 @@ type DataSource interface {
 	// gitmoot retired and could only ever answer empty.
 	Skills(ctx context.Context) (Skills, error)
 	// Attention returns the "Needs a human" view (gitmoot #528): blocked job
-	// gates, pending synth approvals and template candidates awaiting promotion.
-	// Ordering must be deterministic (the UI polls with a signature-skip).
+	// gates and the headline waiting total. Ordering must be deterministic (the
+	// UI polls with a signature-skip).
 	Attention(ctx context.Context) (Attention, error)
 	// JobChecks returns the job-detail failed-check section for one job (gitmoot
 	// #711): the deterministic result checks its result failed plus the home-wide
 	// policy mode. An unknown job yields an empty Failed with the resolved Mode.
 	JobChecks(ctx context.Context, jobID string) (JobChecks, error)
-	// BinaryVerdicts returns the per-run SkillOpt binary-check breakdown (gitmoot
-	// #714) for a skillopt eval run id: verdicts ordered by (dimension,
-	// questionId) plus pass/fail counts. An unknown run yields zero counts.
-	BinaryVerdicts(ctx context.Context, runID string) (BinaryVerdicts, error)
 	Subscribe(ctx context.Context, runID string) (<-chan State, func(), error) // for SSE
 }

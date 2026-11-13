@@ -465,11 +465,11 @@ func compactWorkflowNode(n Node) WorkflowNode {
 
 func fakeWorkflowNotes(anchor int64) []WorkflowNoteView {
 	notes := []WorkflowNoteView{
-		{ID: 109, Author: "claude-coordinator", Body: "Designs agree across all three researchers — dispatching wave-impl to implement the split threshold and LLM-guided lossless merge. Holding review until the validation pass returns.", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(2*time.Minute/time.Millisecond)},
+		{ID: 109, Author: "claude-coordinator", Body: "Designs agree across all three researchers — dispatching wave-impl to implement the exact-head review guard. Holding review until the validation pass returns.", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(2*time.Minute/time.Millisecond)},
 		{ID: 108, Author: "panel-synth", Body: "render <script>window.__workflowScriptExecuted=true</script> literally & safely", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(10*time.Minute/time.Millisecond)},
-		{ID: 107, Author: "claude-coordinator", Body: "Panel fired (3 models): core decision = split threshold at 0.62 cosine plus an LLM-guided lossless merge; write caps set to 16KiB / 64KiB.", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(20*time.Minute/time.Millisecond)},
-		{ID: 106, Author: "research-kimi", Body: "Kimi review favors the lossless merge guard and a separate validation child before synthesis.", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(27*time.Minute/time.Millisecond)},
-		{ID: 105, Author: "research-sol", Body: "The baseline confirms over-merge around high-density topic boundaries; cosine-only tuning is insufficient.", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(40*time.Minute/time.Millisecond)},
+		{ID: 107, Author: "claude-coordinator", Body: "Panel fired (3 models): core decision = keep the merge gate closed until a review exists at the exact head; evidence caps set to 16KiB / 64KiB.", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(20*time.Minute/time.Millisecond)},
+		{ID: 106, Author: "research-kimi", Body: "Kimi review favors the exact-head guard and a separate validation child before synthesis.", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(27*time.Minute/time.Millisecond)},
+		{ID: 105, Author: "research-sol", Body: "The baseline confirms stale-head approvals slip through after force-pushes; branch-name matching is insufficient.", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(40*time.Minute/time.Millisecond)},
 		{ID: 104, Author: "claude-coordinator", Body: "Baseline audit complete. Launching independent design research with Claude, Codex, and Kimi.", Repo: "jerryfane/gitmoot", CreatedAt: anchor - int64(55*time.Minute/time.Millisecond)},
 		{ID: 103, Author: "project-lead", Body: "Workflow opened from issue #78 with the dashboard half isolated from server lifecycle derivation.", Repo: "jerryfane/gitmoot-dashboard", CreatedAt: anchor - int64(75*time.Minute/time.Millisecond)},
 		{ID: 102, Author: "project-lead", Body: "Coordinator pane reserved and journal handoff verified.", Repo: "jerryfane/gitmoot-dashboard", CreatedAt: anchor - int64(100*time.Minute/time.Millisecond)},
@@ -501,14 +501,14 @@ func fakeWorkflowNode(id, parentID, title, agent, runtime string, state NodeStat
 
 func fakeWorkflowRuns(anchor int64) []WorkflowRun {
 	minute := int64(time.Minute / time.Millisecond)
-	currentRoot := fakeWorkflowNode("wf-current-root", "", "Groom split heuristics — validation pass", "claude-coordinator", "claude", "running", anchor-8*minute, 0)
-	currentImpl := fakeWorkflowNode("wf-current-impl", currentRoot.ID, "implement: merge guard", "wave-impl", "codex", "running", anchor-6*minute, 0)
+	currentRoot := fakeWorkflowNode("wf-current-root", "", "Merge gate exact-head guard — validation pass", "claude-coordinator", "claude", "running", anchor-8*minute, 0)
+	currentImpl := fakeWorkflowNode("wf-current-impl", currentRoot.ID, "implement: exact-head guard", "wave-impl", "codex", "running", anchor-6*minute, 0)
 	currentReview := fakeWorkflowNode("wf-current-review", currentRoot.ID, "review: validation results", "researcher", "claude", "queued", 0, 0)
-	failedRoot := fakeWorkflowNode("wf-failed-root", "", "Independent design research — split heuristics", "research-fable", "claude", "failed", anchor-18*minute, anchor-18*minute+15_000)
-	failedChild := fakeWorkflowNode("wf-failed-child", failedRoot.ID, "ask: evaluate split threshold", "research-fable", "claude", "failed", anchor-18*minute, anchor-18*minute+15_000)
-	solRoot := fakeWorkflowNode("wf-sol-root", "", "Independent design research — split heuristics", "research-sol", "codex", "succeeded", anchor-38*minute, anchor-33*minute)
-	solChild := fakeWorkflowNode("wf-sol-child", solRoot.ID, "review: compare merge strategies", "research-sol", "codex", "succeeded", anchor-37*minute, anchor-33*minute)
-	baseRoot := fakeWorkflowNode("wf-base-root", "", "Baseline: current groomer over-merge audit", "researcher", "kimi", "succeeded", anchor-70*minute, anchor-64*minute)
+	failedRoot := fakeWorkflowNode("wf-failed-root", "", "Independent design research — exact-head guard", "research-fable", "claude", "failed", anchor-18*minute, anchor-18*minute+15_000)
+	failedChild := fakeWorkflowNode("wf-failed-child", failedRoot.ID, "ask: evaluate stale-head approvals", "research-fable", "claude", "failed", anchor-18*minute, anchor-18*minute+15_000)
+	solRoot := fakeWorkflowNode("wf-sol-root", "", "Independent design research — exact-head guard", "research-sol", "codex", "succeeded", anchor-38*minute, anchor-33*minute)
+	solChild := fakeWorkflowNode("wf-sol-child", solRoot.ID, "review: compare guard strategies", "research-sol", "codex", "succeeded", anchor-37*minute, anchor-33*minute)
+	baseRoot := fakeWorkflowNode("wf-base-root", "", "Baseline: stale-head approval audit", "researcher", "kimi", "succeeded", anchor-70*minute, anchor-64*minute)
 	runs := []WorkflowRun{
 		{
 			RunID: fakeRunID, Title: currentRoot.Title, Agent: currentRoot.Agent, Runtime: currentRoot.Runtime,
@@ -613,10 +613,10 @@ func fakeWorkflowIndex(anchor int64) []WorkflowIndexEntry {
 	return []WorkflowIndexEntry{
 		{Label: fakeStalledWorkflow, Summary: "Hardening scheduled arXiv retries after repeated rate-limit failures.", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "fable", SessionID: "a3f19c"}, State: "stalled", StalledForS: 40 * 60, Counts: WorkflowCounts{Jobs: 4, Succeeded: 2, Failed: 2, Notes: 5}, TokensIn: 64_000, TokensOut: 16_000, FirstAt: anchor - 3*hour, LastAt: anchor - 40*minute, LastNote: "Panel synthesized temp JSON + env var; no resume note since.", Repos: []string{"jerryfane/arxiv-post-agent"}},
 		primary,
-		{Label: "sol/smart-groomer", Summary: "Improving memory grooming with safer split and merge heuristics.", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "sol", SessionID: "c40d8a"}, State: "active", Counts: WorkflowCounts{Jobs: 11, Running: 2, Succeeded: 9, Notes: 12}, TokensIn: 680_000, TokensOut: 210_000, FirstAt: anchor - 2*hour, LastAt: anchor - 4*minute, LastNote: "Validation workers are still moving.", Repos: []string{"jerryfane/gitmoot"}},
+		{Label: "sol/review-sweep", Summary: "Sweeping open PRs for reviews that predate their current head.", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "sol", SessionID: "c40d8a"}, State: "active", Counts: WorkflowCounts{Jobs: 11, Running: 2, Succeeded: 9, Notes: 12}, TokensIn: 680_000, TokensOut: 210_000, FirstAt: anchor - 2*hour, LastAt: anchor - 4*minute, LastNote: "Validation workers are still moving.", Repos: []string{"jerryfane/gitmoot"}},
 		{Label: "officeqa-point-formula", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "kimi", SessionID: "d7c410"}, State: "settled", Counts: WorkflowCounts{Jobs: 16, Succeeded: 12, Failed: 3, Blocked: 1, Notes: 9}, TokensIn: 2_100_000, TokensOut: 800_000, FirstAt: anchor - day, LastAt: anchor - 8*hour, LastNote: "Closing note published.", Repos: []string{"jerryfane/officeqa"}},
 		{Label: "sol/token-accounting", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "sol", SessionID: "1f9b22"}, State: "settled", Counts: WorkflowCounts{Jobs: 9, Succeeded: 7, Failed: 1, Blocked: 1, Notes: 6}, TokensIn: 470_000, TokensOut: 170_000, FirstAt: anchor - 9*hour, LastAt: anchor - 6*hour, LastNote: "Token totals reconciled.", Repos: []string{"jerryfane/gitmoot"}},
-		{Label: "ops/groom-propose", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "ops", SessionID: "0f621a"}, State: "settled", Counts: WorkflowCounts{Jobs: 5, Succeeded: 5}, TokensIn: 18_000, TokensOut: 4_000, FirstAt: anchor - 5*hour, LastAt: anchor - 4*hour, Repos: []string{"jerryfane/gitmoot"}},
+		{Label: "ops/design-notes", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "ops", SessionID: "0f621a"}, State: "settled", Counts: WorkflowCounts{Jobs: 5, Succeeded: 5}, TokensIn: 18_000, TokensOut: 4_000, FirstAt: anchor - 5*hour, LastAt: anchor - 4*hour, Repos: []string{"jerryfane/gitmoot"}},
 		{Label: "adhoc/researcher", Coordinator: WorkflowCoordinator{Author: "claude-coordinator", Pane: "adhoc", SessionID: "8aa912"}, State: "settled", Counts: WorkflowCounts{Jobs: 26, Succeeded: 22, Failed: 4}, TokensIn: 3_600_000, TokensOut: 1_300_000, FirstAt: anchor - 3*day, LastAt: anchor - day, Repos: []string{"jerryfane/gitmoot", "jerryfane/sophon"}},
 	}
 }
@@ -667,15 +667,14 @@ func (f *FakeDataSource) Overview(ctx context.Context) (Overview, error) {
 		NeedsYou: []OverviewNeedsYou{
 			{Kind: "pr_awaiting_merge", Repo: "jerryfane/vetrina", Ref: "#77", Title: "Charlotte selfimprove pass 3 — layout tokens", AgeS: 11 * 3600, CI: "pending", Link: "https://github.com/jerryfane/vetrina/pull/77"},
 			{Kind: "stalled_workflow", Repo: "jerryfane/arxiv-post-agent", Ref: "40m", Title: "1 run failed · coordinator silent", AgeS: 40 * 60, Link: "/workflows/fable%2Farxiv-retry-hardening", Label: fakeStalledWorkflow, Pane: "fable", SessionID: "a3f19c", LastNote: "synthesized temp JSON + env var; 16KiB caps"},
-			{Kind: "pr_awaiting_merge", Repo: "jerryfane/gitmoot", Ref: "#892", Title: "Add memory-groom split heuristics to nightly propose pass", AgeS: 2 * 3600, CI: "green", Link: "https://github.com/jerryfane/gitmoot/pull/892"},
+			{Kind: "pr_awaiting_merge", Repo: "jerryfane/gitmoot", Ref: "#892", Title: "Require an exact-head review before the merge gate opens", AgeS: 2 * 3600, CI: "green", Link: "https://github.com/jerryfane/gitmoot/pull/892"},
 			{Kind: "blocked_job", Repo: "jerryfane/gitmoot", Ref: "planner", Title: "Job blocked · needs writable /root/.gitmoot", AgeS: 5 * 86400, Link: "/attention"},
-			{Kind: "groom_proposal", Repo: "gitmoot · joltra", Ref: "12 facts", Title: "3 memory-groom proposals await review", AgeS: 4 * 3600, Link: "/attention"},
-			{Kind: "pr_awaiting_merge", Repo: "jerryfane/arxiv-post-agent", Ref: "#418", Title: "Fix arxiv summary pipeline retry backoff on 429", AgeS: 6 * 3600, CI: "red", Link: "https://github.com/jerryfane/arxiv-post-agent/pull/418"},
+			{Kind: "pr_awaiting_merge", Repo: "jerryfane/arxiv-post-agent", Ref: "#418", Title: "Fix arxiv summary retry backoff on 429", AgeS: 6 * 3600, CI: "red", Link: "https://github.com/jerryfane/arxiv-post-agent/pull/418"},
 		},
 		Activity: OverviewActivity{
 			Workflows: []OverviewWorkflowActivity{
 				{Label: "sol/dashboard-redesign", Running: 2, Agents: []string{"sol-impl-a", "ui-designer-researcher"}, StartedAgoS: 4 * 60},
-				{Label: "fable/smart-groomer", Running: 3, Agents: []string{"researcher", "research-sol", "wave-impl"}, StartedAgoS: 25 * 60},
+				{Label: "fable/review-sweep", Running: 3, Agents: []string{"researcher", "research-sol", "wave-impl"}, StartedAgoS: 25 * 60},
 			},
 			UnattendedNote: "ops/… + adhoc/… · 4 more jobs running",
 			Queued:         8,
@@ -684,7 +683,7 @@ func (f *FakeDataSource) Overview(ctx context.Context) (Overview, error) {
 			Completed: 142, Failed: 14, Cancelled: 6, TokensIn: 38_100_000, TokensOut: 9_100_000,
 			PerHour: [24]int{8, 7, 5, 5, 4, 4, 3, 5, 10, 18, 30, 42, 51, 56, 49, 44, 38, 45, 52, 43, 36, 25, 19, 17},
 			Notable: []OverviewNotable{
-				{Agent: "researcher", Title: "Design review for gitmoot #863 — end-to-end pipeline run", Outcome: "succeeded", ElapsedS: 516, AgeS: 12 * 60},
+				{Agent: "researcher", Title: "Design review for gitmoot #863 — merge gate evidence", Outcome: "succeeded", ElapsedS: 516, AgeS: 12 * 60},
 				{Agent: "research-fable", Title: "Independent design research for gitmoot #864: workflow", Outcome: "failed", ElapsedS: 15, AgeS: 34 * 60},
 				{Agent: "wave-impl", Title: "FEATURE: gitmoot server half of dashboard #75", Outcome: "succeeded", ElapsedS: 608, AgeS: 3600},
 				{Agent: "btc-coordinator", Title: "Price model backtest sweep r8", Outcome: "succeeded", ElapsedS: 276, AgeS: 5400},
@@ -701,125 +700,19 @@ func (f *FakeDataSource) Overview(ctx context.Context) (Overview, error) {
 	}, nil
 }
 
-func fakeWakeRows() []WakeRow {
-	attemptedA := "2026-07-28T22:47:00Z"
-	attemptedB := "2026-07-28T22:51:00Z"
-	attemptedC := "2026-07-28T23:03:00Z"
-	return []WakeRow{
-		{
-			ID: "wake-unknown-001", TargetRole: "lead", SourceKind: "escalation", SourceID: "esc-g4-owner-17",
-			State: "delivery_unknown", AttemptCount: 3, AgeSeconds: 3100,
-			LastError:   `connection reset while sending payload "owner decision: rotate the private signing key"`,
-			CreatedAt:   "2026-07-28T22:39:00Z",
-			AttemptedAt: &attemptedA,
-		},
-		{
-			ID: "wake-stalled-001", TargetRole: "g4", SourceKind: "delegation", SourceID: "job-contract-review",
-			State: "stalled", AttemptCount: 4, AgeSeconds: 2700,
-			LastError:   `delivery deadline exceeded: message "use the unredacted customer fixture"`,
-			CreatedAt:   "2026-07-28T22:45:00Z",
-			AttemptedAt: &attemptedB,
-		},
-		{
-			ID: "wake-attempted-001", TargetRole: "vetrina", SourceKind: "recycle", SourceID: "recycle-vetrina-09",
-			State: "attempted", AttemptCount: 2, AgeSeconds: 1900,
-			LastError:   "dial unix /run/tmux/default: connect: connection refused",
-			CreatedAt:   "2026-07-28T22:58:00Z",
-			AttemptedAt: &attemptedC,
-		},
-		{
-			ID: "wake-pending-001", TargetRole: "joltra", SourceKind: "delegation", SourceID: "job-video-export",
-			State: "pending", AttemptCount: 0, AgeSeconds: 420, CreatedAt: "2026-07-28T23:21:00Z",
-		},
-		{
-			ID: "wake-pending-002", TargetRole: "g2", SourceKind: "awaited_fact", SourceID: "fact-release-1230",
-			State: "pending", AttemptCount: 0, AgeSeconds: 180, CreatedAt: "2026-07-28T23:25:00Z",
-		},
-		{
-			ID: "wake-failed-001", TargetRole: "herdres", SourceKind: "escalation", SourceID: "esc-delivery-audit",
-			State: "failed", AttemptCount: 2, AgeSeconds: 800,
-			LastError:   "authentication required for delivery transport",
-			CreatedAt:   "2026-07-28T23:14:00Z",
-			AttemptedAt: &attemptedC,
-		},
-	}
-}
-
-func fakeWakeReceipts() []WakeReceipt {
-	return []WakeReceipt{
-		{ID: "wake-delivered-003", TargetRole: "g3", SourceKind: "delegation", State: "delivered", AttemptCount: 1, DeliveredAt: "2026-07-28T23:24:00Z"},
-		{ID: "wake-delivered-002", TargetRole: "lead", SourceKind: "escalation", State: "delivered", AttemptCount: 2, DeliveredAt: "2026-07-28T22:55:00Z"},
-		{ID: "wake-delivered-001", TargetRole: "joltra", SourceKind: "recycle", State: "delivered", AttemptCount: 1, DeliveredAt: "2026-07-28T20:15:00Z"},
-	}
-}
-
-// WakeSummary implements the deterministic wake-outbox rollup.
-func (f *FakeDataSource) WakeSummary(ctx context.Context) (WakeSummary, error) {
-	return WakeSummary{
-		Outstanding: 5, Pending: 2, AgedAttempted: 1,
-		DeliveryUnknown: 1, Stalled: 1, OldestAgeSeconds: 3100,
-		Rows: fakeWakeRows(),
-	}, nil
-}
-
-// Wakes implements the metadata-only wake obligation listing.
-func (f *FakeDataSource) Wakes(ctx context.Context, query WakeQuery) (WakeRows, error) {
-	rows := fakeWakeRows()
-	out := make([]WakeRow, 0, len(rows))
-	for _, row := range rows {
-		if query.State != "" && row.State != query.State {
-			continue
-		}
-		if query.Role != "" && row.TargetRole != query.Role {
-			continue
-		}
-		out = append(out, row)
-		if query.Limit > 0 && len(out) >= query.Limit {
-			break
-		}
-	}
-	return WakeRows{Rows: out}, nil
-}
-
-// WakeReceipts implements delivered wake history with role/time filtering.
-func (f *FakeDataSource) WakeReceipts(ctx context.Context, query WakeReceiptQuery) (WakeReceipts, error) {
-	var since time.Time
-	if query.Since != "" {
-		since, _ = time.Parse(time.RFC3339, query.Since)
-	}
-	rows := fakeWakeReceipts()
-	out := make([]WakeReceipt, 0, len(rows))
-	for _, row := range rows {
-		if query.Role != "" && row.TargetRole != query.Role {
-			continue
-		}
-		if !since.IsZero() {
-			deliveredAt, err := time.Parse(time.RFC3339, row.DeliveredAt)
-			if err != nil || deliveredAt.Before(since) {
-				continue
-			}
-		}
-		out = append(out, row)
-		if query.Limit > 0 && len(out) >= query.Limit {
-			break
-		}
-	}
-	return WakeReceipts{Rows: out}, nil
-}
-
 func fakeTaskTitles() []string {
 	return []string{
-		"Add memory-groom split heuristics to nightly propose pass",
-		"Fix arxiv summary pipeline retry backoff on 429 responses",
-		"Implement the ENGINE half of gitmoot #779 orchestration loop",
+		"Require an exact-head review before the merge gate opens",
+		"Fix arxiv summary retry backoff on 429 responses",
+		"Record weekly design notes from merged review findings",
 		"Baseline repo reconciliation for GitHub fleet sync",
 		"Messaging, approvals and agent delivery for waybread",
 		"Charlotte selfimprove pass 3 — vetrina layout tokens",
 		"Wire gitmoot activepieces support end to end",
-		"Refactor orchestrator core.mjs runner into staged pipeline",
+		"Wake the requesting seat when a review verdict lands",
 		"Design review for dashboard #78 information architecture",
 		"Backtest sweep r8 for the bitcoin price model",
-		"Cluster store migration to internal memory index",
+		"Org chart role scopes for the review fleet",
 		"Health page locks-aging amber thresholds",
 	}
 }
@@ -835,7 +728,7 @@ func fakeTaskAgent(i int) string {
 }
 
 // Tasks implements the optional task-board contract with the mockup's target
-// volumes: 23 planned, 11 implementing, 10 PR-open, 5 blocked, and 4 merged.
+// volumes: 10 PR-open, 5 blocked, and 4 merged.
 func (f *FakeDataSource) Tasks(ctx context.Context) ([]TaskSummary, error) {
 	f.mu.Lock()
 	anchor := f.st.Nodes[0].StartedAt
@@ -844,8 +737,8 @@ func (f *FakeDataSource) Tasks(ctx context.Context) ([]TaskSummary, error) {
 	counts := []struct {
 		state string
 		count int
-	}{{"planned", 23}, {"implementing", 11}, {"pr_open", 10}, {"blocked", 5}, {"merged", 4}}
-	tasks := make([]TaskSummary, 0, 53)
+	}{{"pr_open", 10}, {"blocked", 5}, {"merged", 4}}
+	tasks := make([]TaskSummary, 0, 19)
 	serial := 0
 	for _, group := range counts {
 		for i := 0; i < group.count; i++ {
@@ -865,8 +758,6 @@ func (f *FakeDataSource) Tasks(ctx context.Context) ([]TaskSummary, error) {
 				Agent: fakeTaskAgent(serial - 1), UpdatedAt: anchor - age*1000, AgeS: age,
 			}
 			switch group.state {
-			case "planned":
-				task.Agent = ""
 			case "pr_open":
 				task.PRNumber = 620 + i*7
 				ci := []string{"green", "green", "red", "pending"}
@@ -1597,7 +1488,7 @@ func fakeHistory() []fakeJobRecord {
 		minsAgo                         int
 		tin, tout                       int
 	}{
-		{"job-live-1", "orchestrate: nightly maintenance", "project-lead", "codex", fakeRepo, "running", 6, 4200, 1800},
+		{"job-live-1", "review: nightly maintenance PR", "project-lead", "codex", fakeRepo, "running", 6, 4200, 1800},
 		{"job-live-2", "implement: export to CSV", "implementer", "codex", fakeRepo, "running", 3, 3100, 900},
 		{"job-live-3", "implement: bulk delete", "implementer", "codex", "jerryfane/noted", "queued", 22, 0, 0},
 		{"job-live-4", "review: auth refactor", "reviewer-kimi", "kimi", "acme/api", "blocked", 47, 800, 120},
@@ -2049,10 +1940,6 @@ func (f *FakeDataSource) Skills(ctx context.Context) (Skills, error) {
 	return fakeSkills(), nil
 }
 
-// fakeVerdictRun is the SkillOpt eval run id the fake binary-verdicts fixture is
-// keyed on (matches the pending candidate skill-reviewer-v3's evaluation).
-const fakeVerdictRun = "eval-reviewer-0007"
-
 // fakeJobChecks builds the fixed job-detail failed-check fixture (gitmoot #711),
 // keyed by job id. job-5 (the integrate/review/open-PR job) failed two
 // deterministic result checks under a block policy; every other job passed
@@ -2084,49 +1971,9 @@ func (f *FakeDataSource) JobChecks(ctx context.Context, jobID string) (JobChecks
 	return JobChecks{JobID: jobID, Mode: "warn", Failed: []ResultCheck{}}, nil
 }
 
-// fakeBinaryVerdicts builds the fixed per-run binary-check breakdown (gitmoot
-// #714): five decomposed questions across two dimensions, three passing and two
-// failing, ordered by (dimension, questionId) — the same order the live store
-// reads. Passed/Failed are derived from Verdict == "yes".
-func fakeBinaryVerdicts() BinaryVerdicts {
-	verdicts := []BinaryVerdict{
-		{QuestionID: "q-cites-sources", Dimension: "correctness", Verdict: "yes",
-			Explanation: "Every claim in the review cites a file:line.", Weight: 1},
-		{QuestionID: "q-no-false-pass", Dimension: "correctness", Verdict: "no",
-			Explanation: "Approved a change whose test <TestExport> is skipped, so the pass is unearned.", Weight: 2},
-		{QuestionID: "q-actionable", Dimension: "usefulness", Verdict: "yes",
-			Explanation: "Findings name a concrete fix & location.", Weight: 1},
-		{QuestionID: "q-no-nits-as-blockers", Dimension: "usefulness", Verdict: "yes",
-			Explanation: "Nits are labelled, not raised as blockers.", Weight: 1},
-		{QuestionID: "q-scoped", Dimension: "usefulness", Verdict: "no",
-			Explanation: "Two findings are outside the diff & should have been dropped.", Weight: 1},
-	}
-	out := BinaryVerdicts{RunID: fakeVerdictRun, Verdicts: verdicts}
-	for i := range verdicts {
-		out.Verdicts[i].Pass = verdicts[i].Verdict == "yes"
-		if out.Verdicts[i].Pass {
-			out.Passed++
-		} else {
-			out.Failed++
-		}
-	}
-	return out
-}
-
-// BinaryVerdicts implements DataSource. It returns the fixed fakeBinaryVerdicts
-// fixture for fakeVerdictRun; any other run id yields zero counts and an empty
-// (never nil) list. Output is deterministic and byte-stable.
-func (f *FakeDataSource) BinaryVerdicts(ctx context.Context, runID string) (BinaryVerdicts, error) {
-	if runID == fakeVerdictRun {
-		return fakeBinaryVerdicts(), nil
-	}
-	return BinaryVerdicts{RunID: runID, Verdicts: []BinaryVerdict{}}, nil
-}
-
-// fakeAttention builds the fixed "Needs a human" fixture (gitmoot #528): two
-// blocked job gates, two pending synth approvals and one candidate awaiting
-// promotion. Every timestamp is anchored on fakeChartsNow (never time.Now()) so
-// the section is byte-stable across polls.
+// fakeAttention builds the fixed "Needs a human" fixture (gitmoot #528): three
+// blocked job gates. Every timestamp is anchored on fakeChartsNow (never
+// time.Now()) so the section is byte-stable across polls.
 func fakeAttention() Attention {
 	const h = time.Hour
 	at := func(x time.Duration) int64 { return fakeChartsNow.Add(-x).UnixMilli() }
@@ -2138,23 +1985,12 @@ func fakeAttention() Attention {
 				Agent: "claude-a", Repo: "jerryfane/noted", State: "blocked", CreatedAt: at(90 * time.Minute)},
 			// Long suggested-action regression fixture (issue #88): the chip must
 			// ellipsize instead of squeezing the title into a per-character wrap.
-			{JobID: "job-long-action-7", Need: "Commit the intact working-tree changes with: git add internal/memory/cluster.go internal/memory/cluster_test.go internal/db/store.go internal/db/memory_cluster_store.go && git commit -m 'feat(memory): cluster hierarchy' then re-run the gate",
-				Title: "Implement the ENGINE half of the memory cluster hierarchy with bounded fan-out and recursive depth",
+			{JobID: "job-long-action-7", Need: "Commit the intact working-tree changes with: git add internal/cli/merge_gate.go internal/cli/merge_gate_test.go internal/db/store.go internal/db/review_head_store.go && git commit -m 'feat(merge): exact-head review guard' then re-run the gate",
+				Title: "Implement the exact-head review guard for the merge gate with bounded evidence and recursive head lookup",
 				Agent: "wave-impl", Repo: "jerryfane/gitmoot", State: "blocked", CreatedAt: at(6 * 24 * h)},
 		},
-		SynthItems: []AttentionSynthItem{
-			{ID: "synth-reviewer-0031", TemplateID: "tmpl-reviewer", Repo: "jerryfane/gitmoot",
-				Question: "Should a review flag an unearned pass when the asserting test is skipped?",
-				Gap:      0.29, WeakAgent: "reviewer@v2", StrongAgent: "reviewer@v3", JudgeAgent: "cross-family-judge", CreatedAt: at(4 * h)},
-			{ID: "synth-reviewer-0030", TemplateID: "tmpl-reviewer", Repo: "jerryfane/gitmoot",
-				Question: "Does the review keep findings scoped to the diff under test?",
-				Gap:      0.18, WeakAgent: "reviewer@v2", StrongAgent: "reviewer@v3", JudgeAgent: "cross-family-judge", CreatedAt: at(5 * h)},
-		},
-		Candidates: []AttentionCandidate{
-			{TemplateID: "tmpl-reviewer", Name: "reviewer", VersionID: "skill-reviewer-v3", Number: 3, Score: "0.81", CreatedAt: at(6 * h)},
-		},
 	}
-	att.Total = len(att.Gates) + len(att.SynthItems) + len(att.Candidates)
+	att.Total = len(att.Gates)
 	return att
 }
 
