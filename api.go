@@ -17,15 +17,6 @@ import (
 const (
 	workflowMaxRuns         = 50
 	workflowMaxNotes        = 200
-	wakeDefaultLimit        = 100
-	wakeMaxLimit            = 500
-	wakeErrorScanLimit      = 256
-	wakeErrorTimeout        = "TIMEOUT"
-	wakeErrorRateLimited    = "RATE LIMITED"
-	wakeErrorAuth           = "AUTH"
-	wakeErrorNotFound       = "NOT FOUND"
-	wakeErrorTransport      = "TRANSPORT"
-	wakeErrorDelivery       = "DELIVERY ERROR"
 	changePollInterval      = time.Second
 	changeHeartbeatInterval = 15 * time.Second
 	changeClientCap         = 32
@@ -254,81 +245,6 @@ func workflowLimit(raw string, cap int) int {
 	return n
 }
 
-func wakeLimit(raw string) int {
-	n, err := strconv.Atoi(raw)
-	if err != nil || n <= 0 {
-		return wakeDefaultLimit
-	}
-	if n > wakeMaxLimit {
-		return wakeMaxLimit
-	}
-	return n
-}
-
-func validWakeState(state string) bool {
-	switch state {
-	case "pending", "attempted", "delivered", "stalled", "failed", "delivery_unknown":
-		return true
-	default:
-		return false
-	}
-}
-
-var wakeOutstandingStates = [...]string{
-	"pending",
-	"attempted",
-	"stalled",
-	"delivery_unknown",
-	"failed",
-}
-
-func wakeStateOutstanding(state string) bool {
-	for _, outstanding := range wakeOutstandingStates {
-		if state == outstanding {
-			return true
-		}
-	}
-	return false
-}
-
-// wakeErrorClass reduces untrusted transport text to a fixed public enum.
-// Bound before case folding so classification work cannot scale with an
-// arbitrarily large error string supplied by a data source.
-func wakeErrorClass(value string) string {
-	if len(value) > wakeErrorScanLimit {
-		value = value[:wakeErrorScanLimit]
-	}
-	value = strings.ToLower(value)
-	switch {
-	case value == "":
-		return ""
-	case strings.Contains(value, "timeout"), strings.Contains(value, "deadline"), strings.Contains(value, "timed out"):
-		return wakeErrorTimeout
-	case strings.Contains(value, "429"), strings.Contains(value, "rate limit"), strings.Contains(value, "throttl"):
-		return wakeErrorRateLimited
-	case strings.Contains(value, "auth"), strings.Contains(value, "unauthor"), strings.Contains(value, "forbidden"), strings.Contains(value, "permission"), strings.Contains(value, "token"), strings.Contains(value, "credential"):
-		return wakeErrorAuth
-	case strings.Contains(value, "not found"), strings.Contains(value, "unknown role"), strings.Contains(value, "no such"):
-		return wakeErrorNotFound
-	case strings.Contains(value, "connect"), strings.Contains(value, "network"), strings.Contains(value, "dial"), strings.Contains(value, "reset"), strings.Contains(value, "broken pipe"), strings.Contains(value, "eof"), strings.Contains(value, "transport"), strings.Contains(value, "socket"):
-		return wakeErrorTransport
-	default:
-		return wakeErrorDelivery
-	}
-}
-
-func publicWakeRows(rows []WakeRow, outstandingOnly bool) []WakeRow {
-	public := make([]WakeRow, 0, len(rows))
-	for _, row := range rows {
-		if outstandingOnly && !wakeStateOutstanding(row.State) {
-			continue
-		}
-		row.LastError = wakeErrorClass(row.LastError)
-		public = append(public, row)
-	}
-	return public
-}
-
 func splitWorkflowLabel(label string) (string, string) {
 	namespace, campaign, ok := strings.Cut(label, "/")
 	if !ok {
@@ -358,27 +274,21 @@ func overviewNeedRank(kind string) int {
 		return 1
 	case "blocked_job":
 		return 2
-	case "groom_proposal":
-		return 3
 	default:
-		return 4
+		return 3
 	}
 }
 
 func taskStateRank(state string) int {
 	switch state {
-	case "planned":
-		return 0
-	case "implementing":
-		return 1
 	case "pr_open":
-		return 2
+		return 0
 	case "blocked":
-		return 3
+		return 1
 	case "merged":
-		return 4
+		return 2
 	default:
-		return 5
+		return 3
 	}
 }
 
@@ -449,89 +359,6 @@ func (s *server) handleOverview(w http.ResponseWriter, r *http.Request) {
 		return o.Fleet[i].Agent < o.Fleet[j].Agent
 	})
 	writeJSON(w, http.StatusOK, o)
-}
-
-// handleWakeSummary serves the wake-outbox rollup used by the Overview badge.
-func (s *server) handleWakeSummary(w http.ResponseWriter, r *http.Request) {
-	ds, ok := s.ds.(WakeDataSource)
-	if !ok {
-		http.Error(w, "wake ledger unsupported by data source", http.StatusNotFound)
-		return
-	}
-	summary, err := ds.WakeSummary(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	candidates := summary.Rows
-	if candidates == nil {
-		for _, state := range wakeOutstandingStates {
-			rows, rowsErr := ds.Wakes(r.Context(), WakeQuery{State: state, Limit: wakeMaxLimit})
-			if rowsErr != nil {
-				http.Error(w, rowsErr.Error(), statusForError(rowsErr))
-				return
-			}
-			candidates = append(candidates, rows.Rows...)
-		}
-	}
-	summary.Rows = publicWakeRows(candidates, true)
-	summary.Outstanding = len(summary.Rows)
-	writeJSON(w, http.StatusOK, summary)
-}
-
-// handleWakes serves metadata-only wake obligations. The data source controls
-// filtering; the handler validates the public query and normalizes nil rows.
-func (s *server) handleWakes(w http.ResponseWriter, r *http.Request) {
-	ds, ok := s.ds.(WakeDataSource)
-	if !ok {
-		http.Error(w, "wake ledger unsupported by data source", http.StatusNotFound)
-		return
-	}
-	state := r.URL.Query().Get("state")
-	if state != "" && !validWakeState(state) {
-		http.Error(w, "invalid wake state", http.StatusBadRequest)
-		return
-	}
-	rows, err := ds.Wakes(r.Context(), WakeQuery{
-		State: state,
-		Role:  r.URL.Query().Get("role"),
-		Limit: wakeLimit(r.URL.Query().Get("limit")),
-	})
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	rows.Rows = publicWakeRows(rows.Rows, false)
-	writeJSON(w, http.StatusOK, rows)
-}
-
-// handleWakeReceipts serves delivered wake metadata filtered by role and time.
-func (s *server) handleWakeReceipts(w http.ResponseWriter, r *http.Request) {
-	ds, ok := s.ds.(WakeDataSource)
-	if !ok {
-		http.Error(w, "wake ledger unsupported by data source", http.StatusNotFound)
-		return
-	}
-	since := r.URL.Query().Get("since")
-	if since != "" {
-		if _, err := time.Parse(time.RFC3339, since); err != nil {
-			http.Error(w, "invalid wake receipt since", http.StatusBadRequest)
-			return
-		}
-	}
-	rows, err := ds.WakeReceipts(r.Context(), WakeReceiptQuery{
-		Role:  r.URL.Query().Get("role"),
-		Since: since,
-		Limit: wakeLimit(r.URL.Query().Get("limit")),
-	})
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if rows.Rows == nil {
-		rows.Rows = []WakeReceipt{}
-	}
-	writeJSON(w, http.StatusOK, rows)
 }
 
 // handleTasks serves GET /api/tasks. Ordering is normalized for byte-stable
@@ -877,8 +704,8 @@ func (s *server) handleLearningSkills(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleAttention serves GET /api/attention -> Attention, the "Needs a human"
-// view (gitmoot #528). Mirrors handleRuns; every list is coerced non-nil so the
-// client always sees JSON arrays.
+// view (gitmoot #528). Mirrors handleRuns; Gates is coerced non-nil so the
+// client always sees a JSON array.
 func (s *server) handleAttention(w http.ResponseWriter, r *http.Request) {
 	att, err := s.ds.Attention(r.Context())
 	if err != nil {
@@ -887,12 +714,6 @@ func (s *server) handleAttention(w http.ResponseWriter, r *http.Request) {
 	}
 	if att.Gates == nil {
 		att.Gates = []AttentionGate{}
-	}
-	if att.SynthItems == nil {
-		att.SynthItems = []AttentionSynthItem{}
-	}
-	if att.Candidates == nil {
-		att.Candidates = []AttentionCandidate{}
 	}
 	writeJSON(w, http.StatusOK, att)
 }
@@ -915,26 +736,6 @@ func (s *server) handleJobChecks(w http.ResponseWriter, r *http.Request) {
 		checks.Failed = []ResultCheck{}
 	}
 	writeJSON(w, http.StatusOK, checks)
-}
-
-// handleBinaryVerdicts serves GET /api/run/{id}/verdicts -> BinaryVerdicts, the
-// per-run SkillOpt binary-check breakdown (gitmoot #714). An unknown run is not
-// a 404 — it returns zero counts with an empty Verdicts list (coerced non-nil).
-func (s *server) handleBinaryVerdicts(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	if id == "" {
-		http.Error(w, "missing run id", http.StatusBadRequest)
-		return
-	}
-	v, err := s.ds.BinaryVerdicts(r.Context(), id)
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if v.Verdicts == nil {
-		v.Verdicts = []BinaryVerdict{}
-	}
-	writeJSON(w, http.StatusOK, v)
 }
 
 // handleState serves GET /api/state?run=<id> -> State. An empty run resolves to

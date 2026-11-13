@@ -134,7 +134,7 @@
     </div>
 
     <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:14px 10px 7px">SYSTEM</div>
-    <div onClick="{{ showAttention }}" title="Needs a human - blocked gates, pending approvals, candidates awaiting promotion" style="{{ attentionNavStyle }}">
+    <div onClick="{{ showAttention }}" title="Needs a human - blocked job gates waiting on a human decision" style="{{ attentionNavStyle }}">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
       <span style="flex:1">Needs a human</span>
       <span style="{{ attentionNavDotStyle }}"></span>
@@ -513,7 +513,7 @@ class Component extends DCLogic {
     vw: 900, vh: 560, showPrompt: true, showOutput: false,
     view: 'overview', // bare / is operator overview; graph survives only at /?run=<id>
     // Runs column
-    runsOpen: true, runsQuery: '', facets: { status: [], kind: [], agent: [], repo: [] },
+    runsOpen: true, runsQuery: '', facets: { status: [], agent: [], repo: [] },
     openFacet: null, oneShotsExpanded: false, oneShotLimit: 6,
     selectedRunId: null, hoverRun: null, listLoading: true, listError: false,
     // Persistent top bar: daemon liveness for the "daemon · up … · ● LIVE" chip.
@@ -543,11 +543,10 @@ class Component extends DCLogic {
   MIN = 60000; HR = 3600000; DAY = 86400000;   // relTime() units
     facetDefs = {
     status: ['running','succeeded','failed','blocked','cancelled'],
-    kind:   ['orchestrate','goal','implement','ask','review'],
     agent:  ['codex','claude','kimi'],
     repo:   ['acme/webapp','quant/pricing','ops/waybread','data/warehouse']
   };
-  facetLabels = { status:'Status', kind:'Kind', agent:'Agent', repo:'Repo' };
+  facetLabels = { status:'Status', agent:'Agent', repo:'Repo' };
   kindColors = { orchestrate:'#9ece6a', goal:'#bb9af7', implement:'#7aa2f7', ask:'#7dcfff', review:'#e0af68' };
 
   relTime(ago) {
@@ -1115,8 +1114,8 @@ class Component extends DCLogic {
       this.stopConfigPoll();
       if (this._configRoot) this._configRoot.style.display = 'none';
     }
-    // Attention overlay ("Needs a human": blocked gates, pending synth approvals,
-    // candidates awaiting promotion). Same body-appended overlay pattern.
+    // Attention overlay ("Needs a human": blocked job gates). Same body-appended
+    // overlay pattern.
     if (v === 'attention') {
       const root = this.ensureAttentionDom();
       root.style.display = 'block';
@@ -1161,114 +1160,45 @@ class Component extends DCLogic {
       "#overview-root .ov-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(340px,.9fr);gap:16px;margin-top:16px}.ov-stack{display:grid;align-content:start;gap:16px}",
       "#overview-root .ov-activity-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto 52px;gap:10px;align-items:center;min-height:51px;border-bottom:1px solid rgba(160,168,220,.07);font:10px 'JetBrains Mono'}.ov-activity-row:last-of-type{border-bottom:0}.ov-label{color:#eef0ff;font:600 11.5px 'JetBrains Mono'}.ov-label .ns{color:#777eac;font-weight:500}.ov-agents{margin-top:4px;color:#555c83;font-size:9px}.ov-running{padding:2px 7px;border:1px solid rgba(158,206,106,.25);border-radius:5px;color:#9ece6a;background:rgba(158,206,106,.08)}.ov-age{text-align:right;color:#9ece6a}.ov-unattended{padding-top:10px;color:#4f567f;font:9.5px 'JetBrains Mono'}.ov-empty{padding:14px 0;color:#596087;font:10.5px 'JetBrains Mono'}.ov-muted-dot{width:7px;height:7px;border-radius:50%;background:#5a6088}",
       "#overview-root .ov-notable-row{display:grid;grid-template-columns:22px 120px minmax(0,1fr) 62px 42px;gap:8px;align-items:center;min-height:36px;border-bottom:1px solid rgba(160,168,220,.055);font:9.5px 'JetBrains Mono'}.ov-notable-row:last-child{border-bottom:0}.ov-outcome{width:20px;height:20px;display:grid;place-items:center;border:1px solid rgba(160,168,220,.18);border-radius:5px}.ov-outcome.succeeded{color:#9ece6a;border-color:rgba(158,206,106,.25)}.ov-outcome.failed{color:#f7768e;border-color:rgba(247,118,142,.25)}.ov-outcome.cancelled{color:#697099}.ov-agent{color:#cabff2;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-job-title{color:#c7c9e5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-num{text-align:right;color:#697099}",
-      "#overview-root .ov-today-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:6px 0 12px}.ov-tile{padding:10px;border:1px solid rgba(160,168,220,.12);border-radius:7px;background:#0f1120}.ov-tile b{display:block;font:600 18px 'JetBrains Mono';color:#9ece6a}.ov-tile.fail b{color:#f7768e}.ov-tile.cancel b{color:#8b90b8}.ov-tile.wake b{color:#5a6088}.ov-tile.wake.problem{border-color:rgba(224,175,104,.35);background:rgba(224,175,104,.065)}.ov-tile.wake.problem b{color:#e0af68}.ov-tile.wake.aging{border-color:rgba(247,118,142,.52);background:rgba(247,118,142,.09)}.ov-tile.wake.aging b{color:#f7768e}.ov-tile span{display:block;margin-top:4px;color:#555c83;font:8px 'JetBrains Mono';letter-spacing:.1em;text-transform:uppercase}.ov-bars{height:66px;display:flex;align-items:flex-end;gap:3px;border-bottom:1px solid rgba(160,168,220,.07)}.ov-bar{flex:1;min-width:2px;background:#7da357;border-radius:2px 2px 0 0}.ov-bar-axis{display:flex;justify-content:space-between;margin-top:5px;color:#41486d;font:8px 'JetBrains Mono'}.ov-token{margin-top:12px;color:#7c83aa;font:9.5px 'JetBrains Mono'}.ov-token b{color:#cabff2;font-size:13px}",
-      "#overview-root .ov-wake-shell{margin-top:16px;padding:13px 14px 14px}.ov-wake-shell.problem{border-color:rgba(224,175,104,.3)}.ov-wake-shell.aging{border-color:rgba(247,118,142,.44);background:rgba(247,118,142,.025)}.ov-wake-dot{width:8px;height:8px;border-radius:50%;background:#5a6088}.ov-wake-shell.problem .ov-wake-dot{background:#e0af68}.ov-wake-shell.aging .ov-wake-dot{background:#f7768e}.ov-wake-rollup{margin-left:auto;display:flex;align-items:center;gap:6px;color:#62698f;font:9px 'JetBrains Mono';letter-spacing:0;text-transform:none}.ov-wake-chip{padding:2px 7px;border:1px solid rgba(160,168,220,.14);border-radius:5px;background:#0f1120}.ov-wake-chip.bad{color:#f7768e;border-color:rgba(247,118,142,.28);background:rgba(247,118,142,.07)}.ov-wake-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(330px,.8fr);gap:14px;margin-top:8px}.ov-wake-pane{min-width:0;border:1px solid rgba(160,168,220,.1);border-radius:8px;background:#0c0e1a;overflow:hidden}.ov-wake-pane-head{min-height:36px;display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid rgba(160,168,220,.08);color:#8b90b8;font:600 9px 'JetBrains Mono';letter-spacing:.1em;text-transform:uppercase}.ov-wake-pane-head .muted{color:#4f567f;font-weight:400;letter-spacing:0;text-transform:none}.ov-wake-controls{margin-left:auto;display:flex;gap:6px}.ov-wake-controls select{height:26px;max-width:128px;padding:0 24px 0 8px;border:1px solid rgba(160,168,220,.14);border-radius:6px;background:#0f1120;color:#a8aecf;font:9px 'JetBrains Mono'}.ov-wake-list{max-height:286px;overflow:auto}.ov-wake-row{display:grid;grid-template-columns:92px minmax(130px,1fr) 116px 58px 88px 48px;gap:8px;align-items:center;min-height:47px;padding:7px 10px;border-bottom:1px solid rgba(160,168,220,.06);font:9.5px 'JetBrains Mono'}.ov-wake-row:last-child{border-bottom:0}.ov-wake-row.urgent{background:rgba(247,118,142,.055);box-shadow:inset 3px 0 #f7768e}.ov-wake-role{color:#eef0ff;font-weight:600;overflow:hidden;text-overflow:ellipsis}.ov-wake-source{min-width:0;color:#8b90b8}.ov-wake-source b{display:block;color:#c7c9e5;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-wake-source span{display:block;margin-top:3px;color:#555c83;font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-wake-state{display:inline-flex;width:max-content;max-width:100%;padding:3px 6px;border:1px solid rgba(160,168,220,.16);border-radius:5px;color:#8b90b8;background:rgba(160,168,220,.05);overflow:hidden;text-overflow:ellipsis}.ov-wake-state.delivery_unknown,.ov-wake-state.stalled{color:#f7768e;border-color:rgba(247,118,142,.32);background:rgba(247,118,142,.1)}.ov-wake-state.pending,.ov-wake-state.attempted{color:#e0af68;border-color:rgba(224,175,104,.28);background:rgba(224,175,104,.07)}.ov-wake-state.failed{color:#ff9e64;border-color:rgba(255,158,100,.28)}.ov-wake-attempt,.ov-wake-age{text-align:right;color:#697099}.ov-wake-error{color:#e0af68;font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-receipt-row{display:grid;grid-template-columns:86px minmax(92px,1fr) 48px 74px;gap:8px;align-items:center;min-height:43px;padding:7px 10px;border-bottom:1px solid rgba(160,168,220,.06);font:9.5px 'JetBrains Mono'}.ov-receipt-row:last-child{border-bottom:0}.ov-receipt-kind{min-width:0;color:#c7c9e5}.ov-receipt-kind span{display:block;margin-top:3px;color:#555c83;font-size:8.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ov-receipt-ok{color:#9ece6a;text-align:right}.ov-wake-empty{padding:18px 10px;color:#596087;font:10px 'JetBrains Mono'}.ov-wake-note{padding:8px 10px;border-top:1px solid rgba(160,168,220,.06);color:#4f567f;font:8.5px 'JetBrains Mono';line-height:1.45}",
-      "#overview-root .ov-wake-cols{display:grid;grid-template-columns:92px minmax(130px,1fr) 116px 58px 88px 48px;gap:8px;padding:6px 10px;border-bottom:1px solid rgba(160,168,220,.06);color:#444b70;font:8px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase}.ov-wake-cols span:nth-last-child(-n+3){text-align:right}",
+      "#overview-root .ov-today-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:6px 0 12px}.ov-tile{padding:10px;border:1px solid rgba(160,168,220,.12);border-radius:7px;background:#0f1120}.ov-tile b{display:block;font:600 18px 'JetBrains Mono';color:#9ece6a}.ov-tile.fail b{color:#f7768e}.ov-tile.cancel b{color:#8b90b8}.ov-tile span{display:block;margin-top:4px;color:#555c83;font:8px 'JetBrains Mono';letter-spacing:.1em;text-transform:uppercase}.ov-bars{height:66px;display:flex;align-items:flex-end;gap:3px;border-bottom:1px solid rgba(160,168,220,.07)}.ov-bar{flex:1;min-width:2px;background:#7da357;border-radius:2px 2px 0 0}.ov-bar-axis{display:flex;justify-content:space-between;margin-top:5px;color:#41486d;font:8px 'JetBrains Mono'}.ov-token{margin-top:12px;color:#7c83aa;font:9.5px 'JetBrains Mono'}.ov-token b{color:#cabff2;font-size:13px}",
       "#overview-root .ov-fleet{grid-column:1/-1}.ov-fleet-list{display:flex;gap:9px;overflow-x:auto}.ov-fleet-item{display:flex;align-items:center;gap:7px;min-width:210px;padding:9px 11px;border:1px solid rgba(160,168,220,.12);border-radius:7px;background:#0f1120;font:9.5px 'JetBrains Mono'}.ov-fleet-item b{color:#eef0ff}.ov-runtime{padding:2px 6px;border:1px solid rgba(160,168,220,.16);border-radius:4px}.ov-runtime.claude{color:#cabff2;background:rgba(187,154,247,.1)}.ov-runtime.codex{color:#8fd3ff;background:rgba(110,198,255,.1)}.ov-runtime.kimi{color:#e8c58a;background:rgba(224,175,104,.1)}.ov-fleet-jobs{margin-left:auto;color:#596087}",
       "#overview-root .ov-shimmer{height:140px;border-radius:9px;background:#0d0f1c;position:relative;overflow:hidden}.ov-shimmer:after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(187,154,247,.08),transparent);animation:ovsh 1.35s infinite}@keyframes ovsh{to{transform:translateX(100%)}}.ov-loading{display:grid;grid-template-columns:1.45fr .9fr;gap:16px}.ov-loading .wide{grid-column:1/-1}",
-      "@media(max-width:768px){#overview-root{left:0!important;top:54px!important;bottom:calc(60px + env(safe-area-inset-bottom))!important}.ov-scroll{padding:14px 15px 24px!important}.ov-needs-list{display:grid!important;overflow:visible!important}.ov-need{width:auto!important;min-width:0!important;min-height:122px!important}.ov-grid{display:block!important;margin-top:13px!important}.ov-stack{display:block!important}.ov-panel{margin-bottom:13px}.ov-notable.empty-mobile,.ov-fleet.empty-mobile{display:none}.ov-activity-row{grid-template-columns:9px minmax(0,1fr) auto 38px!important}.ov-notable-row{grid-template-columns:22px 92px minmax(0,1fr) 38px!important}.ov-notable-row .elapsed{display:none}.ov-today-tiles{grid-template-columns:repeat(2,1fr)!important}.ov-wake-shell{padding:11px!important}.ov-wake-shell .ov-head{height:auto!important;min-height:28px;flex-wrap:wrap}.ov-wake-rollup{width:100%;margin-left:15px!important;overflow-x:auto;padding-bottom:3px}.ov-wake-grid{grid-template-columns:1fr!important}.ov-wake-list{max-height:none!important}.ov-wake-cols{display:none!important}.ov-wake-row{grid-template-columns:76px minmax(100px,1fr) 104px!important;gap:7px!important;min-height:64px!important}.ov-wake-row .ov-wake-attempt,.ov-wake-row .ov-wake-error,.ov-wake-row .ov-wake-age{grid-row:2}.ov-wake-row .ov-wake-attempt{text-align:left}.ov-wake-row .ov-wake-error{grid-column:2}.ov-wake-row .ov-wake-age{grid-column:3}.ov-receipt-row{grid-template-columns:72px minmax(90px,1fr) 42px 62px!important}.ov-wake-pane-head .muted{display:none}.ov-wake-controls{width:100%;margin-left:0!important}.ov-wake-controls select{flex:1;max-width:none!important}.ov-loading{display:grid!important;grid-template-columns:1fr!important}.ov-loading .wide{grid-column:auto}.ov-fresh{display:block!important;text-align:center;color:#4f567f;font:9.5px 'JetBrains Mono';padding:12px 0 6px}}"
+      "@media(max-width:768px){#overview-root{left:0!important;top:54px!important;bottom:calc(60px + env(safe-area-inset-bottom))!important}.ov-scroll{padding:14px 15px 24px!important}.ov-needs-list{display:grid!important;overflow:visible!important}.ov-need{width:auto!important;min-width:0!important;min-height:122px!important}.ov-grid{display:block!important;margin-top:13px!important}.ov-stack{display:block!important}.ov-panel{margin-bottom:13px}.ov-notable.empty-mobile,.ov-fleet.empty-mobile{display:none}.ov-activity-row{grid-template-columns:9px minmax(0,1fr) auto 38px!important}.ov-notable-row{grid-template-columns:22px 92px minmax(0,1fr) 38px!important}.ov-notable-row .elapsed{display:none}.ov-today-tiles{grid-template-columns:repeat(3,1fr)!important}.ov-loading{display:grid!important;grid-template-columns:1fr!important}.ov-loading .wide{grid-column:auto}.ov-fresh{display:block!important;text-align:center;color:#4f567f;font:9.5px 'JetBrains Mono';padding:12px 0 6px}}"
     ].join('\n');
     document.head.appendChild(st);
     const root=document.createElement('div'); root.id='overview-root'; root.style.cssText='position:fixed;left:216px;top:54px;right:0;bottom:0;z-index:42;display:none;flex-direction:column';
     root.innerHTML='<div id="ov-scroll" class="ov-scroll"><div id="ov-content" class="ov-inner"></div></div>';
     root.addEventListener('click',e=>{const link=e.target.closest&&e.target.closest('[data-ov-link]');if(!link)return;const href=link.getAttribute('href')||'';if(href.indexOf('/workflows/')===0){e.preventDefault();let label=href.slice(11);try{label=decodeURIComponent(label);}catch(x){}this.showWorkflow(label);}else if(href==='/workflows'){e.preventDefault();this.showWorkflows();}else if(href==='/attention'){e.preventDefault();this.showAttention();}else if(href==='/agents'){e.preventDefault();this.showAgents();}});
-    this._wakeReceiptRole=this._wakeReceiptRole||'';this._wakeReceiptRange=this._wakeReceiptRange||'24h';this._wakeRoles=this._wakeRoles||[];
-    root.addEventListener('change',e=>{if(e.target.id==='ov-wake-role'){this._wakeReceiptRole=e.target.value||'';this.fetchOverview(false);}else if(e.target.id==='ov-wake-range'){this._wakeReceiptRange=e.target.value||'24h';this.fetchOverview(false);}});
     document.body.appendChild(root);this._dockOverlay(root);this._overviewRoot=root;return root;
   }
   _ovEsc(v){return this._galaxyEsc(v==null?'':String(v));}
   _ovDur(s){s=Math.max(0,Number(s||0));if(s<60)return Math.round(s)+'s';if(s<3600)return Math.round(s/60)+'m';if(s<86400)return Math.round(s/3600)+'h';return Math.round(s/86400)+'d';}
   _ovNum(n){n=Number(n||0);if(n>=1000000)return(n/1000000).toFixed(n>=10000000?0:1).replace(/\.0$/,'')+'M';if(n>=1000)return(n/1000).toFixed(n>=100000?0:1).replace(/\.0$/,'')+'K';return String(n);}
   _ovRuntime(rt){rt=String(rt||'').toLowerCase();return rt==='claude'||rt==='codex'||rt==='kimi'?rt:'shell';}
-  _wakeSince(range){
-    const hours={ '1h':1,'6h':6,'24h':24,'7d':168 }[range||'24h'];
-    return hours?new Date(Date.now()-hours*3600000).toISOString():'';
-  }
-  _wakeErrorClass(value){
-    const s=String(value||'').slice(0,256).toLowerCase();
-    if(!s)return'';
-    if(/timeout|deadline|timed out/.test(s))return'TIMEOUT';
-    if(/429|rate limit|throttl/.test(s))return'RATE LIMITED';
-    if(/auth|unauthor|forbidden|permission|token|credential/.test(s))return'AUTH';
-    if(/not found|unknown role|no such/.test(s))return'NOT FOUND';
-    if(/connect|network|dial|reset|broken pipe|eof|transport|socket/.test(s))return'TRANSPORT';
-    return'DELIVERY ERROR';
-  }
-  _wakeStateRank(state){return({delivery_unknown:0,stalled:1,pending:2,attempted:3,failed:4,delivered:5})[state]??6;}
-  _wakeAbs(value){
-    const d=new Date(value||'');if(!Number.isFinite(d.getTime()))return'-';
-    return d.toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'UTC'})+' UTC';
-  }
-  _wakeRead(url){
-    return fetch(url,{cache:'no-store'}).then(async r=>({status:r.status,text:await r.text()})).catch(err=>({status:0,text:'',error:err}));
-  }
   fetchOverview(isPoll){
     const token=(this._overviewFetchToken||0)+1;this._overviewFetchToken=token;
-    const receiptParams=new URLSearchParams({limit:'100'}),role=this._wakeReceiptRole||'',since=this._wakeSince(this._wakeReceiptRange||'24h');
-    if(role)receiptParams.set('role',role);if(since)receiptParams.set('since',since);
-    Promise.all([
-      this._wakeRead('/api/overview'),
-      this._wakeRead('/api/wakes/summary'),
-      this._wakeRead('/api/wakes/receipts?'+receiptParams.toString())
-    ]).then(parts=>{
+    fetch('/api/overview',{cache:'no-store'}).then(async r=>({status:r.status,text:await r.text()})).then(overview=>{
       if(token!==this._overviewFetchToken||this.state.view!=='overview')return;
-      const overview=parts[0],wakeParts=parts.slice(1);
       if(overview.status===404){this._overviewData=null;this.renderOverview(null,'unsupported');return;}
       if(overview.status<200||overview.status>=300)throw new Error(overview.text||('HTTP '+overview.status));
-      const sig=[overview.text,role,this._wakeReceiptRange||'24h',...wakeParts.map(p=>p.status+':'+p.text)].join('\\n');
-      if(isPoll&&this._overviewSig===sig)return;
-      this._overviewSig=sig;this._overviewData=JSON.parse(overview.text);
-      if(wakeParts.some(p=>p.status===404)){
-        this._wakeLedgerData={status:'unsupported',summary:{},rows:[],receipts:[]};
-      }else if(wakeParts.every(p=>p.status>=200&&p.status<300)){
-        try{
-          const summary=JSON.parse(wakeParts[0].text)||{},receiptBody=JSON.parse(wakeParts[1].text)||{};
-          const rows=Array.isArray(summary.rows)?summary.rows:[],receipts=Array.isArray(receiptBody.rows)?receiptBody.rows:[];
-          this._wakeLedgerData={status:'ready',hasSnapshot:true,summary:summary,rows:rows,receipts:receipts};
-          this._wakeRoles=[...new Set([...(this._wakeRoles||[]),...rows.map(r=>r.target_role),...receipts.map(r=>r.target_role)].filter(Boolean))].sort();
-        }catch(e){
-          this._wakeLedgerData=Object.assign({},this._wakeLedgerData||{hasSnapshot:false,summary:{},rows:[],receipts:[]},{status:'error'});
-        }
-      }else{
-        this._wakeLedgerData=Object.assign({},this._wakeLedgerData||{hasSnapshot:false,summary:{},rows:[],receipts:[]},{status:'error'});
-      }
+      if(isPoll&&this._overviewSig===overview.text)return;
+      this._overviewSig=overview.text;this._overviewData=JSON.parse(overview.text);
       this.renderOverview(this._overviewData,'ready');
     }).catch(err=>{if(token===this._overviewFetchToken&&!isPoll)this.renderOverview(null,'error');});
-  }
-  _wakeLedgerHTML(){
-    const esc=this._ovEsc.bind(this),ledger=this._wakeLedgerData||{status:'loading',summary:{},rows:[],receipts:[]},summary=ledger.summary||{};
-    const n=v=>Math.max(0,Number(v||0)),outstanding=n(summary.outstanding),pending=n(summary.pending),aged=n(summary.aged_attempted),unknown=n(summary.delivery_unknown),stalled=n(summary.stalled),oldest=n(summary.oldest_age_seconds);
-    const problem=outstanding>0||unknown>0||stalled>0,aging=outstanding>0&&aged>0,statusClass=aging?' aging':problem?' problem':'';
-    if(ledger.status==='unsupported')return '<section class="ov-panel ov-wake-shell"><div class="ov-head"><span class="ov-wake-dot"></span>Wake obligations</div><div class="ov-wake-empty">Wake ledger requires a newer gitmoot build.</div></section>';
-    if(ledger.status==='loading')return '<section class="ov-panel ov-wake-shell"><div class="ov-head"><span class="ov-wake-dot"></span>Wake obligations</div><div class="ov-wake-empty">Loading wake obligations and receipts...</div></section>';
-    if(ledger.status==='error'&&!ledger.hasSnapshot)return '<section class="ov-panel ov-wake-shell problem"><div class="ov-head"><span class="ov-wake-dot"></span>Wake obligations</div><div class="ov-wake-empty">Wake obligations are temporarily unavailable. No clear state is being inferred.</div></section>';
-    const rows=(Array.isArray(ledger.rows)?ledger.rows:[]).slice().sort((a,b)=>this._wakeStateRank(a.state)-this._wakeStateRank(b.state)||n(b.age_seconds)-n(a.age_seconds));
-    const wakeRows=rows.length?rows.map(r=>{
-      const state=String(r.state||'pending'),urgent=state==='delivery_unknown'||state==='stalled',errorClass=this._wakeErrorClass(r.last_error);
-      return '<div class="ov-wake-row'+(urgent?' urgent':'')+'"><span class="ov-wake-role" title="'+esc(r.target_role||'-')+'">'+esc(r.target_role||'-')+'</span><span class="ov-wake-source"><b>'+esc(r.source_kind||'-')+'</b><span>'+esc(r.source_id||r.id||'-')+'</span></span><span class="ov-wake-state '+esc(state)+'">'+esc(state.replace(/_/g,' '))+'</span><span class="ov-wake-attempt">'+n(r.attempt_count)+'</span><span class="ov-wake-error">'+esc(errorClass||'-')+'</span><span class="ov-wake-age" title="'+esc(this._wakeAbs(r.created_at))+'">'+esc(this._ovDur(r.age_seconds))+'</span></div>';
-    }).join(''):'<div class="ov-wake-empty">No outstanding wake obligations.</div>';
-    const roles=(this._wakeRoles||[]).slice().sort(),role=this._wakeReceiptRole||'',range=this._wakeReceiptRange||'24h';
-    const roleOptions='<option value="">all roles</option>'+roles.map(v=>'<option value="'+esc(v)+'"'+(v===role?' selected':'')+'>'+esc(v)+'</option>').join('');
-    const rangeOptions=[['1h','last hour'],['6h','last 6h'],['24h','last 24h'],['7d','last 7d'],['all','all receipts']].map(v=>'<option value="'+v[0]+'"'+(v[0]===range?' selected':'')+'>'+v[1]+'</option>').join('');
-    const receipts=Array.isArray(ledger.receipts)?ledger.receipts:[];
-    const receiptRows=receipts.length?receipts.map(r=>'<div class="ov-receipt-row"><span class="ov-wake-role" title="'+esc(r.target_role||'-')+'">'+esc(r.target_role||'-')+'</span><span class="ov-receipt-kind">'+esc(r.source_kind||'-')+'<span>'+esc(r.id||'-')+'</span></span><span class="ov-wake-attempt">'+n(r.attempt_count)+'</span><span class="ov-receipt-ok" title="'+esc(this._wakeAbs(r.delivered_at))+'">'+esc(this._wakeAbs(r.delivered_at))+'</span></div>').join(''):'<div class="ov-wake-empty">No matching delivery receipts.</div>';
-    const stale=ledger.status==='error'?'<span class="ov-wake-chip bad">refresh unavailable</span>':'';
-    return '<section class="ov-panel ov-wake-shell'+statusClass+'"><div class="ov-head"><span class="ov-wake-dot"></span>Wake obligations <span class="ov-count">'+outstanding+'</span><div class="ov-wake-rollup">'+stale+'<span class="ov-wake-chip">pending '+pending+'</span><span class="ov-wake-chip'+(aged?' bad':'')+'">aged attempted '+aged+'</span><span class="ov-wake-chip'+(unknown?' bad':'')+'">delivery unknown '+unknown+'</span><span class="ov-wake-chip'+(stalled?' bad':'')+'">stalled '+stalled+'</span><span class="ov-wake-chip">oldest '+esc(oldest?this._ovDur(oldest):'-')+'</span></div></div><div class="ov-wake-grid"><div class="ov-wake-pane"><div class="ov-wake-pane-head">Outstanding ledger <span class="muted">urgent states first</span></div><div class="ov-wake-cols"><span>role</span><span>source</span><span>state</span><span>attempts</span><span>error class</span><span>age</span></div><div class="ov-wake-list">'+wakeRows+'</div><div class="ov-wake-note">Metadata only. Delivery error text is classified; raw error strings are never displayed.</div></div><div class="ov-wake-pane"><div class="ov-wake-pane-head">Receipts <span class="muted">who was told, when, and whether it arrived</span><div class="ov-wake-controls"><select id="ov-wake-role" aria-label="Receipt role">'+roleOptions+'</select><select id="ov-wake-range" aria-label="Receipt time range">'+rangeOptions+'</select></div></div><div class="ov-wake-list">'+receiptRows+'</div></div></div></section>';
   }
   renderOverview(data,status){
     if(!this._overviewRoot)return;const box=this._overviewRoot.querySelector('#ov-content');
     if(status==='unsupported'){box.innerHTML='<div class="ov-empty" style="padding:48px 10px">Overview requires a newer gitmoot build. Jobs, Workflows, and the run graph remain available.</div>';return;}
     if(!data){box.innerHTML=status==='error'?'<div class="ov-empty" style="padding:48px 10px">Overview is temporarily unavailable.</div>':'<div class="ov-loading"><div class="ov-shimmer wide"></div><div class="ov-shimmer"></div><div class="ov-shimmer"></div><div class="ov-shimmer wide"></div></div>';return;}
-    const esc=this._ovEsc.bind(this),needs=Array.isArray(data.needs_you)?data.needs_you:[],act=data.activity||{},workflows=Array.isArray(act.workflows)?act.workflows:[],today=data.today||{},notable=Array.isArray(today.notable)?today.notable:[],fleet=Array.isArray(data.fleet)?data.fleet:[],wake=this._wakeLedgerData||{status:'loading',summary:{}},wakeSummary=wake.summary||{},wakeOutstanding=Math.max(0,Number(wakeSummary.outstanding||0)),wakeAging=wakeOutstanding>0&&Number(wakeSummary.aged_attempted||0)>0,wakeProblem=wakeOutstanding>0||Number(wakeSummary.delivery_unknown||0)>0||Number(wakeSummary.stalled||0)>0;
-    const needHTML=needs.length?'<section class="ov-panel ov-needs"><div class="ov-head"><span class="ov-dot warn"></span>Needs you <span class="ov-count">'+needs.length+'</span><span class="right">stalled workflows · PRs to merge · blocked jobs · groom proposals</span></div><div class="ov-needs-list">'+needs.map(n=>{const stalled=n.kind==='stalled_workflow',badge=stalled?'STALLED':n.kind==='pr_awaiting_merge'?'PR '+(n.ref||''):n.kind==='blocked_job'?'BLOCKED '+(n.ref||''):'GROOM '+(n.ref||''),ci=n.ci?'<span class="ov-ci '+esc(n.ci)+'">CI '+(n.ci==='green'?'✓':n.ci==='red'?'✗':'…')+'</span>':'';return '<a class="ov-need '+(stalled?'stalled':'')+'" href="'+esc(n.link||'#')+'" data-ov-link><div class="ov-need-top"><span class="ov-badge">'+esc(badge)+'</span><span style="margin-left:auto">'+esc(this._ovDur(n.age_s))+'</span></div>'+(stalled?'<div class="ov-need-label">'+this._wfLabelHTML(n.label||'')+'</div>':'')+'<div class="ov-need-title">'+esc(n.title||'Needs attention')+'</div><div class="ov-need-meta">'+(stalled?'pane '+esc(n.pane||'-')+' · sess '+esc(n.session_id||'-')+(n.last_note?'<br>last note · '+esc(n.last_note):''):esc(n.repo||''))+ci+'</div></a>';}).join('')+'</div></section>':'<div class="ov-clear"><span>✓</span><b>Nothing needs you</b><span>0 PRs · 0 blocked · 0 proposals · 0 stalled workflows</span></div>';
+    const esc=this._ovEsc.bind(this),needs=Array.isArray(data.needs_you)?data.needs_you:[],act=data.activity||{},workflows=Array.isArray(act.workflows)?act.workflows:[],today=data.today||{},notable=Array.isArray(today.notable)?today.notable:[],fleet=Array.isArray(data.fleet)?data.fleet:[];
+    const needHTML=needs.length?'<section class="ov-panel ov-needs"><div class="ov-head"><span class="ov-dot warn"></span>Needs you <span class="ov-count">'+needs.length+'</span><span class="right">stalled workflows · PRs to merge · blocked jobs · unlabeled jobs</span></div><div class="ov-needs-list">'+needs.map(n=>{const stalled=n.kind==='stalled_workflow',badge=stalled?'STALLED':n.kind==='pr_awaiting_merge'?'PR '+(n.ref||''):n.kind==='blocked_job'?'BLOCKED '+(n.ref||''):n.kind==='unlabeled_jobs'?'UNLABELED':String(n.kind||'needs you').replace(/_/g,' ').toUpperCase(),ci=n.ci?'<span class="ov-ci '+esc(n.ci)+'">CI '+(n.ci==='green'?'✓':n.ci==='red'?'✗':'…')+'</span>':'';return '<a class="ov-need '+(stalled?'stalled':'')+'" href="'+esc(n.link||'#')+'" data-ov-link><div class="ov-need-top"><span class="ov-badge">'+esc(badge)+'</span><span style="margin-left:auto">'+esc(this._ovDur(n.age_s))+'</span></div>'+(stalled?'<div class="ov-need-label">'+this._wfLabelHTML(n.label||'')+'</div>':'')+'<div class="ov-need-title">'+esc(n.title||'Needs attention')+'</div><div class="ov-need-meta">'+(stalled?'pane '+esc(n.pane||'-')+' · sess '+esc(n.session_id||'-')+(n.last_note?'<br>last note · '+esc(n.last_note):''):esc(n.repo||''))+ci+'</div></a>';}).join('')+'</div></section>':'<div class="ov-clear"><span>✓</span><b>Nothing needs you</b><span>0 PRs · 0 blocked · 0 stalled workflows</span></div>';
     const activity='<section class="ov-panel ov-pad"><div class="ov-head"><span class="ov-dot"></span>Live fleet activity <span style="color:#555c83;letter-spacing:0;text-transform:none">by workflow</span><span class="right">'+Number(act.queued||0)+' queued · <a href="/workflows" data-ov-link>Workflows ↗</a></span></div>'+(workflows.length?workflows.map(w=>{const p=this._wfSplitLabel(w.label||'');return '<div class="ov-activity-row"><span class="ov-dot"></span><div><div class="ov-label">'+(p.namespace?'<span class="ns">'+esc(p.namespace)+'/</span>':'')+esc(p.campaign)+'</div><div class="ov-agents">'+esc((w.agents||[]).join(', '))+'</div></div><span class="ov-running">▶ '+Number(w.running||0)+' running</span><span class="ov-age">'+esc(this._ovDur(w.started_ago_s))+'</span></div>';}).join('')+(act.unattended_note?'<div class="ov-unattended">unattended · '+esc(act.unattended_note)+'</div>':''):'<div class="ov-empty"><span class="ov-muted-dot" style="display:inline-block;margin-right:8px"></span>Fleet idle · no jobs yet · '+Number(act.queued||0)+' queued</div>')+'</section>';
     const notableHTML='<section class="ov-panel ov-pad ov-notable '+(notable.length?'':'empty-mobile')+'"><div class="ov-head">Notable completions <span class="right">last 5 finished</span></div>'+(notable.length?notable.map(n=>'<div class="ov-notable-row"><span class="ov-outcome '+esc(n.outcome)+'">'+(n.outcome==='succeeded'?'✓':n.outcome==='failed'?'✗':'⊘')+'</span><span class="ov-agent">'+esc(n.agent||'agent')+'</span><span class="ov-job-title">'+esc(n.title||'job')+'</span><span class="ov-num elapsed">'+esc(n.elapsed_s?this._ovDur(n.elapsed_s):'-')+'</span><span class="ov-num">'+esc(this._ovDur(n.age_s))+'</span></div>').join(''):'<div class="ov-empty">No jobs have finished in the last 24h.</div>')+'</section>';
     const hours=Array.isArray(today.per_hour)?today.per_hour:[],max=Math.max(1,...hours.map(Number)),bars=hours.some(Number)?'<div class="ov-bars">'+hours.map(v=>'<span class="ov-bar" style="height:'+Math.max(4,Math.round(Number(v||0)/max*58))+'px"></span>').join('')+'</div><div class="ov-bar-axis"><span>24h ago</span><span>jobs / hour</span><span>now</span></div>':'';
-    const wakeTileValue=wake.status==='ready'||(wake.status==='error'&&wake.hasSnapshot)?this._ovNum(wakeOutstanding):'-',wakeTileTitle=wakeOutstanding?' title="oldest '+esc(this._ovDur(wakeSummary.oldest_age_seconds))+'"':'';
-    const todayHTML='<section class="ov-panel ov-pad"><div class="ov-head">Today <span class="right">rolling 24h</span></div><div class="ov-today-tiles"><div class="ov-tile"><b>'+this._ovNum(today.completed)+'</b><span>completed</span></div><div class="ov-tile fail"><b>'+this._ovNum(today.failed)+'</b><span>failed</span></div><div class="ov-tile cancel"><b>'+this._ovNum(today.cancelled)+'</b><span>cancelled</span></div><div class="ov-tile wake'+(wakeAging?' aging':wakeProblem?' problem':'')+'"'+wakeTileTitle+'><b>'+wakeTileValue+'</b><span>wake obligations</span></div></div>'+bars+'<div class="ov-token"><b>'+this._ovNum(Number(today.tokens_in||0)+Number(today.tokens_out||0))+'</b> tokens · '+this._ovNum(today.tokens_in)+' in · '+this._ovNum(today.tokens_out)+' out</div></section>';
+    const todayHTML='<section class="ov-panel ov-pad"><div class="ov-head">Today <span class="right">rolling 24h</span></div><div class="ov-today-tiles"><div class="ov-tile"><b>'+this._ovNum(today.completed)+'</b><span>completed</span></div><div class="ov-tile fail"><b>'+this._ovNum(today.failed)+'</b><span>failed</span></div><div class="ov-tile cancel"><b>'+this._ovNum(today.cancelled)+'</b><span>cancelled</span></div></div>'+bars+'<div class="ov-token"><b>'+this._ovNum(Number(today.tokens_in||0)+Number(today.tokens_out||0))+'</b> tokens · '+this._ovNum(today.tokens_in)+' in · '+this._ovNum(today.tokens_out)+' out</div></section>';
     const fleetHTML='<section class="ov-panel ov-pad ov-fleet '+(fleet.length?'':'empty-mobile')+'"><div class="ov-head">Fleet at a glance <span class="right"><a href="/agents" data-ov-link>Agents ↗</a></span></div>'+(fleet.length?'<div class="ov-fleet-list">'+fleet.map(a=>'<div class="ov-fleet-item"><span class="'+(a.running?'ov-dot':'ov-muted-dot')+'"></span><b>'+esc(a.agent)+'</b><span class="ov-runtime '+this._ovRuntime(a.runtime)+'">'+esc(a.runtime||'shell')+'</span><span class="ov-fleet-jobs">'+Number(a.jobs_today||0)+' today</span></div>').join('')+'</div>':'<div class="ov-empty">No agents registered yet.</div>')+'</section>';
-    const fresh=!needs.length&&!workflows.length&&!Number(today.completed||0)&&!Number(today.failed||0)&&!wakeProblem&&!fleet.length;
-    box.innerHTML=needHTML+this._wakeLedgerHTML()+'<div class="ov-grid"><div class="ov-stack">'+activity+notableHTML+'</div><div class="ov-stack">'+todayHTML+'</div>'+fleetHTML+'</div>'+(fresh?'<div class="ov-fresh" style="display:none">Fresh install - no agents registered yet.</div>':'');
+    const fresh=!needs.length&&!workflows.length&&!Number(today.completed||0)&&!Number(today.failed||0)&&!fleet.length;
+    box.innerHTML=needHTML+'<div class="ov-grid"><div class="ov-stack">'+activity+notableHTML+'</div><div class="ov-stack">'+todayHTML+'</div>'+fleetHTML+'</div>'+(fresh?'<div class="ov-fresh" style="display:none">Fresh install - no agents registered yet.</div>':'');
   }
 
   // ============================================================
@@ -1282,12 +1212,12 @@ class Component extends DCLogic {
     if(this._tasksRoot)return this._tasksRoot;const st=document.createElement('style');st.textContent=[
       "#tasks-root{font-family:Inter,system-ui,sans-serif;color:#c7c9e5;background:#080a14;overflow:hidden}#tasks-root *{box-sizing:border-box}#tasks-root button,#tasks-root input,#tasks-root select{font:inherit}",
       "#tasks-root .tk-head{height:72px;flex:none;display:flex;align-items:center;gap:14px;padding:0 26px;border-bottom:1px solid rgba(160,168,220,.09)}.tk-title{font:700 23px 'Space Grotesk';color:#eef0ff}.tk-title i{font-style:normal;color:#bb9af7}.tk-summary{color:#596087;font:10.5px 'JetBrains Mono'}.tk-filters{margin-left:auto;display:flex;gap:8px}.tk-search{width:220px;padding:8px 10px;border:1px solid rgba(160,168,220,.14);border-radius:8px;background:#0f1120;color:#c7c9e5;font:10.5px 'JetBrains Mono';outline:0}.tk-select{padding:0 26px 0 10px;border:1px solid rgba(160,168,220,.14);border-radius:8px;background:#0f1120;color:#a8aecf;font:10px 'JetBrains Mono'}.tk-tabs{display:none}",
-      "#tasks-root .tk-board-wrap{flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding:14px 26px 22px}.tk-board{height:100%;min-width:1040px;display:grid;grid-template-columns:repeat(3,minmax(210px,1fr)) 176px;gap:12px}.tk-col{min-width:0;display:flex;flex-direction:column;min-height:0}.tk-col-head{height:30px;display:flex;align-items:center;gap:8px;flex:none;color:#8b90b8;font:600 10px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase}.tk-col-dot{width:7px;height:7px;border-radius:50%;background:#7d83ac}.tk-col.implementing .tk-col-dot{background:#9ece6a;box-shadow:0 0 8px rgba(158,206,106,.6)}.tk-col.pr_open .tk-col-dot{background:#6ec6ff}.tk-col.blocked .tk-col-dot{background:#f7768e}.tk-col.merged .tk-col-dot{background:#5a6088}.tk-col-count{margin-left:auto;padding:2px 7px;border-radius:9px;background:rgba(160,168,220,.1);color:#a8aecf;font-size:9px;letter-spacing:0}.tk-col-body{flex:1;min-height:0;overflow-y:auto;padding-right:3px;display:flex;flex-direction:column;gap:8px}.tk-empty{padding:24px 4px;text-align:center;color:#4f567f;font:9.5px 'JetBrains Mono'}.tk-card{flex:none;padding:10px 11px;border:1px solid rgba(160,168,220,.13);border-radius:8px;background:#0f1120;cursor:pointer;transition:background .15s,border-color .15s}.tk-card:hover{background:#12152a}.tk-card.selected{border-color:rgba(187,154,247,.55);box-shadow:inset 0 0 0 1px rgba(187,154,247,.12)}.tk-card-title{color:#eef0ff;font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tk-card-meta{display:flex;align-items:center;gap:7px;margin-top:8px;min-width:0}.tk-chip{max-width:120px;padding:2px 7px;border:1px solid rgba(160,168,220,.14);border-radius:4px;color:#8b90b8;background:rgba(160,168,220,.05);font:9px 'JetBrains Mono';white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tk-agent.claude{color:#cabff2;background:rgba(187,154,247,.1)}.tk-agent.codex{color:#8fd3ff;background:rgba(110,198,255,.1)}.tk-agent.kimi{color:#e8c58a;background:rgba(224,175,104,.1)}.tk-age{margin-left:auto;color:#50577d;font:9px 'JetBrains Mono'}.tk-state{display:flex;align-items:center;gap:7px;margin-top:8px;color:#68709c;font:9px 'JetBrains Mono'}.tk-state-dot{width:6px;height:6px;border-radius:50%;background:#697099}.tk-state-dot.running{background:#9ece6a;box-shadow:0 0 7px rgba(158,206,106,.6);animation:dotpulse 1.8s infinite}.tk-state-dot.green{background:#9ece6a}.tk-state-dot.red{background:#f7768e}.tk-state-dot.pending{background:#e0af68}.tk-blocked-reason{margin-top:8px;padding:5px 6px;border-radius:5px;background:rgba(247,118,142,.07);color:#f7768e;font:8.5px 'JetBrains Mono';white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tk-col.merged .tk-card{padding:8px}.tk-col.merged .tk-card-title{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:10.5px}.tk-col.merged .tk-chip{display:none}",
+      "#tasks-root .tk-board-wrap{flex:1;min-height:0;overflow-x:auto;overflow-y:hidden;padding:14px 26px 22px}.tk-board{height:100%;min-width:800px;display:grid;grid-template-columns:repeat(2,minmax(210px,1fr)) 176px;gap:12px}.tk-col{min-width:0;display:flex;flex-direction:column;min-height:0}.tk-col-head{height:30px;display:flex;align-items:center;gap:8px;flex:none;color:#8b90b8;font:600 10px 'JetBrains Mono';letter-spacing:.08em;text-transform:uppercase}.tk-col-dot{width:7px;height:7px;border-radius:50%;background:#7d83ac}.tk-col.pr_open .tk-col-dot{background:#6ec6ff}.tk-col.blocked .tk-col-dot{background:#f7768e}.tk-col.merged .tk-col-dot{background:#5a6088}.tk-col-count{margin-left:auto;padding:2px 7px;border-radius:9px;background:rgba(160,168,220,.1);color:#a8aecf;font-size:9px;letter-spacing:0}.tk-col-body{flex:1;min-height:0;overflow-y:auto;padding-right:3px;display:flex;flex-direction:column;gap:8px}.tk-empty{padding:24px 4px;text-align:center;color:#4f567f;font:9.5px 'JetBrains Mono'}.tk-card{flex:none;padding:10px 11px;border:1px solid rgba(160,168,220,.13);border-radius:8px;background:#0f1120;cursor:pointer;transition:background .15s,border-color .15s}.tk-card:hover{background:#12152a}.tk-card.selected{border-color:rgba(187,154,247,.55);box-shadow:inset 0 0 0 1px rgba(187,154,247,.12)}.tk-card-title{color:#eef0ff;font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tk-card-meta{display:flex;align-items:center;gap:7px;margin-top:8px;min-width:0}.tk-chip{max-width:120px;padding:2px 7px;border:1px solid rgba(160,168,220,.14);border-radius:4px;color:#8b90b8;background:rgba(160,168,220,.05);font:9px 'JetBrains Mono';white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tk-agent.claude{color:#cabff2;background:rgba(187,154,247,.1)}.tk-agent.codex{color:#8fd3ff;background:rgba(110,198,255,.1)}.tk-agent.kimi{color:#e8c58a;background:rgba(224,175,104,.1)}.tk-age{margin-left:auto;color:#50577d;font:9px 'JetBrains Mono'}.tk-state{display:flex;align-items:center;gap:7px;margin-top:8px;color:#68709c;font:9px 'JetBrains Mono'}.tk-state-dot{width:6px;height:6px;border-radius:50%;background:#697099}.tk-state-dot.green{background:#9ece6a}.tk-state-dot.red{background:#f7768e}.tk-state-dot.pending{background:#e0af68}.tk-blocked-reason{margin-top:8px;padding:5px 6px;border-radius:5px;background:rgba(247,118,142,.07);color:#f7768e;font:8.5px 'JetBrains Mono';white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.tk-col.merged .tk-card{padding:8px}.tk-col.merged .tk-card-title{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;font-size:10.5px}.tk-col.merged .tk-chip{display:none}",
       "#tasks-root .tk-hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);padding:6px 10px;border:1px solid rgba(160,168,220,.12);border-radius:14px;background:#0d0f1c;color:#596087;font:9px 'JetBrains Mono';pointer-events:none}.tk-detail{position:absolute;right:0;top:0;bottom:0;width:410px;z-index:5;display:flex;flex-direction:column;background:#0a0b16;border-left:1px solid rgba(160,168,220,.15);box-shadow:-24px 0 48px rgba(0,0,0,.46);animation:panelin .22s ease}.tk-detail-head{padding:17px 18px 14px;border-bottom:1px solid rgba(160,168,220,.09)}.tk-detail-top{display:flex;align-items:center;gap:8px}.tk-state-badge{padding:3px 7px;border:1px solid rgba(160,168,220,.18);border-radius:5px;color:#8b90b8;font:9px 'JetBrains Mono'}.tk-state-badge.blocked{color:#f7768e;border-color:rgba(247,118,142,.3);background:rgba(247,118,142,.08)}.tk-close{margin-left:auto;width:26px;height:26px;border:1px solid rgba(160,168,220,.14);border-radius:7px;background:#0f1120;color:#8b90b8;cursor:pointer}.tk-detail-title{margin-top:13px;color:#eef0ff;font-size:15px;font-weight:600;line-height:1.4}.tk-detail-meta{display:flex;gap:8px;align-items:center;margin-top:9px;color:#596087;font:9.5px 'JetBrains Mono'}.tk-detail-body{flex:1;min-height:0;overflow-y:auto;padding:16px 18px 84px}.tk-section{margin:0 0 10px;color:#5a6088;font:600 9px 'JetBrains Mono';letter-spacing:.12em;text-transform:uppercase}.tk-life{padding:2px 0 16px}.tk-life-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:9px;align-items:center;min-height:42px;position:relative;color:#697099;font:10.5px 'JetBrains Mono'}.tk-life-row:not(:last-child):before{content:'';position:absolute;left:10px;top:27px;bottom:-15px;width:1px;background:rgba(160,168,220,.14)}.tk-life-mark{width:20px;height:20px;display:grid;place-items:center;border:1px solid rgba(160,168,220,.18);border-radius:50%;background:#0d0f1c}.tk-life-row.done{color:#a8aecf}.tk-life-row.done .tk-life-mark{color:#9ece6a;border-color:rgba(158,206,106,.3);background:rgba(158,206,106,.08)}.tk-life-row.current{color:#cabff2}.tk-life-row.blocked{color:#f7768e}.tk-life-row.blocked .tk-life-mark{border-color:rgba(247,118,142,.35);background:rgba(247,118,142,.09)}.tk-life-note{color:#f7768e;font-size:8.5px}.tk-state-box{margin:4px 0 18px;padding:12px;border:1px solid rgba(160,168,220,.13);border-radius:8px;background:#0f1120;color:#a8aecf;font:10px/1.55 'JetBrains Mono'}.tk-state-box.blocked{border-color:rgba(247,118,142,.3);background:rgba(247,118,142,.05);color:#f7768e}.tk-state-box a{display:block;margin-top:9px;color:#f7768e;text-decoration:none}.tk-job{display:grid;grid-template-columns:8px 66px minmax(0,1fr) auto;gap:8px;align-items:center;min-height:31px;border-bottom:1px solid rgba(160,168,220,.06);color:#697099;font:9px 'JetBrains Mono'}.tk-job .action{padding:2px 5px;border:1px solid rgba(110,198,255,.18);border-radius:4px;color:#6ec6ff}.tk-detail-actions{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 18px 15px;border-top:1px solid rgba(160,168,220,.09);background:#0a0b16}.tk-action{display:flex;justify-content:center;padding:9px;border:1px solid rgba(160,168,220,.14);border-radius:7px;background:#0f1120;color:#c7c9e5;text-decoration:none;font:9.5px 'JetBrains Mono'}.tk-shimmer{height:100%;border-radius:8px;background:#0d0f1c;position:relative;overflow:hidden}.tk-shimmer:after{content:'';position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(187,154,247,.08),transparent);animation:tksh 1.35s infinite}@keyframes tksh{to{transform:translateX(100%)}}",
       "@media(max-width:768px){#tasks-root{left:0!important;top:54px!important;bottom:calc(60px + env(safe-area-inset-bottom))!important}.tk-head{height:auto!important;display:block!important;padding:13px 15px 10px!important}.tk-head>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.tk-title{font-size:20px!important}.tk-summary{float:none!important;margin-top:0!important;white-space:nowrap}.tk-filters{margin-top:10px!important;display:grid!important;grid-template-columns:minmax(0,1fr) 70px 80px!important}.tk-search{width:auto!important;min-width:0}.tk-tabs{display:flex!important;gap:7px;padding:0 15px 10px;overflow-x:auto;flex:none}.tk-tab{flex:none;padding:6px 9px;border:1px solid rgba(160,168,220,.14);border-radius:14px;background:#0f1120;color:#8b90b8;font:9px 'JetBrains Mono';white-space:nowrap}.tk-tab.active{color:#cabff2;border-color:rgba(187,154,247,.35);background:rgba(187,154,247,.1)}.tk-board-wrap{padding:0 15px 18px!important;overflow:hidden!important}.tk-board{min-width:0!important;display:block!important}.tk-col{display:none!important;height:100%}.tk-col.mobile-active{display:flex!important}.tk-col-head{display:none}.tk-card{padding:12px!important}.tk-card-title{font-size:12px!important}.tk-col.merged .tk-chip{display:inline-block}.tk-hint{display:none}.tk-detail{position:fixed!important;inset:54px 0 calc(60px + env(safe-area-inset-bottom)) 0!important;width:auto!important;border-left:0!important;z-index:80!important}.tk-detail-actions{grid-template-columns:1fr!important}.tk-detail-body{padding-bottom:120px!important}}"
     ].join('\n');document.head.appendChild(st);
     const root=document.createElement('div');root.id='tasks-root';root.style.cssText='position:fixed;left:216px;top:54px;right:0;bottom:0;z-index:42;display:none;flex-direction:column';root.innerHTML='<header class="tk-head"><div><span class="tk-title">Tasks<i>.</i></span> <span id="tk-summary" class="tk-summary"></span></div><div class="tk-filters"><input id="tk-search" class="tk-search" type="search" placeholder="⌕  Filter tasks…"><select id="tk-repo" class="tk-select"><option value="all">Repo</option></select><select id="tk-agent" class="tk-select"><option value="all">Agent</option></select></div></header><div id="tk-tabs" class="tk-tabs"></div><div class="tk-board-wrap"><div id="tk-board" class="tk-board"></div></div><div id="tk-detail-slot"></div>';
-    document.body.appendChild(root);this._dockOverlay(root);this._tasksFilters={query:'',repo:'all',agent:'all'};this._tasksTab=this._tasksTab||'implementing';
+    document.body.appendChild(root);this._dockOverlay(root);this._tasksFilters={query:'',repo:'all',agent:'all'};this._tasksTab=this._tasksTab||'pr_open';
     root.querySelector('#tk-search').addEventListener('input',e=>{this._tasksFilters.query=e.target.value||'';this.renderTasks(this._tasksData||[]);});root.querySelector('#tk-repo').addEventListener('change',e=>{this._tasksFilters.repo=e.target.value||'all';this.renderTasks(this._tasksData||[]);});root.querySelector('#tk-agent').addEventListener('change',e=>{this._tasksFilters.agent=e.target.value||'all';this.renderTasks(this._tasksData||[]);});
     root.addEventListener('click',e=>{const tab=e.target.closest&&e.target.closest('[data-tk-tab]');if(tab){this._tasksTab=tab.getAttribute('data-tk-tab');this.renderTasks(this._tasksData||[]);return;}const card=e.target.closest&&e.target.closest('[data-task-id]');if(card){this._tasksSelected=card.getAttribute('data-task-id');this.renderTasks(this._tasksData||[]);return;}if(e.target.closest&&e.target.closest('[data-tk-close]')){this._tasksSelected='';this.renderTasks(this._tasksData||[]);return;}if(e.target.id==='tk-board'){this._tasksSelected='';this.renderTasks(this._tasksData||[]);}});
     this._tasksKeydown=e=>{if(e.key==='Escape'&&this.state.view==='tasks'&&this._tasksSelected){this._tasksSelected='';this.renderTasks(this._tasksData||[]);}};document.addEventListener('keydown',this._tasksKeydown);this._tasksRoot=root;return root;
@@ -1297,17 +1227,17 @@ class Component extends DCLogic {
   }
   _tkRuntime(agent){const known=this._tasksRuntimeByAgent&&this._tasksRuntimeByAgent[agent];if(known)return this._ovRuntime(known);const s=String(agent||'').toLowerCase();if(s.indexOf('kimi')>=0)return'kimi';if(s.indexOf('research')>=0||s.indexOf('lead')>=0)return'claude';return'codex';}
   _tkRepo(repo){const s=String(repo||''),at=s.lastIndexOf('/');return at>=0?s.slice(at+1):s;}
-  _tkCard(task){const esc=this._ovEsc.bind(this),state=task.state||'',rt=this._tkRuntime(task.agent),age=this._ovDur(task.age_s),ci=task.ci||'',status=state==='implementing'?'<div class="tk-state"><span class="tk-state-dot running"></span>agent working</div>':state==='pr_open'?'<div class="tk-state"><span class="tk-state-dot '+esc(ci)+'"></span>#'+Number(task.pr_number||0)+' · CI '+(ci==='green'?'✓':ci==='red'?'✗':'…')+'</div>':state==='merged'?'<div class="tk-state"><span class="tk-state-dot green"></span>merged'+(task.pr_number?' · #'+Number(task.pr_number):'')+'</div>':'';return '<article class="tk-card '+(this._tasksSelected===task.id?'selected':'')+'" data-task-id="'+esc(task.id)+'"><div class="tk-card-title">'+esc(task.title)+'</div><div class="tk-card-meta"><span class="tk-chip">'+esc(this._tkRepo(task.repo))+'</span>'+(task.agent?'<span class="tk-chip tk-agent '+rt+'">'+esc(task.agent)+'</span>':'')+'<span class="tk-age">'+esc(age)+'</span></div>'+status+(state==='blocked'?'<div class="tk-blocked-reason">'+esc(task.blocked_reason||'blocked')+'</div>':'')+'</article>';}
-  _tkDetail(task){if(!task)return'';const esc=this._ovEsc.bind(this),state=task.state||'',rt=this._tkRuntime(task.agent),steps=['implementing','pr_open','merged'],current=state==='blocked'?0:Math.max(0,steps.indexOf(state)),life=steps.map((s,i)=>{const done=i<current||(state==='merged'&&i<=current),blocked=state==='blocked'&&i===current,cur=!done&&i===current;return '<div class="tk-life-row '+(done?'done ':blocked?'blocked ':cur?'current ':'')+'"><span class="tk-life-mark">'+(done?'✓':blocked?'⚑':cur?'●':'○')+'</span><span>'+esc(s==='pr_open'?'PR open':s.charAt(0).toUpperCase()+s.slice(1))+'</span>'+(blocked?'<span class="tk-life-note">blocked here</span>':done?'<span style="font-size:8px">done</span>':'')+'</div>';}).join('');
-    let stateBox='';if(state==='blocked')stateBox='<div class="tk-state-box blocked"><b>! BLOCKED</b><br>'+esc(task.blocked_reason||'Needs operator input')+'<a href="/attention">Resolve in Needs a human →</a></div>';else if(state==='pr_open'){const href='https://github.com/'+String(task.repo||'').replace(/^\/+|\/+$/g,'')+'/pull/'+Number(task.pr_number||0);stateBox='<div class="tk-state-box">PR #'+Number(task.pr_number||0)+' · CI '+esc(task.ci||'pending')+'<br><a style="color:#6ec6ff" target="_blank" rel="noopener" href="'+esc(href)+'">Open on GitHub ↗</a></div>';}else if(state==='implementing')stateBox='<div class="tk-state-box"><span class="tk-state-dot running" style="display:inline-block;margin-right:7px"></span>agent is implementing</div>';else if(state==='merged')stateBox='<div class="tk-state-box">Merged'+(task.pr_number?' via PR #'+Number(task.pr_number):'')+' · '+esc(this._ovDur(task.age_s))+' ago</div>';else stateBox='<div class="tk-state-box">Queued for implementation.</div>';
+  _tkCard(task){const esc=this._ovEsc.bind(this),state=task.state||'',rt=this._tkRuntime(task.agent),age=this._ovDur(task.age_s),ci=task.ci||'',status=state==='pr_open'?'<div class="tk-state"><span class="tk-state-dot '+esc(ci)+'"></span>#'+Number(task.pr_number||0)+' · CI '+(ci==='green'?'✓':ci==='red'?'✗':'…')+'</div>':state==='merged'?'<div class="tk-state"><span class="tk-state-dot green"></span>merged'+(task.pr_number?' · #'+Number(task.pr_number):'')+'</div>':'';return '<article class="tk-card '+(this._tasksSelected===task.id?'selected':'')+'" data-task-id="'+esc(task.id)+'"><div class="tk-card-title">'+esc(task.title)+'</div><div class="tk-card-meta"><span class="tk-chip">'+esc(this._tkRepo(task.repo))+'</span>'+(task.agent?'<span class="tk-chip tk-agent '+rt+'">'+esc(task.agent)+'</span>':'')+'<span class="tk-age">'+esc(age)+'</span></div>'+status+(state==='blocked'?'<div class="tk-blocked-reason">'+esc(task.blocked_reason||'blocked')+'</div>':'')+'</article>';}
+  _tkDetail(task){if(!task)return'';const esc=this._ovEsc.bind(this),state=task.state||'',rt=this._tkRuntime(task.agent),steps=['pr_open','merged'],current=state==='blocked'?0:Math.max(0,steps.indexOf(state)),life=steps.map((s,i)=>{const done=i<current||(state==='merged'&&i<=current),blocked=state==='blocked'&&i===current,cur=!done&&i===current;return '<div class="tk-life-row '+(done?'done ':blocked?'blocked ':cur?'current ':'')+'"><span class="tk-life-mark">'+(done?'✓':blocked?'⚑':cur?'●':'○')+'</span><span>'+esc(s==='pr_open'?'PR open':s.charAt(0).toUpperCase()+s.slice(1))+'</span>'+(blocked?'<span class="tk-life-note">blocked here</span>':done?'<span style="font-size:8px">done</span>':'')+'</div>';}).join('');
+    let stateBox='';if(state==='blocked')stateBox='<div class="tk-state-box blocked"><b>! BLOCKED</b><br>'+esc(task.blocked_reason||'Needs operator input')+'<a href="/attention">Resolve in Needs a human →</a></div>';else if(state==='pr_open'){const href='https://github.com/'+String(task.repo||'').replace(/^\/+|\/+$/g,'')+'/pull/'+Number(task.pr_number||0);stateBox='<div class="tk-state-box">PR #'+Number(task.pr_number||0)+' · CI '+esc(task.ci||'pending')+'<br><a style="color:#6ec6ff" target="_blank" rel="noopener" href="'+esc(href)+'">Open on GitHub ↗</a></div>';}else if(state==='merged')stateBox='<div class="tk-state-box">Merged'+(task.pr_number?' via PR #'+Number(task.pr_number):'')+' · '+esc(this._ovDur(task.age_s))+' ago</div>';
     const jobs=(this._tasksJobs||[]).filter(j=>(j.repo&&j.repo===task.repo)||(task.agent&&j.agent===task.agent)).slice(0,3),jobHTML=jobs.length?jobs.map(j=>'<div class="tk-job"><span class="tk-state-dot '+(j.state==='failed'?'red':j.state==='running'?'running':j.state==='succeeded'?'green':'')+'"></span><span class="action">'+esc(j.kind||'job')+'</span><span>'+esc(j.agent||'agent')+'</span><span>'+esc(j.started?this._fmtDur(j.duration):'-')+'</span></div>').join(''):'<div class="tk-empty" style="text-align:left;padding:8px 0 14px">No linked jobs reported.</div>';
     return '<aside class="tk-detail"><div class="tk-detail-head"><div class="tk-detail-top"><span class="tk-state-badge '+esc(state)+'">'+esc(state.replace('_',' '))+'</span><button class="tk-close" data-tk-close aria-label="Close">×</button></div><div class="tk-detail-title">'+esc(task.title)+'</div><div class="tk-detail-meta"><span>'+esc(task.repo)+'</span>'+(task.agent?'<span class="tk-chip tk-agent '+rt+'">'+esc(task.agent)+'</span>':'')+'<span>updated '+esc(this._ovDur(task.age_s))+' ago</span></div></div><div class="tk-detail-body"><div class="tk-section">Lifecycle</div><div class="tk-life">'+life+'</div>'+stateBox+'<div class="tk-section">Linked jobs</div>'+jobHTML+'</div><div class="tk-detail-actions"><a class="tk-action" href="/jobs?agent='+encodeURIComponent(task.agent||'')+'">Jobs for this task ↗</a><a class="tk-action" href="/workflows">Open in Workflows ↗</a></div></aside>';
   }
   renderTasks(data,status){
     if(!this._tasksRoot)return;const board=this._tasksRoot.querySelector('#tk-board'),summary=this._tasksRoot.querySelector('#tk-summary'),tabs=this._tasksRoot.querySelector('#tk-tabs'),slot=this._tasksRoot.querySelector('#tk-detail-slot');if(status==='unsupported'){summary.textContent='';tabs.innerHTML='';board.innerHTML='<div class="tk-empty" style="grid-column:1/-1">Tasks requires a newer gitmoot build.</div>';slot.innerHTML='';return;}if(!data){summary.textContent='';tabs.innerHTML='';board.innerHTML=status==='error'?'<div class="tk-empty" style="grid-column:1/-1">Tasks are temporarily unavailable.</div>':'<div class="tk-shimmer"></div><div class="tk-shimmer"></div><div class="tk-shimmer"></div><div class="tk-shimmer"></div>';slot.innerHTML='';return;}
     const all=Array.isArray(data)?data:[],repos=[...new Set(all.map(t=>t.repo).filter(Boolean))].sort(),agents=[...new Set(all.map(t=>t.agent).filter(Boolean))].sort(),repoSel=this._tasksRoot.querySelector('#tk-repo'),agentSel=this._tasksRoot.querySelector('#tk-agent'),fill=(el,vals,label,current)=>{el.innerHTML='<option value="all">'+label+'</option>'+vals.map(v=>'<option value="'+this._ovEsc(v)+'" '+(v===current?'selected':'')+'>'+this._ovEsc(this._tkRepo(v))+'</option>').join('');};fill(repoSel,repos,'Repo',this._tasksFilters.repo);fill(agentSel,agents,'Agent',this._tasksFilters.agent);
-    const q=String(this._tasksFilters.query||'').toLowerCase(),filtered=all.filter(t=>(this._tasksFilters.repo==='all'||t.repo===this._tasksFilters.repo)&&(this._tasksFilters.agent==='all'||t.agent===this._tasksFilters.agent)&&(!q||[t.title,t.repo,t.agent,t.blocked_reason,String(t.pr_number||'')].join(' ').toLowerCase().indexOf(q)>=0));const states=[['implementing','Implementing'],['pr_open','PR open'],['blocked','Blocked'],['merged','Merged · 7d']],counts={};states.forEach(s=>counts[s[0]]=filtered.filter(t=>t.state===s[0]).length);const tracked=['implementing','pr_open','blocked'].reduce((n,s)=>n+counts[s],0);summary.textContent=tracked+' tracked · '+counts.blocked+' blocked';tabs.innerHTML=states.map(s=>'<button class="tk-tab '+(this._tasksTab===s[0]?'active':'')+'" data-tk-tab="'+s[0]+'">'+s[1]+' · '+counts[s[0]]+'</button>').join('');
-    board.innerHTML=states.map(s=>{const items=filtered.filter(t=>t.state===s[0]);const empty={implementing:'- none in flight -',pr_open:'- no open PRs -',blocked:'- nothing blocked -',merged:'- none -'}[s[0]];return '<section class="tk-col '+s[0]+' '+(this._tasksTab===s[0]?'mobile-active':'')+'"><div class="tk-col-head"><span class="tk-col-dot"></span>'+s[1]+'<span class="tk-col-count">'+items.length+'</span></div><div class="tk-col-body">'+(items.length?items.map(t=>this._tkCard(t)).join(''):'<div class="tk-empty">'+empty+'</div>')+'</div></section>';}).join('');const selected=all.find(t=>t.id===this._tasksSelected);if(this._tasksSelected&&!selected)this._tasksSelected='';slot.innerHTML=this._tkDetail(selected);const hint=this._tasksRoot.querySelector('.tk-hint');if(hint)hint.remove();if(all.length&&!selected){const h=document.createElement('div');h.className='tk-hint';h.textContent='Click any card to open its detail panel';this._tasksRoot.appendChild(h);}
+    const q=String(this._tasksFilters.query||'').toLowerCase(),filtered=all.filter(t=>(this._tasksFilters.repo==='all'||t.repo===this._tasksFilters.repo)&&(this._tasksFilters.agent==='all'||t.agent===this._tasksFilters.agent)&&(!q||[t.title,t.repo,t.agent,t.blocked_reason,String(t.pr_number||'')].join(' ').toLowerCase().indexOf(q)>=0));const states=[['pr_open','PR open'],['blocked','Blocked'],['merged','Merged · 7d']],counts={};states.forEach(s=>counts[s[0]]=filtered.filter(t=>t.state===s[0]).length);const tracked=['pr_open','blocked'].reduce((n,s)=>n+counts[s],0);summary.textContent=tracked+' tracked · '+counts.blocked+' blocked';tabs.innerHTML=states.map(s=>'<button class="tk-tab '+(this._tasksTab===s[0]?'active':'')+'" data-tk-tab="'+s[0]+'">'+s[1]+' · '+counts[s[0]]+'</button>').join('');
+    board.innerHTML=states.map(s=>{const items=filtered.filter(t=>t.state===s[0]);const empty={pr_open:'- no open PRs -',blocked:'- nothing blocked -',merged:'- none -'}[s[0]];return '<section class="tk-col '+s[0]+' '+(this._tasksTab===s[0]?'mobile-active':'')+'"><div class="tk-col-head"><span class="tk-col-dot"></span>'+s[1]+'<span class="tk-col-count">'+items.length+'</span></div><div class="tk-col-body">'+(items.length?items.map(t=>this._tkCard(t)).join(''):'<div class="tk-empty">'+empty+'</div>')+'</div></section>';}).join('');const selected=all.find(t=>t.id===this._tasksSelected);if(this._tasksSelected&&!selected)this._tasksSelected='';slot.innerHTML=this._tkDetail(selected);const hint=this._tasksRoot.querySelector('.tk-hint');if(hint)hint.remove();if(all.length&&!selected){const h=document.createElement('div');h.className='tk-hint';h.textContent='Click any card to open its detail panel';this._tasksRoot.appendChild(h);}
   }
 
   // ============================================================
@@ -2700,9 +2630,10 @@ class Component extends DCLogic {
   // active. Escaping + state colors reuse _galaxyEsc /
   // _galaxyStateColor; job detail reuses the galaxy detail layout.
   // ============================================================
-  // Design palette: codex cyan / claude purple / kimi orange / shell grey — cyan for
-  // codex avoids colliding with the succeeded-green state color in the same charts.
-  runtimeColors = { codex: '#7dcfff', claude: '#bb9af7', kimi: '#e0af68', shell: '#5a6088' };
+  // Design palette: omp teal / shell grey (the live runtimes), plus codex cyan /
+  // claude purple / kimi orange so historical jobs on retired runtimes keep their
+  // color. None is green, which would collide with the succeeded state color.
+  runtimeColors = { omp: '#73daca', codex: '#7dcfff', claude: '#bb9af7', kimi: '#e0af68', shell: '#5a6088' };
   _runtimeColor(rt) { return this.runtimeColors[rt] || '#5a6088'; }
   _fmtDur(ms) {
     if (!ms || ms <= 0) return '-';
@@ -4539,9 +4470,6 @@ class Component extends DCLogic {
       "#charts-root .ch-sbtn{border:1px solid rgba(160,168,220,.14);border-radius:14px;background:#0f1120;padding:4px 11px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:11px;color:#8b90b8}",
       "#charts-root .ch-sbtn:hover{color:#c8cce6;border-color:rgba(160,168,220,.24)}",
       "#charts-root .ch-sbtn.on{color:#cabff2;border-color:rgba(187,154,247,.35);background:rgba(187,154,247,.1)}",
-      "#charts-root .ch-foot{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:11px;border-top:1px solid rgba(160,168,220,0.07)}",
-      "#charts-root .ch-foot .ico{font-size:13px;color:#5a6088;flex:none}",
-      "#charts-root .ch-foot .txt{font-size:11.5px;color:#5a6088;font-style:italic}",
       // Top agents / repos: clickable rows (name + track/bar + count).
       "#charts-root .ch-rows{display:flex;flex-direction:column;gap:11px}",
       "#charts-root .ch-row{display:flex;align-items:center;gap:12px;cursor:pointer;border-radius:6px;padding:3px 5px;margin:-3px -5px}",
@@ -4581,7 +4509,7 @@ class Component extends DCLogic {
     // Derived from _jobSegs() so legend swatches can never diverge from the bars
     // (review catch: queued/cancelled greys rendered with no legend entry).
     const jobsLegend = '<div class="ch-leg">' + this._jobSegs().map(g => legItem(g[0], g[1])).join('') + '</div>';
-    const rtLegend = '<div class="ch-leg">' + ['codex', 'claude', 'kimi'].map(rt => legItem(rt, this._runtimeColor(rt))).join('') + '</div>';
+    const rtLegend = '<div class="ch-leg">' + ['omp', 'shell', 'codex', 'claude', 'kimi'].map(rt => legItem(rt, this._runtimeColor(rt))).join('') + '</div>';
     const scaleToggle = '<div class="ch-scale" id="ch-scale"><button class="ch-sbtn" data-scale="linear" type="button">linear</button><button class="ch-sbtn" data-scale="log" type="button">log</button></div>';
     root.innerHTML = [
       '<div class="ch-scroll">',
@@ -4602,7 +4530,6 @@ class Component extends DCLogic {
       '<div class="ch-card">',
       '  <div class="ch-chead"><span class="ch-ct">Tokens / day</span><span class="ch-toktot" id="ch-tok-total"></span>' + scaleToggle + '</div>',
       '  <div class="ch-plot" id="ch-tokens"></div>',
-      '  <div class="ch-foot"><span class="ico">ⓘ</span><span class="txt">codex &amp; kimi token usage not yet captured - claude only</span></div>',
       '</div>',
       '<div class="ch-two">',
       '  <div class="ch-card"><div class="ch-chead"><span class="ch-ct">Top agents</span>' + rtLegend + '</div><div class="ch-plot" id="ch-agents"></div></div>',
@@ -4924,8 +4851,7 @@ class Component extends DCLogic {
   // ============================================================
   // Attention view ("Needs a human", gitmoot #528): the fleet-wide
   // roll-up of everything parked on an explicit human decision —
-  // blocked job gates (#693), pending synth approvals, and template
-  // candidates awaiting promotion. Body-appended overlay, same
+  // blocked job gates (#693). Body-appended overlay, same
   // pattern as Health; polled with a signature-skip so a byte-stable
   // /api/attention response never re-renders. A gate row expands to
   // lazily fetch that job's failed result checks (/api/job/<id>/checks).
@@ -4966,8 +4892,6 @@ class Component extends DCLogic {
       "#attention-root .at-chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:7px;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;white-space:nowrap;flex:none}",
       "#attention-root .at-chip.gate{display:inline-block;max-width:44%;overflow:hidden;text-overflow:ellipsis;line-height:1.7}",
       "#attention-root .at-chip.gate{color:#e0af68;background:rgba(224,175,104,0.12);border:1px solid rgba(224,175,104,0.3)}",
-      "#attention-root .at-chip.gap{color:#7dcfff;background:rgba(125,207,255,0.1);border:1px solid rgba(125,207,255,0.28)}",
-      "#attention-root .at-chip.score{color:#9ece6a;background:rgba(158,206,106,0.1);border:1px solid rgba(158,206,106,0.28)}",
       "#attention-root .at-checks{margin-top:10px;padding-left:20px;display:none;flex-direction:column;gap:8px}",
       "#attention-root .at-checks.open{display:flex}",
       "#attention-root .at-check{padding:9px 11px;background-color:#0a0b16;border:1px solid rgba(247,118,142,0.22);border-radius:9px}",
@@ -4988,9 +4912,7 @@ class Component extends DCLogic {
       '<div class="at-head"><div class="at-title">Needs a human<span class="at-tdot">.</span></div><div class="at-updated" id="at-updated"></div></div>',
       '<div class="at-sub">Everything parked on an explicit human decision - retry, approve, reject, continue or escalate.</div>',
       '<div class="at-hero" id="at-hero"></div>',
-      '<div class="at-section"><div class="at-h">Blocked job gates <span class="at-hc" id="at-gates-c"></span></div><div class="at-list" id="at-gates"></div></div>',
-      '<div class="at-section"><div class="at-h">Pending synth approvals <span class="at-hc" id="at-synth-c"></span></div><div class="at-list" id="at-synth"></div></div>',
-      '<div class="at-section" style="padding-bottom:30px"><div class="at-h">Candidates awaiting promotion <span class="at-hc" id="at-cand-c"></span></div><div class="at-list" id="at-cand"></div></div>',
+      '<div class="at-section" style="padding-bottom:30px"><div class="at-h">Blocked job gates <span class="at-hc" id="at-gates-c"></span></div><div class="at-list" id="at-gates"></div></div>',
       '</div>'
     ].join('\n');
     document.body.appendChild(root);
@@ -5036,9 +4958,7 @@ class Component extends DCLogic {
     const esc = (s) => this._galaxyEsc(s);
     const root = this._attentionRoot;
     const gates = Array.isArray(data.gates) ? data.gates : [];
-    const synth = Array.isArray(data.synthItems) ? data.synthItems : [];
-    const cand = Array.isArray(data.candidates) ? data.candidates : [];
-    const total = (typeof data.total === 'number') ? data.total : (gates.length + synth.length + cand.length);
+    const total = (typeof data.total === 'number') ? data.total : gates.length;
 
     const upd = root.querySelector('#at-updated');
     if (upd) upd.textContent = 'updated ' + new Date().toLocaleTimeString();
@@ -5046,13 +4966,11 @@ class Component extends DCLogic {
     const hero = root.querySelector('#at-hero');
     if (hero) {
       const stat = (n, k, hot) => '<div class="at-stat"><div class="at-statn" style="color:' + (hot && n > 0 ? '#e0af68' : '#eef0ff') + '">' + n + '</div><div class="at-statk">' + k + '</div></div>';
-      hero.innerHTML = stat(total, 'total waiting', true) + stat(gates.length, 'blocked gates', false) + stat(synth.length, 'synth approvals', false) + stat(cand.length, 'candidates', false);
+      hero.innerHTML = stat(total, 'total waiting', true) + stat(gates.length, 'blocked gates', false);
     }
 
     const setCount = (id, n) => { const el = root.querySelector(id); if (el) el.textContent = n ? ('· ' + n) : ''; };
     setCount('#at-gates-c', gates.length);
-    setCount('#at-synth-c', synth.length);
-    setCount('#at-cand-c', cand.length);
 
     const col = (s) => this._galaxyStateColor(s || 'blocked');
     const gatesEl = root.querySelector('#at-gates');
@@ -5077,45 +4995,6 @@ class Component extends DCLogic {
       }
     }
 
-    const synthEl = root.querySelector('#at-synth');
-    if (synthEl) {
-      if (!synth.length) {
-        synthEl.innerHTML = '<div class="at-empty">No synth review items are awaiting approval.</div>';
-      } else {
-        synthEl.innerHTML = synth.map(s => {
-          const meta = [];
-          meta.push('<span>' + esc(s.id) + '</span>');
-          if (s.templateId) meta.push('<span>' + esc(s.templateId) + '</span>');
-          if (s.repo) meta.push('<span>' + esc(s.repo) + '</span>');
-          if (s.weakAgent || s.strongAgent) meta.push('<span>' + esc(s.weakAgent || '?') + ' → ' + esc(s.strongAgent || '?') + '</span>');
-          if (s.judgeAgent) meta.push('<span>judge ' + esc(s.judgeAgent) + '</span>');
-          if (s.createdAt) meta.push('<span>' + esc(this._relFromMs(s.createdAt)) + '</span>');
-          const gap = (typeof s.gap === 'number' && s.gap > 0) ? '<span class="at-chip gap">gap ' + esc(s.gap.toFixed(2)) + '</span>' : '';
-          return '<div class="at-row"><div class="at-rtop"><span class="at-dot" style="background:#7dcfff;box-shadow:0 0 8px #7dcfff"></span>' +
-            '<div class="at-rmain"><div class="at-rtitle">' + esc(s.question || s.id) + '</div>' +
-            '<div class="at-rmeta">' + meta.join('') + '</div></div>' + gap + '</div></div>';
-        }).join('');
-      }
-    }
-
-    const candEl = root.querySelector('#at-cand');
-    if (candEl) {
-      if (!cand.length) {
-        candEl.innerHTML = '<div class="at-empty">No template candidates are awaiting promotion.</div>';
-      } else {
-        candEl.innerHTML = cand.map(c => {
-          const meta = [];
-          meta.push('<span>' + esc(c.versionId) + '</span>');
-          if (c.templateId) meta.push('<span>' + esc(c.templateId) + '</span>');
-          if (c.createdAt) meta.push('<span>' + esc(this._relFromMs(c.createdAt)) + '</span>');
-          const score = c.score ? '<span class="at-chip score">score ' + esc(c.score) + '</span>' : '';
-          const label = (c.name ? esc(c.name) : esc(c.templateId || c.versionId)) + ' · v' + esc(c.number);
-          return '<div class="at-row"><div class="at-rtop"><span class="at-dot" style="background:#9ece6a;box-shadow:0 0 8px #9ece6a"></span>' +
-            '<div class="at-rmain"><div class="at-rtitle">' + label + '</div>' +
-            '<div class="at-rmeta">' + meta.join('') + '</div></div>' + score + '</div></div>';
-        }).join('');
-      }
-    }
   }
 
   // fetchAttentionJobChecks lazily loads one gate job's failed result checks
@@ -6353,7 +6232,7 @@ class Component extends DCLogic {
     const cur = s.facets[cat]; const has = cur.includes(val);
     return { facets: { ...s.facets, [cat]: has ? cur.filter(x => x !== val) : [...cur, val] } };
   });
-  clearFacets = () => this.setState({ facets: { status: [], kind: [], agent: [], repo: [] }, runsQuery: '', openFacet: null });
+  clearFacets = () => this.setState({ facets: { status: [], agent: [], repo: [] }, runsQuery: '', openFacet: null });
   selectRun = (id) => {
     if (!id || id === this.state.selectedRunId) return;
     this.currentRunId = id;
@@ -6453,7 +6332,7 @@ class Component extends DCLogic {
   _navApplyAttention(data) {
     data = data || {};
     const total = (typeof data.total === 'number') ? data.total
-      : ((Array.isArray(data.gates) ? data.gates.length : 0) + (Array.isArray(data.synthItems) ? data.synthItems.length : 0) + (Array.isArray(data.candidates) ? data.candidates.length : 0));
+      : (Array.isArray(data.gates) ? data.gates.length : 0);
     const on = total > 0;
     if (on !== this.state.attnAttn) this.setState({ attnAttn: on });
   }
@@ -6688,7 +6567,7 @@ class Component extends DCLogic {
     const facetActive = Object.values(S.facets).some(a => a.length);
     const filtered = runs.filter(r => {
       if (q && !(r.title.toLowerCase().includes(q) || r.snippet.toLowerCase().includes(q))) return false;
-      for (const cat of ['status', 'kind', 'agent', 'repo']) {
+      for (const cat of ['status', 'agent', 'repo']) {
         const sel = S.facets[cat]; if (!sel.length) continue;
         const val = cat === 'status' ? r.state : r[cat];
         if (!sel.includes(val)) return false;
@@ -6742,7 +6621,7 @@ class Component extends DCLogic {
       const cat = S.openFacet;
       const vals = this.facetDefs[cat].map(v => {
         const on = S.facets[cat].includes(v);
-        const col = cat === 'status' ? (CO[v] || CO.queued).c : cat === 'kind' ? this.kindColors[v] : '#7aa2f7';
+        const col = cat === 'status' ? (CO[v] || CO.queued).c : '#7aa2f7';
         return R('button', { key: v, onClick: () => this.toggleFacet(cat, v), style: {
           display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', borderRadius: '7px', cursor: 'pointer', fontSize: '11.5px', fontFamily: cat === 'repo' ? mono : 'Inter',
           background: on ? 'rgba(158,206,106,0.14)' : 'rgba(160,168,220,0.05)',
@@ -6762,7 +6641,7 @@ class Component extends DCLogic {
       ]);
     }
     const facetBar = R('div', { key: 'fc', style: { padding: '0 14px 12px', flex: 'none', position: 'relative', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' } }, [
-      catChip('status'), catChip('kind'), catChip('agent'), catChip('repo'),
+      catChip('status'), catChip('agent'), catChip('repo'),
       (facetActive || q) ? R('button', { key: 'clr', onClick: this.clearFacets, style: { marginLeft: 'auto', background: 'none', border: 'none', color: '#7aa2f7', fontSize: '11px', cursor: 'pointer', padding: '4px 2px', fontFamily: 'Inter' } }, 'Clear') : null,
       popover
     ]);
