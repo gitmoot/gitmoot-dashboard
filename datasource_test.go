@@ -7,7 +7,7 @@ import (
 )
 
 func TestWorkflowAdditiveJSONContracts(t *testing.T) {
-	t.Run("legacy graph node and state omit workflow fields", func(t *testing.T) {
+	t.Run("legacy graph node omits workflow fields", func(t *testing.T) {
 		node := GraphNode{ID: "job-1", Type: "job", Label: "legacy", State: "running"}
 		got, err := json.Marshal(node)
 		if err != nil {
@@ -17,25 +17,9 @@ func TestWorkflowAdditiveJSONContracts(t *testing.T) {
 		if string(got) != wantNode {
 			t.Fatalf("legacy GraphNode JSON = %s, want %s", got, wantNode)
 		}
-
-		const statePayload = `{"runId":"run-1","title":"legacy","nodes":[]}`
-		var state State
-		if err := json.Unmarshal([]byte(statePayload), &state); err != nil {
-			t.Fatalf("unmarshal legacy State: %v", err)
-		}
-		if state.Workflow != "" {
-			t.Fatalf("legacy State.Workflow = %q, want empty", state.Workflow)
-		}
-		stateJSON, err := json.Marshal(state)
-		if err != nil {
-			t.Fatalf("marshal legacy State: %v", err)
-		}
-		if string(stateJSON) != statePayload {
-			t.Fatalf("legacy State JSON = %s, want %s", stateJSON, statePayload)
-		}
 	})
 
-	t.Run("labeled graph node and state round trip", func(t *testing.T) {
+	t.Run("labeled graph node round trips", func(t *testing.T) {
 		const payload = `{"id":"workflow::panel","type":"workflow","label":"panel","jobCount":7,"noteCount":3,"tokensIn":22400,"tokensOut":9700}`
 		var node GraphNode
 		if err := json.Unmarshal([]byte(payload), &node); err != nil {
@@ -50,23 +34,6 @@ func TestWorkflowAdditiveJSONContracts(t *testing.T) {
 		}
 		if !bytes.Equal(got, []byte(payload)) {
 			t.Fatalf("workflow GraphNode JSON = %s, want %s", got, payload)
-		}
-
-		state := State{RunID: "run-1", Title: "labeled", Workflow: "panel", Nodes: []Node{}}
-		stateJSON, err := json.Marshal(state)
-		if err != nil {
-			t.Fatalf("marshal labeled State: %v", err)
-		}
-		const wantState = `{"runId":"run-1","title":"labeled","workflow":"panel","nodes":[]}`
-		if string(stateJSON) != wantState {
-			t.Fatalf("labeled State JSON = %s, want %s", stateJSON, wantState)
-		}
-		var roundTrip State
-		if err := json.Unmarshal(stateJSON, &roundTrip); err != nil {
-			t.Fatalf("unmarshal labeled State: %v", err)
-		}
-		if roundTrip.Workflow != "panel" {
-			t.Fatalf("round-trip State.Workflow = %q, want panel", roundTrip.Workflow)
 		}
 	})
 }

@@ -1,17 +1,17 @@
 // Package dashboard provides the read-only backend for the gitmoot web
-// dashboard: a small HTTP server that serves a live orchestration-DAG UI and
+// dashboard: a small HTTP server that serves the embedded dashboard UI and
 // reads live state from gitmoot's store through the DataSource interface.
 package dashboard
 
 import "context"
 
-// NodeState is the lifecycle state of a single orchestration node.
+// NodeState is the lifecycle state of a single job.
 type NodeState string // "queued" "running" "succeeded" "failed" "blocked" "cancelled"
 
 // Event is a label attached to a node's timeline.
 //
 // Wall-clock timestamps in this package (Node.StartedAt/EndedAt,
-// RunSummary.Updated) are epoch milliseconds (JS Date compatible). Event.T is a
+// JobSummary.Updated) are epoch milliseconds (JS Date compatible). Event.T is a
 // monotonic ordering key for a node's timeline: epoch milliseconds where the
 // feed has per-event times, or a 1-based index otherwise. Clients should sort a
 // node's events by T rather than treat it as wall-clock.
@@ -20,8 +20,7 @@ type Event struct {
 	Label string `json:"label"`
 }
 
-// Node is a single job/agent in the orchestration graph. Edges are derived
-// client-side from ParentID + Deps.
+// Node is the full detail of a single job served by GET /api/job/{id}.
 type Node struct {
 	ID        string    `json:"id"`
 	ParentID  string    `json:"parentId,omitempty"`
@@ -41,45 +40,9 @@ type Node struct {
 	Events    []Event   `json:"events"`
 }
 
-// State is a snapshot of one orchestration run.
-type State struct {
-	RunID    string `json:"runId"`
-	Title    string `json:"title"`
-	Workflow string `json:"workflow,omitempty"` // root workflow label, when this run is labeled
-	Nodes    []Node `json:"nodes"`              // edges are derived client-side from ParentID + Deps
-}
-
-// RunSummary is a lightweight listing entry for a run. Beyond identity/state it
-// carries enough shape for the Runs column to group, disambiguate, and search
-// runs without fetching each run's full graph: kind/significance drive the
-// Active/Orchestrations/one-shots sectioning, and the counts/snippet
-// disambiguate same-titled runs.
-type RunSummary struct {
-	RunID string    `json:"runId"`
-	Title string    `json:"title"`
-	State NodeState `json:"state"`
-	// Kind is the run's entrypoint: ask | review | implement | orchestrate | goal.
-	Kind string `json:"kind,omitempty"`
-	// Significance is "orchestration" for a multi-node delegation tree, else
-	// "one-shot" for a single-node ask/review (used to fold noise in the UI).
-	Significance string `json:"significance,omitempty"`
-	Agent        string `json:"agent,omitempty"` // coordinator/agent name
-	Repo         string `json:"repo,omitempty"`
-	PR           int    `json:"pr,omitempty"`
-	NodeCount    int    `json:"nodeCount"`          // jobs in the run tree
-	Depth        int    `json:"depth"`              // delegation levels (1-based)
-	DoneCount    int    `json:"doneCount"`          // finished (terminal) nodes
-	Snippet      string `json:"snippet,omitempty"`  // first line of the root prompt
-	Started      int64  `json:"started,omitempty"`  // epoch milliseconds
-	Updated      int64  `json:"updated"`            // epoch milliseconds
-	Duration     int64  `json:"duration,omitempty"` // milliseconds (updated-started)
-}
-
-// JobSummary is a flattened listing entry for a single job, across every run.
-// Unlike RunSummary (which rolls a whole delegation tree into one row) each
-// JobSummary is one node in one run, carrying enough identity/timing/state for
-// the Jobs page to list, group by Run, and search without fetching each run's
-// full graph.
+// JobSummary is a flattened listing entry for a single job, across every run,
+// carrying enough identity/timing/state for the Jobs page to list, group by
+// Run, and search without fetching each job's full detail.
 type JobSummary struct {
 	ID      string `json:"id"`
 	Title   string `json:"title"` // first line of prompt, fallback id
@@ -89,7 +52,7 @@ type JobSummary struct {
 	// Kind is the job's action/type: ask | review | implement | ...
 	Kind      string    `json:"kind,omitempty"`
 	State     NodeState `json:"state"`
-	Depth     int       `json:"depth"`         // delegation depth (0 = root)
+	Depth     int       `json:"depth"`         // job-tree depth (0 = root)
 	Run       string    `json:"run,omitempty"` // root/run id this job belongs to
 	PR        int       `json:"pr,omitempty"`
 	Started   int64     `json:"started,omitempty"`  // epoch ms
@@ -100,8 +63,7 @@ type JobSummary struct {
 }
 
 // AgentSummary is a listing entry for the Agents page: one row per registered
-// agent, plus a single synthetic rollup row for the fleet of ephemeral workers.
-// The counts aggregate every job the agent has run across all runs.
+// agent. The counts aggregate every job the agent has run across all runs.
 type AgentSummary struct {
 	Name           string   `json:"name"`
 	Role           string   `json:"role,omitempty"`
@@ -111,71 +73,27 @@ type AgentSummary struct {
 	Capabilities   []string `json:"capabilities,omitempty"`
 	AutonomyPolicy string   `json:"autonomyPolicy,omitempty"`
 	Health         string   `json:"health,omitempty"`
-	// Ephemeral is true only for the synthetic ephemeral-workers rollup row.
-	Ephemeral      bool  `json:"ephemeral,omitempty"`
-	JobCount       int   `json:"jobCount"`
-	RunningCount   int   `json:"runningCount"`
-	SucceededCount int   `json:"succeededCount"`
-	FailedCount    int   `json:"failedCount"`
-	LastActive     int64 `json:"lastActive,omitempty"` // epoch ms of most recent job update
-}
-
-// TemplateVersionInfo is one entry in an agent template's version history.
-type TemplateVersionInfo struct {
-	ID             string  `json:"id"`
-	Number         int     `json:"number"`
-	State          string  `json:"state"` // e.g. promoted | pending | canary | rejected (pass through the store's value)
-	Name           string  `json:"name,omitempty"`
-	Description    string  `json:"description,omitempty"`
-	SourceRef      string  `json:"sourceRef,omitempty"`
-	ResolvedCommit string  `json:"resolvedCommit,omitempty"`
-	CreatedAt      int64   `json:"createdAt,omitempty"`  // epoch ms, 0 unknown
-	PromotedAt     int64   `json:"promotedAt,omitempty"` // epoch ms, 0 unknown
-	CanarySample   float64 `json:"canarySample,omitempty"`
-	Current        bool    `json:"current,omitempty"` // true for the version the template currently resolves to
-	// Content is this version's full prompt text (the template body captured at
-	// this version). Can be multi-KB; served only by the per-agent detail endpoint.
-	Content string `json:"content,omitempty"`
-}
-
-// AgentTemplateInfo describes the template an agent is instantiated from: its
-// identity and where its definition is sourced/resolved from.
-type AgentTemplateInfo struct {
-	ID             string `json:"id"`
-	Name           string `json:"name,omitempty"`
-	Description    string `json:"description,omitempty"`
-	SourceRepo     string `json:"sourceRepo,omitempty"`
-	SourceRef      string `json:"sourceRef,omitempty"`
-	SourcePath     string `json:"sourcePath,omitempty"`
-	ResolvedCommit string `json:"resolvedCommit,omitempty"`
-	// Content is the agent's full prompt text (the currently resolved template
-	// body). Can be multi-KB; served only by the per-agent detail endpoint.
-	Content string `json:"content,omitempty"`
+	JobCount       int      `json:"jobCount"`
+	RunningCount   int      `json:"runningCount"`
+	SucceededCount int      `json:"succeededCount"`
+	FailedCount    int      `json:"failedCount"`
+	LastActive     int64    `json:"lastActive,omitempty"` // epoch ms of most recent job update
 }
 
 // AgentConfigInfo holds the agent's [agents.<name>] config-section values as
 // resolved at config parse time (parse-time defaults included, so a field can be
 // populated even when the section did not set it explicitly). These are
-// configured knobs, not live runtime state: the pool knobs (MaxBackground,
-// IdleTimeout, JobTimeout) only take effect for the managed instances / temp
-// workers gitmoot spins up for this agent, so they do not describe a one-off
-// foreground invocation.
+// configured knobs, not live runtime state.
 type AgentConfigInfo struct {
-	MaxBackground int      `json:"maxBackground,omitempty"`
-	IdleTimeout   string   `json:"idleTimeout,omitempty"`
-	JobTimeout    string   `json:"jobTimeout,omitempty"`
-	Model         string   `json:"model,omitempty"`
-	Template      string   `json:"template,omitempty"`
-	Capabilities  []string `json:"capabilities,omitempty"`
+	JobTimeout   string   `json:"jobTimeout,omitempty"`
+	Model        string   `json:"model,omitempty"`
+	Capabilities []string `json:"capabilities,omitempty"`
 }
 
 // AgentDetail is the Agents page's click-through detail: the summary plus the
-// agent's template and its version history (newest first). Template is nil for
-// agents with no template.
+// agent's config section.
 type AgentDetail struct {
 	AgentSummary
-	Template *AgentTemplateInfo    `json:"template,omitempty"`
-	Versions []TemplateVersionInfo `json:"versions"`
 	// Config is the agent's [agents.<name>] config section, or nil when the agent
 	// has no such section.
 	Config *AgentConfigInfo `json:"config,omitempty"`
@@ -200,8 +118,8 @@ type GraphNode struct {
 	TokensOut int       `json:"tokensOut,omitempty"`
 }
 
-// GraphLink is an edge in the galaxy graph. Kind is "parent"/"dep" (delegation
-// and sibling links between jobs), "repo" (job -> its repo hub), "agent"
+// GraphLink is an edge in the galaxy graph. Kind is "parent"/"dep" (parent and
+// dependency links between jobs), "repo" (job -> its repo hub), "agent"
 // (job -> its agent hub), or "workflow" (labeled job -> its workflow hub).
 type GraphLink struct {
 	Source string `json:"source"`
@@ -532,7 +450,7 @@ type OrgEscalation struct {
 
 // OrgFeedRow is one organization signal.
 type OrgFeedRow struct {
-	Kind   string `json:"kind"` // blocked_since | recycle_overdue | recycle
+	Kind   string `json:"kind"` // blocked_since | recycle
 	Role   string `json:"role"`
 	At     string `json:"at"` // RFC3339
 	Since  string `json:"since,omitempty"`
@@ -658,7 +576,6 @@ type ConfigAgent struct {
 	Model          string   `json:"model"`
 	Capabilities   []string `json:"capabilities"`
 	AutonomyPolicy string   `json:"autonomy_policy"`
-	MaxBackground  int      `json:"max_background"`
 }
 
 // KeychainView is the metadata-only registry projection shown on the Config
@@ -704,7 +621,7 @@ type ConfigSnapshot struct {
 	Keychain        KeychainView    `json:"keychain"`
 }
 
-// HealthDaemon reports the orchestration daemon's liveness.
+// HealthDaemon reports the gitmoot daemon's liveness.
 type HealthDaemon struct {
 	Running   bool   `json:"running"`
 	PID       int    `json:"pid,omitempty"`
@@ -732,15 +649,7 @@ type HealthTotals struct {
 	Cancelled int `json:"cancelled"`
 }
 
-// HealthLock is a held branch/checkout lock.
-type HealthLock struct {
-	Repo       string `json:"repo"`
-	Branch     string `json:"branch"`
-	Owner      string `json:"owner"`
-	AcquiredAt int64  `json:"acquiredAt,omitempty"` // epoch ms
-}
-
-// HealthResourceLock is a held non-branch resource lock (runtime session, etc.).
+// HealthResourceLock is a held resource lock (runtime session, etc.).
 type HealthResourceLock struct {
 	Key        string `json:"key"`
 	Owner      string `json:"owner,omitempty"`
@@ -769,61 +678,14 @@ type HealthFailure struct {
 }
 
 // Health is the data behind the Health page: daemon liveness, fleet totals, held
-// locks, wedged jobs and recent failures.
+// resource locks, wedged jobs and recent failures.
 type Health struct {
 	Daemon         HealthDaemon         `json:"daemon"`
 	Update         *HealthUpdate        `json:"update,omitempty"` // daemon-binary update check; nil when unavailable
 	Totals         HealthTotals         `json:"totals"`
-	Locks          []HealthLock         `json:"locks"`          // branch/checkout locks, oldest first
 	ResourceLocks  []HealthResourceLock `json:"resourceLocks"`  // runtime-session etc., oldest first
 	Stuck          []HealthStuckJob     `json:"stuck"`          // blocked jobs + queued older than 10 min, oldest first
 	RecentFailures []HealthFailure      `json:"recentFailures"` // last 10 failed, newest first
-}
-
-// Skills — the SkillOpt evolution overview.
-
-// SkillVersion is one version in a skill template's evolution history, in
-// sparkline order. Score is present only when the version was scored (HasScore).
-type SkillVersion struct {
-	Number     int     `json:"number"`
-	State      string  `json:"state"`
-	Score      float64 `json:"score,omitempty"`
-	HasScore   bool    `json:"hasScore,omitempty"`
-	CreatedAt  int64   `json:"createdAt,omitempty"` // epoch ms
-	PromotedAt int64   `json:"promotedAt,omitempty"`
-}
-
-// SkillCandidate is a pending version awaiting review/promotion. Score is passed
-// through in the review's stored string form (e.g. a decimal or a verdict).
-type SkillCandidate struct {
-	VersionID string `json:"versionId"`
-	Number    int    `json:"number"`
-	Score     string `json:"score,omitempty"` // pass through the review's stored form
-	CreatedAt int64  `json:"createdAt,omitempty"`
-}
-
-// SkillTemplate is one skill template's evolution: its version history (for the
-// sparkline), the version it currently resolves to, any in-flight canary, and
-// its pending candidates.
-type SkillTemplate struct {
-	TemplateID      string           `json:"templateId"`
-	Name            string           `json:"name,omitempty"`
-	Agents          []string         `json:"agents,omitempty"` // registered agents using it, sorted
-	Versions        []SkillVersion   `json:"versions"`         // ascending by Number (sparkline order)
-	CurrentVersion  int              `json:"currentVersion,omitempty"`
-	CurrentState    string           `json:"currentState,omitempty"`
-	CanarySample    float64          `json:"canarySample,omitempty"`
-	CanaryStartedAt int64            `json:"canaryStartedAt,omitempty"`
-	LastPromotedAt  int64            `json:"lastPromotedAt,omitempty"`
-	Pending         []SkillCandidate `json:"pending"`
-}
-
-// Skills is the data behind the Learning page's Skills view: every skill
-// template's evolution, plus range rollups for the header.
-type Skills struct {
-	Templates      []SkillTemplate `json:"templates"` // sorted: pending-first, then most-recently-promoted
-	ActiveCanaries int             `json:"activeCanaries"`
-	PendingTotal   int             `json:"pendingTotal"`
 }
 
 // Attention + result checks — surfacing evaluator output and human gates where a
@@ -885,17 +747,16 @@ type ChangeCursorDataSource interface {
 // DataSource is the read-only feed the dashboard renders. Implementations must
 // be safe for concurrent use.
 type DataSource interface {
-	Runs(ctx context.Context) ([]RunSummary, error)
-	State(ctx context.Context, runID string) (State, error) // runID "" => active/most-recent
+	// Job returns one job's full detail. Unknown ids return a not-found
+	// sentinel (mapped to 404 by the API layer).
 	Job(ctx context.Context, jobID string) (Node, error)
 	// Jobs returns every job across all runs, flattened, sorted Updated desc.
 	Jobs(ctx context.Context) ([]JobSummary, error)
-	// Agents returns the registered agents plus one synthetic rollup row for the
-	// fleet of ephemeral workers (the row with Ephemeral == true).
+	// Agents returns the registered agents.
 	Agents(ctx context.Context) ([]AgentSummary, error)
 	// Agent returns the click-through detail for a single agent by name: its
-	// summary plus template and version history. Unknown names return a
-	// not-found sentinel (mapped to 404 by the API layer).
+	// summary plus config section. Unknown names return a not-found sentinel
+	// (mapped to 404 by the API layer).
 	Agent(ctx context.Context, name string) (AgentDetail, error)
 	// Graph returns the whole-history galaxy graph. Empty repo => all runs; a
 	// non-empty repo scopes to that repository's jobs (and their hubs).
@@ -905,7 +766,7 @@ type DataSource interface {
 	// days of 0 means all history. Days is oldest->newest and zero-filled
 	// continuous across the whole window.
 	Charts(ctx context.Context, days int) (Charts, error)
-	// Health returns the daemon liveness, fleet totals, held locks, wedged jobs
+	// Health returns the daemon liveness, fleet totals, held resource locks, wedged jobs
 	// and recent failures behind the Health page.
 	Health(ctx context.Context) (Health, error)
 	// Config returns the versioned, sanitized effective configuration behind the
@@ -913,17 +774,6 @@ type DataSource interface {
 	// by name only, and the keychain projection contains metadata only. Sections,
 	// knobs, agents, unknown keys and keychain rows are deterministic.
 	Config(ctx context.Context) (ConfigSnapshot, error)
-	// Skills returns the template evolution overview behind the Learning page's
-	// Skills view: per-template version history, active canaries and pending
-	// candidates. Ordering must be deterministic (the UI polls with a
-	// signature-skip): templates pending-first then most-recently-promoted, each
-	// template's versions ascending by Number.
-	//
-	// Skills is REQUIRED (gitmoot #2206) while Knowledge and ChatThreads left this
-	// interface: gitmoot serves Skills from its surviving agent-template tables, so
-	// the page renders real data, whereas Knowledge and Chat were backed by tables
-	// gitmoot retired and could only ever answer empty.
-	Skills(ctx context.Context) (Skills, error)
 	// Attention returns the "Needs a human" view (gitmoot #528): blocked job
 	// gates and the headline waiting total. Ordering must be deterministic (the
 	// UI polls with a signature-skip).
@@ -932,5 +782,4 @@ type DataSource interface {
 	// #711): the deterministic result checks its result failed plus the home-wide
 	// policy mode. An unknown job yields an empty Failed with the resolved Mode.
 	JobChecks(ctx context.Context, jobID string) (JobChecks, error)
-	Subscribe(ctx context.Context, runID string) (<-chan State, func(), error) // for SSE
 }

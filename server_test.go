@@ -47,10 +47,11 @@ func TestServeSPAFallback(t *testing.T) {
 	}
 }
 
-// TestRemovedAPIRoutesNotFound pins that endpoints removed from the contract
-// (the wake ledger and the SkillOpt verdicts stub, gitmoot/gitmoot#2593) and
-// any other unknown /api/ path answer 404 instead of the 200 SPA shell.
-func TestRemovedAPIRoutesNotFound(t *testing.T) {
+// TestRemovedRoutesNotFound pins that endpoints removed from the contract (the
+// wake ledger, the SkillOpt verdicts stub, the single-run graph feed and its
+// /events stream, and the Learning page, gitmoot/gitmoot#2593) and any other
+// unknown /api/ path answer 404 instead of the 200 SPA shell.
+func TestRemovedRoutesNotFound(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
@@ -59,6 +60,12 @@ func TestRemovedAPIRoutesNotFound(t *testing.T) {
 		"/api/wakes/summary",
 		"/api/wakes/receipts",
 		"/api/run/eval-reviewer-0007/verdicts",
+		"/api/runs",
+		"/api/state",
+		"/api/state?run=run-noted-001",
+		"/api/learning/skills",
+		"/events",
+		"/events?run=run-noted-001",
 		"/api/no-such-endpoint",
 		"/api",
 	} {
@@ -73,27 +80,6 @@ func TestRemovedAPIRoutesNotFound(t *testing.T) {
 		if ct := resp.Header.Get("Content-Type"); strings.HasPrefix(ct, "text/html") {
 			t.Fatalf("GET %s served the HTML shell (Content-Type %q)", path, ct)
 		}
-	}
-}
-
-// TestStateRouteRegistered asserts the /api/state route is wired into the mux
-// and served by the JSON handler (not the static SPA fallback, which would
-// return an HTML index).
-func TestStateRouteRegistered(t *testing.T) {
-	srv := httptest.NewServer(Serve(NewFakeDataSource()))
-	defer srv.Close()
-
-	resp, err := http.Get(srv.URL + "/api/state")
-	if err != nil {
-		t.Fatalf("GET /api/state: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("GET /api/state status = %d, want 200", resp.StatusCode)
-	}
-	if ct := resp.Header.Get("Content-Type"); !strings.HasPrefix(ct, "application/json") {
-		t.Fatalf("GET /api/state Content-Type = %q, want application/json", ct)
 	}
 }
 

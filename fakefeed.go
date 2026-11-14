@@ -12,10 +12,8 @@ import (
 )
 
 // Sentinel errors returned by FakeDataSource (and mapped to HTTP status codes
-// by the API/SSE handlers).
+// by the API handlers).
 var (
-	// ErrRunNotFound indicates the requested run does not exist.
-	ErrRunNotFound = errors.New("run not found")
 	// ErrJobNotFound indicates the requested job/node does not exist.
 	ErrJobNotFound = errors.New("job not found")
 	// ErrAgentNotFound indicates the requested agent does not exist.
@@ -27,12 +25,11 @@ var (
 )
 
 const (
-	fakeRunID           = "run-noted-001"
-	fakeRunTitle        = "noted: add note search, delete, and export"
-	fakeWorkflow        = "fable/dashboard-redesign"
-	fakeStalledWorkflow = "fable/arxiv-retry-hardening"
-	fakeEphemeralAgent  = "wave-impl-temp-7f3a"
-	fakeEphemeralJobID  = "job-ephemeral-demo"
+	fakeRunID            = "run-noted-001"
+	fakeWorkflow         = "fable/dashboard-redesign"
+	fakeStalledWorkflow  = "fable/arxiv-retry-hardening"
+	fakeUnregisteredName = "retired-impl-7f3a"
+	fakeUnregisteredJob  = "job-unregistered-demo"
 	// fakeRepo is the repository the fake run operates on (shared by Jobs/Graph).
 	fakeRepo = "acme/webapp"
 	// fakeTickInterval is how often the background goroutine advances the run.
@@ -40,20 +37,18 @@ const (
 )
 
 // FakeDataSource is an in-memory DataSource used for local development and
-// tests. It models a realistic `noted` orchestration run: a coordinator that
-// fans out three parallel implement jobs, an integrate/review/open-PR job that
-// depends on all three, and a final synthesis continuation. A background
-// goroutine advances node states (queued -> running -> succeeded) on a timer
-// and broadcasts each new snapshot to SSE subscribers.
+// tests. It models a realistic `noted` run: a coordinator job with three
+// parallel implement jobs, an integrate/review/open-PR job that depends on all
+// three, and a final summary job. A background goroutine advances job states
+// (queued -> running -> succeeded) on a timer and moves the change cursor.
 //
 // FakeDataSource is safe for concurrent use.
 type FakeDataSource struct {
 	interval         time.Duration
-	broker           *broker
 	workflowsEnabled bool
 
 	mu      sync.Mutex
-	st      State
+	nodes   []Node
 	step    int
 	started bool
 }
@@ -61,111 +56,51 @@ type FakeDataSource struct {
 // NewFakeDataSource returns a FakeDataSource seeded with the noted run and
 // starts the background goroutine that advances it.
 func NewFakeDataSource() *FakeDataSource {
-	workflowsEnabled := os.Getenv("FAKEFEED_WORKFLOWS") != "0"
 	f := &FakeDataSource{
 		interval:         fakeTickInterval,
-		broker:           newBroker(),
-		workflowsEnabled: workflowsEnabled,
-		st:               initialFakeState(workflowsEnabled),
+		workflowsEnabled: os.Getenv("FAKEFEED_WORKFLOWS") != "0",
+		nodes:            initialFakeNodes(),
 	}
 	f.start()
 	return f
 }
 
-// initialFakeState builds the seeded graph with the coordinator running and
-// every downstream node queued.
-func initialFakeState(workflowsEnabled bool) State {
+// initialFakeNodes builds the seeded run with the coordinator running and every
+// downstream job queued.
+func initialFakeNodes() []Node {
 	now := time.Now().UnixMilli()
-	st := State{
-		RunID: fakeRunID,
-		Title: fakeRunTitle,
-		Nodes: []Node{
-			{
-				ID:        "job-1",
-				Title:     "coordinate: note search, delete, export",
-				Agent:     "project-lead",
-				Runtime:   "codex",
-				Model:     "gpt-5.5",
-				State:     "running",
-				Depth:     0,
-				StartedAt: now,
-				WorkerID:  "codex-coordinator",
-				Events: []Event{
-					{T: now, Label: "queued"},
-					{T: now, Label: "started"},
-					{T: now, Label: "decomposed into 3 delegations"},
-				},
-			},
-			{
-				ID:       "job-2",
-				ParentID: "job-1",
-				Title:    "implement: note search",
-				Agent:    "implementer",
-				Runtime:  "codex",
-				Model:    "gpt-5.5",
-				State:    "queued",
-				Depth:    1,
-				Events:   []Event{{T: now, Label: "delegation_enqueued"}},
-			},
-			{
-				ID:       "job-3",
-				ParentID: "job-1",
-				Title:    "implement: note delete",
-				Agent:    "implementer",
-				Runtime:  "codex",
-				Model:    "gpt-5.5",
-				State:    "queued",
-				Depth:    1,
-				Events:   []Event{{T: now, Label: "delegation_enqueued"}},
-			},
-			{
-				ID:       "job-4",
-				ParentID: "job-1",
-				Title:    "implement: note export",
-				Agent:    "implementer",
-				Runtime:  "codex",
-				Model:    "gpt-5.5",
-				State:    "queued",
-				Depth:    1,
-				Events:   []Event{{T: now, Label: "delegation_enqueued"}},
-			},
-			{
-				ID:       "job-5",
-				ParentID: "job-1",
-				Deps:     []string{"job-2", "job-3", "job-4"},
-				Title:    "integrate + review + open PR",
-				Agent:    "integrator",
-				Runtime:  "codex",
-				Model:    "gpt-5.5",
-				State:    "queued",
-				Depth:    1,
-				Events:   []Event{{T: now, Label: "delegation_enqueued (awaiting deps)"}},
-			},
-			{
-				ID:       "job-6",
-				ParentID: "job-1",
-				Deps:     []string{"job-5"},
-				Title:    "synthesize: summarize outcome",
-				Agent:    "project-lead",
-				Runtime:  "codex",
-				Model:    "gpt-5.5",
-				State:    "queued",
-				Depth:    1,
-				Events:   []Event{{T: now, Label: "delegation_enqueued (continuation)"}},
-			},
+	queued := func(id, title, agent string, deps ...string) Node {
+		return Node{
+			ID: id, ParentID: "job-1", Deps: deps, Title: title, Agent: agent,
+			Runtime: "codex", Model: "gpt-5.5", State: "queued", Depth: 1,
+			Events: []Event{{T: now, Label: "queued"}},
+		}
+	}
+	return []Node{
+		{
+			ID:        "job-1",
+			Title:     "coordinate: note search, delete, export",
+			Agent:     "project-lead",
+			Runtime:   "codex",
+			Model:     "gpt-5.5",
+			State:     "running",
+			StartedAt: now,
+			WorkerID:  "codex-coordinator",
+			Events:    []Event{{T: now, Label: "queued"}, {T: now, Label: "started"}},
 		},
+		queued("job-2", "implement: note search", "implementer"),
+		queued("job-3", "implement: note delete", "implementer"),
+		queued("job-4", "implement: note export", "implementer"),
+		queued("job-5", "integrate + review + open PR", "integrator", "job-2", "job-3", "job-4"),
+		queued("job-6", "summarize outcome", "project-lead", "job-5"),
 	}
-	if workflowsEnabled {
-		st.Workflow = fakeWorkflow
-	}
-	return st
 }
 
 // fakeStep mutates the run for a single tick. Each step is applied with f.mu held.
 type fakeStep func(f *FakeDataSource)
 
 // fakeSteps is the ordered timeline the background goroutine walks. The initial
-// snapshot already has the coordinator running and children queued.
+// snapshot already has the coordinator running and the other jobs queued.
 var fakeSteps = []fakeStep{
 	func(f *FakeDataSource) { f.transition("job-2", "running", "worker started: note search") },
 	func(f *FakeDataSource) { f.transition("job-3", "running", "worker started: note delete") },
@@ -178,7 +113,7 @@ var fakeSteps = []fakeStep{
 		f.setPRURL("job-5", "https://github.com/jerryfane/noted/pull/42")
 		f.transition("job-5", "succeeded", "integration PR opened, review clean")
 	},
-	func(f *FakeDataSource) { f.transition("job-6", "running", "synthesizing outcome") },
+	func(f *FakeDataSource) { f.transition("job-6", "running", "summarizing outcome") },
 	func(f *FakeDataSource) { f.transition("job-6", "succeeded", "summary posted") },
 	func(f *FakeDataSource) { f.transition("job-1", "succeeded", "run complete") },
 }
@@ -194,8 +129,8 @@ func (f *FakeDataSource) start() {
 	go f.run()
 }
 
-// run advances the timeline on a ticker and broadcasts each new snapshot,
-// stopping once the run reaches its terminal state.
+// run advances the timeline on a ticker, stopping once the run reaches its
+// terminal state. Each step moves the change cursor.
 func (f *FakeDataSource) run() {
 	t := time.NewTicker(f.interval)
 	defer t.Stop()
@@ -207,9 +142,7 @@ func (f *FakeDataSource) run() {
 		}
 		fakeSteps[f.step](f)
 		f.step++
-		snap := f.cloneStateLocked()
 		f.mu.Unlock()
-		f.broker.publish(snap)
 	}
 }
 
@@ -217,8 +150,8 @@ func (f *FakeDataSource) run() {
 // called with f.mu held.
 func (f *FakeDataSource) transition(id string, state NodeState, label string) {
 	now := time.Now().UnixMilli()
-	for i := range f.st.Nodes {
-		n := &f.st.Nodes[i]
+	for i := range f.nodes {
+		n := &f.nodes[i]
 		if n.ID != id {
 			continue
 		}
@@ -238,9 +171,9 @@ func (f *FakeDataSource) transition(id string, state NodeState, label string) {
 }
 
 func (f *FakeDataSource) setPRURL(id, url string) {
-	for i := range f.st.Nodes {
-		if f.st.Nodes[i].ID == id {
-			f.st.Nodes[i].PRURL = url
+	for i := range f.nodes {
+		if f.nodes[i].ID == id {
+			f.nodes[i].PRURL = url
 			return
 		}
 	}
@@ -254,71 +187,33 @@ func isTerminal(s NodeState) bool {
 	return false
 }
 
-// cloneStateLocked returns a deep copy of the current run state so callers can
-// read/encode it without holding f.mu. Must be called with f.mu held.
-func (f *FakeDataSource) cloneStateLocked() State {
-	out := State{RunID: f.st.RunID, Title: f.st.Title, Workflow: f.st.Workflow}
-	out.Nodes = make([]Node, len(f.st.Nodes))
-	for i, n := range f.st.Nodes {
+// cloneNodesLocked returns a deep copy of the current run's nodes so callers
+// can read/encode them without holding f.mu. Must be called with f.mu held.
+func (f *FakeDataSource) cloneNodesLocked() []Node {
+	out := make([]Node, len(f.nodes))
+	for i, n := range f.nodes {
 		cp := n
 		if n.Deps != nil {
 			cp.Deps = append([]string(nil), n.Deps...)
 		}
 		cp.Events = append([]Event(nil), n.Events...)
-		out.Nodes[i] = cp
+		out[i] = cp
 	}
 	return out
 }
 
-// overallStateLocked derives the run-level state from the coordinator (root)
-// node, defaulting to running. Must be called with f.mu held.
-func (f *FakeDataSource) overallStateLocked() (NodeState, int64) {
-	var updated int64
-	for _, n := range f.st.Nodes {
-		for _, e := range n.Events {
-			if e.T > updated {
-				updated = e.T
-			}
-		}
-	}
-	root := NodeState("running")
-	for _, n := range f.st.Nodes {
-		if n.ID == "job-1" {
-			root = n.State
-			break
-		}
-	}
-	return root, updated
-}
-
-// Runs implements DataSource.
-func (f *FakeDataSource) Runs(ctx context.Context) ([]RunSummary, error) {
+// anchor returns the run start, the time every fixture is anchored on.
+func (f *FakeDataSource) anchor() int64 {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	state, updated := f.overallStateLocked()
-	return []RunSummary{{
-		RunID:   f.st.RunID,
-		Title:   f.st.Title,
-		State:   state,
-		Updated: updated,
-	}}, nil
-}
-
-// State implements DataSource. An empty runID returns the active/most-recent run.
-func (f *FakeDataSource) State(ctx context.Context, runID string) (State, error) {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-	if runID != "" && runID != fakeRunID {
-		return State{}, ErrRunNotFound
-	}
-	return f.cloneStateLocked(), nil
+	return f.nodes[0].StartedAt
 }
 
 // Job implements DataSource.
 func (f *FakeDataSource) Job(ctx context.Context, jobID string) (Node, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	for _, n := range f.st.Nodes {
+	for _, n := range f.nodes {
 		if n.ID == jobID {
 			cp := n
 			cp.Deps = append([]string(nil), n.Deps...)
@@ -327,39 +222,17 @@ func (f *FakeDataSource) Job(ctx context.Context, jobID string) (Node, error) {
 		}
 	}
 	if f.workflowsEnabled && jobID == "demo-single-job" {
-		return fakeWorkflowSingleNode(f.st.Nodes[0].StartedAt), nil
+		return fakeWorkflowSingleNode(f.nodes[0].StartedAt), nil
 	}
-	if jobID == fakeEphemeralJobID {
-		return fakeEphemeralGalaxyNode(f.st.Nodes[0].StartedAt), nil
+	if jobID == fakeUnregisteredJob {
+		return fakeUnregisteredGalaxyNode(f.nodes[0].StartedAt), nil
 	}
 	return Node{}, ErrJobNotFound
 }
 
-// Subscribe implements DataSource. It registers an SSE subscriber, immediately
-// delivers the current snapshot, and receives every subsequent snapshot the
-// background goroutine broadcasts. The returned cancel func unregisters the
-// subscriber; it is also invoked automatically when ctx is done.
-func (f *FakeDataSource) Subscribe(ctx context.Context, runID string) (<-chan State, func(), error) {
-	if runID != "" && runID != fakeRunID {
-		return nil, nil, ErrRunNotFound
-	}
-	f.mu.Lock()
-	snap := f.cloneStateLocked()
-	f.mu.Unlock()
-
-	ch, cancel := f.broker.subscribe(snap)
-
-	// Automatically unregister when the request context is cancelled.
-	go func() {
-		<-ctx.Done()
-		cancel()
-	}()
-	return ch, cancel, nil
-}
-
 // ChangeCursor implements the optional dashboard invalidation stream. Each
 // completed fake timeline mutation increments step, so the opaque cursor moves
-// in lockstep with the state snapshots served by the dev harness.
+// in lockstep with the jobs served by the dev harness.
 func (f *FakeDataSource) ChangeCursor(context.Context) (string, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -371,7 +244,7 @@ func (f *FakeDataSource) ChangeCursor(context.Context) (string, error) {
 // Galaxy view standalone.
 func (f *FakeDataSource) Graph(ctx context.Context, repo string) (Graph, error) {
 	f.mu.Lock()
-	snap := f.cloneStateLocked()
+	nodes := f.cloneNodesLocked()
 	workflowsEnabled := f.workflowsEnabled
 	f.mu.Unlock()
 	g := Graph{Nodes: []GraphNode{}, Links: []GraphLink{}, Repos: []string{fakeRepo}}
@@ -379,12 +252,12 @@ func (f *FakeDataSource) Graph(ctx context.Context, repo string) (Graph, error) 
 		return g, nil
 	}
 	ids := map[string]bool{}
-	for _, n := range snap.Nodes {
+	for _, n := range nodes {
 		ids[n.ID] = true
 	}
 	agents := map[string]bool{}
-	for _, n := range snap.Nodes {
-		g.Nodes = append(g.Nodes, GraphNode{ID: n.ID, Type: "job", Label: n.Title, State: n.State, Agent: n.Agent, Repo: fakeRepo, Run: snap.RunID})
+	for _, n := range nodes {
+		g.Nodes = append(g.Nodes, GraphNode{ID: n.ID, Type: "job", Label: n.Title, State: n.State, Agent: n.Agent, Repo: fakeRepo, Run: fakeRunID})
 		if n.ParentID != "" && ids[n.ParentID] {
 			g.Links = append(g.Links, GraphLink{Source: n.ParentID, Target: n.ID, Kind: "parent"})
 		}
@@ -399,19 +272,19 @@ func (f *FakeDataSource) Graph(ctx context.Context, repo string) (Graph, error) 
 			g.Links = append(g.Links, GraphLink{Source: n.ID, Target: "agent::" + n.Agent, Kind: "agent"})
 		}
 	}
-	ephemeral := fakeEphemeralGalaxyNode(snap.Nodes[0].StartedAt)
-	g.Nodes = append(g.Nodes, GraphNode{ID: ephemeral.ID, Type: "job", Label: ephemeral.Title, State: ephemeral.State, Agent: ephemeral.Agent, Repo: fakeRepo, Run: snap.RunID})
+	unregistered := fakeUnregisteredGalaxyNode(nodes[0].StartedAt)
+	g.Nodes = append(g.Nodes, GraphNode{ID: unregistered.ID, Type: "job", Label: unregistered.Title, State: unregistered.State, Agent: unregistered.Agent, Repo: fakeRepo, Run: fakeRunID})
 	g.Links = append(g.Links,
-		GraphLink{Source: ephemeral.ID, Target: "repo::" + fakeRepo, Kind: "repo"},
-		GraphLink{Source: ephemeral.ID, Target: "agent::" + ephemeral.Agent, Kind: "agent"},
+		GraphLink{Source: unregistered.ID, Target: "repo::" + fakeRepo, Kind: "repo"},
+		GraphLink{Source: unregistered.ID, Target: "agent::" + unregistered.Agent, Kind: "agent"},
 	)
-	agents[ephemeral.Agent] = true
+	agents[unregistered.Agent] = true
 	g.Nodes = append(g.Nodes, GraphNode{ID: "repo::" + fakeRepo, Type: "repo", Label: fakeRepo, Repo: fakeRepo})
 	for a := range agents {
 		g.Nodes = append(g.Nodes, GraphNode{ID: "agent::" + a, Type: "agent", Label: a, Agent: a})
 	}
 	if workflowsEnabled {
-		extra := fakeWorkflowSingleNode(snap.Nodes[0].StartedAt)
+		extra := fakeWorkflowSingleNode(nodes[0].StartedAt)
 		g.Nodes = append(g.Nodes, GraphNode{ID: extra.ID, Type: "job", Label: extra.Title, State: extra.State, Agent: extra.Agent, Repo: fakeRepo, Run: "run-demo-single"})
 		g.Links = append(g.Links,
 			GraphLink{Source: extra.ID, Target: "repo::" + fakeRepo, Kind: "repo"},
@@ -420,25 +293,26 @@ func (f *FakeDataSource) Graph(ctx context.Context, repo string) (Graph, error) 
 		if !agents[extra.Agent] {
 			g.Nodes = append(g.Nodes, GraphNode{ID: "agent::" + extra.Agent, Type: "agent", Label: extra.Agent, Agent: extra.Agent})
 		}
-		for _, n := range append(snap.Nodes, extra) {
+		for _, n := range append(nodes, extra) {
 			g.Links = append(g.Links, GraphLink{Source: n.ID, Target: "workflow::" + fakeWorkflow, Kind: "workflow"})
 		}
 		g.Nodes = append(g.Nodes, GraphNode{
 			ID: "workflow::" + fakeWorkflow, Type: "workflow", Label: fakeWorkflow,
-			JobCount: len(snap.Nodes) + 1, NoteCount: len(fakeWorkflowNotes(snap.Nodes[0].StartedAt)), TokensIn: 1_230_000, TokensOut: 15_300,
+			JobCount: len(nodes) + 1, NoteCount: len(fakeWorkflowNotes(nodes[0].StartedAt)), TokensIn: 1_230_000, TokensOut: 15_300,
 		})
 	}
 	return g, nil
 }
 
-// fakeEphemeralGalaxyNode is intentionally present in Graph and Jobs but absent
-// from Agents/Agent, matching a one-off worker with no persistent registration.
-func fakeEphemeralGalaxyNode(anchor int64) Node {
+// fakeUnregisteredGalaxyNode is intentionally present in Graph and Jobs but
+// absent from Agents/Agent, matching history from an agent that is no longer
+// registered.
+func fakeUnregisteredGalaxyNode(anchor int64) Node {
 	started := anchor - int64(4*time.Minute/time.Millisecond)
 	ended := started + int64(2*time.Minute/time.Millisecond)
 	return Node{
-		ID: fakeEphemeralJobID, Title: "implement: transient delegation patch",
-		Agent: fakeEphemeralAgent, Runtime: "codex", Model: "gpt-5.5",
+		ID: fakeUnregisteredJob, Title: "implement: patch from a retired agent",
+		Agent: fakeUnregisteredName, Runtime: "codex", Model: "gpt-5.5",
 		State: "succeeded", StartedAt: started, EndedAt: ended,
 		Events: []Event{{T: started, Label: "started"}, {T: ended, Label: "completed"}},
 	}
@@ -654,10 +528,7 @@ func (f *FakeDataSource) Workflows(ctx context.Context) ([]WorkflowIndexEntry, e
 	if !f.workflowsEnabled {
 		return []WorkflowIndexEntry{}, nil
 	}
-	f.mu.Lock()
-	anchor := f.st.Nodes[0].StartedAt
-	f.mu.Unlock()
-	return fakeWorkflowIndex(anchor), nil
+	return fakeWorkflowIndex(f.anchor()), nil
 }
 
 // Overview implements the optional operator-first landing-page contract. Every
@@ -713,7 +584,7 @@ func fakeTaskTitles() []string {
 		"Design review for dashboard #78 information architecture",
 		"Backtest sweep r8 for the bitcoin price model",
 		"Org chart role scopes for the review fleet",
-		"Health page locks-aging amber thresholds",
+		"Health page resource-lock amber thresholds",
 	}
 }
 
@@ -730,9 +601,7 @@ func fakeTaskAgent(i int) string {
 // Tasks implements the optional task-board contract with the mockup's target
 // volumes: 10 PR-open, 5 blocked, and 4 merged.
 func (f *FakeDataSource) Tasks(ctx context.Context) ([]TaskSummary, error) {
-	f.mu.Lock()
-	anchor := f.st.Nodes[0].StartedAt
-	f.mu.Unlock()
+	anchor := f.anchor()
 	titles := fakeTaskTitles()
 	counts := []struct {
 		state string
@@ -824,7 +693,6 @@ func fakeOrgView() OrgView {
 		Escalations: escalations,
 		Feed: []OrgFeedRow{
 			{Kind: "blocked_since", Role: "g4", At: "2026-07-23T01:31:00Z", Since: "14m", Detail: "waiting on an API contract decision"},
-			{Kind: "recycle_overdue", Role: "vetrina", At: "2026-07-23T01:22:00Z", Since: "23m", Detail: "visual audit handoff is overdue"},
 			{Kind: "recycle", Role: "joltra", At: "2026-07-23T00:58:00Z", Detail: "handoff recorded after the weekly clip batch"},
 		},
 	}
@@ -907,9 +775,7 @@ func (f *FakeDataSource) Workflow(ctx context.Context, label string, q WorkflowQ
 	if !f.workflowsEnabled || (label != fakeWorkflow && label != fakeStalledWorkflow) {
 		return WorkflowView{}, ErrWorkflowNotFound
 	}
-	f.mu.Lock()
-	snap := f.cloneStateLocked()
-	f.mu.Unlock()
+	anchor := f.anchor()
 
 	if q.MaxRuns <= 0 || q.MaxRuns > workflowMaxRuns {
 		q.MaxRuns = workflowMaxRuns
@@ -918,8 +784,8 @@ func (f *FakeDataSource) Workflow(ctx context.Context, label string, q WorkflowQ
 		q.MaxNotes = workflowMaxNotes
 	}
 
-	runs := fakeWorkflowRuns(snap.Nodes[0].StartedAt)
-	notes := fakeWorkflowNotes(snap.Nodes[0].StartedAt)
+	runs := fakeWorkflowRuns(anchor)
+	notes := fakeWorkflowNotes(anchor)
 	state := "active"
 	coordinator := WorkflowCoordinator{Author: "claude-coordinator", Pane: "fable", SessionID: "7b2e04"}
 	workDir := "/root/gitmoot"
@@ -983,21 +849,7 @@ func (f *FakeDataSource) Workflow(ctx context.Context, label string, q WorkflowQ
 	return view, nil
 }
 
-func (f *FakeDataSource) overallStateLockedForSnapshot(snap State) (NodeState, int64) {
-	state := NodeState("running")
-	var updated int64
-	for _, n := range snap.Nodes {
-		if n.ParentID == "" {
-			state = n.State
-		}
-		if u := nodeUpdated(n); u > updated {
-			updated = u
-		}
-	}
-	return state, updated
-}
-
-// nodeUpdatedLocked returns a node's most-recent activity time (epoch ms): its
+// nodeUpdated returns a node's most-recent activity time (epoch ms): its
 // last timeline event, falling back to EndedAt/StartedAt.
 func nodeUpdated(n Node) int64 {
 	updated := n.StartedAt
@@ -1012,12 +864,10 @@ func nodeUpdated(n Node) int64 {
 	return updated
 }
 
-// fakeKind maps a fake node to a plausible job kind (ask|review|implement|
-// orchestrate) from its depth/title so the Jobs page has something to group on.
+// fakeKind maps a fake node to a plausible job kind (ask|review|implement) from
+// its title so the Jobs page has something to group on.
 func fakeKind(n Node) string {
 	switch {
-	case n.Depth == 0:
-		return "orchestrate"
 	case strings.HasPrefix(n.Title, "implement"):
 		return "implement"
 	case strings.Contains(n.Title, "review"):
@@ -1081,14 +931,14 @@ func jobSummaryFor(n Node, runID string) JobSummary {
 // that run's nodes into per-job rows, sorted Updated desc.
 func (f *FakeDataSource) Jobs(ctx context.Context) ([]JobSummary, error) {
 	f.mu.Lock()
-	snap := f.cloneStateLocked()
+	nodes := f.cloneNodesLocked()
 	f.mu.Unlock()
 
-	jobs := make([]JobSummary, 0, len(snap.Nodes))
-	for _, n := range snap.Nodes {
-		jobs = append(jobs, jobSummaryFor(n, snap.RunID))
+	jobs := make([]JobSummary, 0, len(nodes)+1)
+	for _, n := range nodes {
+		jobs = append(jobs, jobSummaryFor(n, fakeRunID))
 	}
-	jobs = append(jobs, jobSummaryFor(fakeEphemeralGalaxyNode(snap.Nodes[0].StartedAt), snap.RunID))
+	jobs = append(jobs, jobSummaryFor(fakeUnregisteredGalaxyNode(nodes[0].StartedAt), fakeRunID))
 	sort.SliceStable(jobs, func(i, j int) bool {
 		if jobs[i].Updated != jobs[j].Updated {
 			return jobs[i].Updated > jobs[j].Updated // Updated desc
@@ -1125,24 +975,23 @@ type fakeAgent struct {
 // config values are constant (no time.Now()) so a clicked-through detail is
 // byte-stable.
 var fakeAgents = []fakeAgent{
-	{name: "project-lead", role: "coordinator", runtime: "codex", model: "gpt-5.5", capabilities: []string{"orchestrate", "review"}, autonomyPolicy: "workspace-write", health: "healthy", repoScope: []string{fakeRepo},
-		config: &AgentConfigInfo{MaxBackground: 4, IdleTimeout: "10m", JobTimeout: "1h", Model: "gpt-5.5", Template: "coordinator", Capabilities: []string{"orchestrate", "review"}}},
+	{name: "project-lead", role: "coordinator", runtime: "codex", model: "gpt-5.5", capabilities: []string{"ask", "review"}, autonomyPolicy: "workspace-write", health: "healthy", repoScope: []string{fakeRepo},
+		config: &AgentConfigInfo{JobTimeout: "1h", Model: "gpt-5.5", Capabilities: []string{"ask", "review"}}},
 	{name: "implementer", role: "implementer", runtime: "codex", model: "gpt-5.5", capabilities: []string{"implement"}, autonomyPolicy: "workspace-write", health: "healthy", repoScope: []string{fakeRepo},
-		config: &AgentConfigInfo{MaxBackground: 6, IdleTimeout: "5m", JobTimeout: "45m", Model: "gpt-5.5", Capabilities: []string{"implement"}}},
+		config: &AgentConfigInfo{JobTimeout: "45m", Model: "gpt-5.5", Capabilities: []string{"implement"}}},
 	{name: "integrator", role: "integrator", runtime: "codex", capabilities: []string{"review", "integrate"}, autonomyPolicy: "workspace-write", health: "healthy", repoScope: []string{fakeRepo}},
 	{name: "researcher", role: "researcher", runtime: "claude", model: "claude-opus-4-8", capabilities: []string{"research"}, autonomyPolicy: "read-only", health: "healthy",
-		config: &AgentConfigInfo{MaxBackground: 2, IdleTimeout: "15m", JobTimeout: "30m", Model: "claude-opus-4-8", Template: "researcher", Capabilities: []string{"research"}}},
+		config: &AgentConfigInfo{JobTimeout: "30m", Model: "claude-opus-4-8", Capabilities: []string{"research"}}},
 	{name: "reviewer-kimi", role: "reviewer", runtime: "kimi", model: "kimi-code", capabilities: []string{"review"}, autonomyPolicy: "read-only", health: "degraded",
-		config: &AgentConfigInfo{MaxBackground: 3, IdleTimeout: "10m", JobTimeout: "30m", Model: "kimi-code", Template: "reviewer", Capabilities: []string{"review"}}},
+		config: &AgentConfigInfo{JobTimeout: "30m", Model: "kimi-code", Capabilities: []string{"review"}}},
 	{name: "ci-runner", role: "ci", runtime: "shell", capabilities: []string{"ci", "lint"}, autonomyPolicy: "workspace-write", health: "healthy", repoScope: []string{fakeRepo}},
 }
 
-// Agents implements DataSource. It returns the registered agents (with job
-// counts aggregated live from the seeded run) plus one synthetic rollup row for
-// the fleet of ephemeral workers (Ephemeral == true).
+// Agents implements DataSource. It returns the registered agents with job
+// counts aggregated live from the seeded run.
 func (f *FakeDataSource) Agents(ctx context.Context) ([]AgentSummary, error) {
 	f.mu.Lock()
-	snap := f.cloneStateLocked()
+	nodes := f.cloneNodesLocked()
 	f.mu.Unlock()
 
 	// Aggregate per-agent counts from the run's jobs.
@@ -1151,7 +1000,7 @@ func (f *FakeDataSource) Agents(ctx context.Context) ([]AgentSummary, error) {
 		lastActive                       int64
 	}
 	byAgent := map[string]*agg{}
-	for _, n := range snap.Nodes {
+	for _, n := range nodes {
 		a := byAgent[n.Agent]
 		if a == nil {
 			a = &agg{}
@@ -1171,7 +1020,7 @@ func (f *FakeDataSource) Agents(ctx context.Context) ([]AgentSummary, error) {
 		}
 	}
 
-	out := make([]AgentSummary, 0, len(fakeAgents)+1)
+	out := make([]AgentSummary, 0, len(fakeAgents))
 	for _, fa := range fakeAgents {
 		s := AgentSummary{
 			Name:           fa.name,
@@ -1193,175 +1042,12 @@ func (f *FakeDataSource) Agents(ctx context.Context) ([]AgentSummary, error) {
 		out = append(out, s)
 	}
 
-	// One synthetic rollup row for the fleet of ephemeral workers.
-	out = append(out, AgentSummary{
-		Name:           "ephemeral-workers",
-		Role:           "worker",
-		Runtime:        "codex",
-		Capabilities:   []string{"implement", "review"},
-		AutonomyPolicy: "workspace-write",
-		Health:         "healthy",
-		Ephemeral:      true,
-		JobCount:       128,
-		RunningCount:   3,
-		SucceededCount: 119,
-		FailedCount:    6,
-		LastActive:     time.Now().UnixMilli(),
-	})
 	return out, nil
 }
 
-// fakeTemplatedAgent is the one seeded agent whose click-through detail carries
-// a template and version history; every other agent's AgentDetail has Template
-// nil. It is deliberately an agent that does not appear in the seeded run so its
-// summary counts (and thus its whole AgentDetail) are byte-stable across calls.
-const fakeTemplatedAgent = "researcher"
-
-// fakeGalaxyPanelAgent appears in the seeded graph and carries a compact
-// template record so the Galaxy inspector exercises its complete state.
-const fakeGalaxyPanelAgent = "project-lead"
-
-// The three prompt bodies below are fakeTemplatedAgent's full template content at
-// each version. They are multi-line markdown and deliberately DIFFERENT per
-// version (v1 base → v2 widens fan-out → v3 adds a verification pass) so the
-// detail view's content viewer is exercised, and each contains angle brackets,
-// ampersands, and quotes so the client's HTML-escaping is exercised too. Constant
-// (no time.Now()) so the whole AgentDetail stays byte-stable across calls.
-const (
-	fakeResearcherPromptV1 = `# Researcher agent
-
-You are a **research agent**. Given a question, find the current
-state-of-the-art answer & cite every source.
-
-## Method
-1. Decompose the question into sub-queries.
-2. Search the web; prefer primary sources & standards bodies over blog summaries.
-3. Synthesize a concise answer.
-
-## Output
-Return findings as <finding> blocks and quote sources verbatim inside
-"double quotes". Never invent a citation.
-`
-	fakeResearcherPromptV2 = `# Researcher agent
-
-You are a **research agent**. Given a question, find the current
-state-of-the-art answer & cite every source.
-
-## Method
-1. Decompose the question into up to 8 sub-queries.
-2. Fan out all sub-queries in parallel, then dedupe the results.
-3. Search the web; prefer primary sources & standards bodies over blog summaries.
-4. Synthesize a concise answer.
-
-## Output
-Return findings as <finding> blocks and quote sources verbatim inside
-"double quotes". Never invent a citation.
-`
-	fakeResearcherPromptV3 = `# Researcher agent
-
-You are a **research agent**. Given a question, find the current
-state-of-the-art answer & cite every source.
-
-## Method
-1. Decompose the question into up to 8 sub-queries.
-2. Fan out all sub-queries in parallel, then dedupe the results.
-3. Search the web; prefer primary sources & standards bodies over blog summaries.
-4. Adversarially verify each claim against a second source; drop any
-   claim you cannot corroborate.
-5. Synthesize a concise answer.
-
-## Output
-Return findings as <finding> blocks and quote sources verbatim inside
-"double quotes". Never invent a citation.
-`
-)
-
-// fakeAgentTemplate is the template fakeTemplatedAgent is instantiated from. Its
-// ResolvedCommit and Content match the currently-promoted version below (v1, the
-// version the template currently resolves to). All values are constant so the
-// detail is deterministic.
-var fakeAgentTemplate = AgentTemplateInfo{
-	ID:             "tmpl-researcher",
-	Name:           "researcher",
-	Description:    "SOTA / best-solution research agent that cites its sources",
-	SourceRepo:     "jerryfane/gitmoot",
-	SourceRef:      "main",
-	SourcePath:     "agents/researcher.md",
-	ResolvedCommit: "3c3824f9a1b2c4d5e6f70819a2b3c4d5e6f70819",
-	Content:        fakeResearcherPromptV1,
-}
-
-// fakeAgentVersions is fakeTemplatedAgent's version history, newest first, across
-// the pending/canary/promoted states so the version-history UI is fully
-// exercised: v1 is the promoted version the template currently resolves to
-// (Current), v2 is a canary being sampled (CanarySample), v3 is a newly proposed
-// pending candidate. Timestamps are anchored on fakeChartsNow (never time.Now())
-// so the detail is byte-stable across calls.
-var fakeAgentVersions = []TemplateVersionInfo{
-	{
-		ID:          "tmpl-researcher-v3",
-		Number:      3,
-		State:       "pending",
-		Name:        "researcher",
-		Description: "propose: add adversarial claim-verification pass",
-		SourceRef:   "main",
-		CreatedAt:   fakeChartsNow.Add(-6 * time.Hour).UnixMilli(),
-		Content:     fakeResearcherPromptV3,
-	},
-	{
-		ID:             "tmpl-researcher-v2",
-		Number:         2,
-		State:          "canary",
-		Name:           "researcher",
-		Description:    "widen source fan-out to 8 parallel searches",
-		SourceRef:      "main",
-		ResolvedCommit: "9f8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c",
-		CreatedAt:      fakeChartsNow.AddDate(0, 0, -2).UnixMilli(),
-		CanarySample:   0.15,
-		Content:        fakeResearcherPromptV2,
-	},
-	{
-		ID:             "tmpl-researcher-v1",
-		Number:         1,
-		State:          "current", // live version (store emits 'current', never 'promoted')
-		Name:           "researcher",
-		Description:    "initial captured researcher agent",
-		SourceRef:      "main",
-		ResolvedCommit: "3c3824f9a1b2c4d5e6f70819a2b3c4d5e6f70819",
-		CreatedAt:      fakeChartsNow.AddDate(0, 0, -9).UnixMilli(),
-		PromotedAt:     fakeChartsNow.AddDate(0, 0, -8).UnixMilli(),
-		Current:        true,
-		Content:        fakeResearcherPromptV1,
-	},
-}
-
-var fakeCoordinatorTemplate = AgentTemplateInfo{
-	ID:             "tmpl-coordinator",
-	Name:           "coordinator",
-	Description:    "Coordinates delegation trees and synthesizes their outcomes",
-	SourceRepo:     "jerryfane/gitmoot",
-	SourceRef:      "main",
-	SourcePath:     "agents/coordinator.md",
-	ResolvedCommit: "6f4c9d218a37b510e2f6548bd90ac1734ef21865",
-}
-
-var fakeCoordinatorVersions = []TemplateVersionInfo{{
-	ID:             "tmpl-coordinator-v4",
-	Number:         4,
-	State:          "current",
-	Name:           "coordinator",
-	Description:    "current coordinator policy",
-	SourceRef:      "main",
-	ResolvedCommit: "6f4c9d218a37b510e2f6548bd90ac1734ef21865",
-	CreatedAt:      fakeChartsNow.AddDate(0, 0, -6).UnixMilli(),
-	PromotedAt:     fakeChartsNow.AddDate(0, 0, -5).UnixMilli(),
-	Current:        true,
-}}
-
 // Agent implements DataSource. It returns the click-through detail for a single
 // agent: the same AgentSummary row Agents() lists (so counts line up with the
-// Agents page), plus template histories for the Agents-page fixture and the
-// Galaxy-visible coordinator. Unknown names return ErrAgentNotFound.
+// Agents page) plus its config section. Unknown names return ErrAgentNotFound.
 func (f *FakeDataSource) Agent(ctx context.Context, name string) (AgentDetail, error) {
 	agents, err := f.Agents(ctx)
 	if err != nil {
@@ -1371,16 +1057,7 @@ func (f *FakeDataSource) Agent(ctx context.Context, name string) (AgentDetail, e
 		if a.Name != name {
 			continue
 		}
-		detail := AgentDetail{AgentSummary: a, Versions: []TemplateVersionInfo{}}
-		if name == fakeTemplatedAgent {
-			tmpl := fakeAgentTemplate
-			detail.Template = &tmpl
-			detail.Versions = append([]TemplateVersionInfo(nil), fakeAgentVersions...)
-		} else if name == fakeGalaxyPanelAgent {
-			tmpl := fakeCoordinatorTemplate
-			detail.Template = &tmpl
-			detail.Versions = append([]TemplateVersionInfo(nil), fakeCoordinatorVersions...)
-		}
+		detail := AgentDetail{AgentSummary: a}
 		// Config section comes from the registered fakeAgent (nil config => "no
 		// config entry" in the panel). Constant, so the detail stays byte-stable
 		// across calls.
@@ -1401,7 +1078,7 @@ func (f *FakeDataSource) Agent(ctx context.Context, name string) (AgentDetail, e
 }
 
 // fakeChartsNow is the fixed reference instant the Charts/Health fake views
-// treat as "now". Unlike the live-advancing run state (Runs/State/Jobs/Agents,
+// treat as "now". Unlike the live-advancing run (Jobs/Agents,
 // which embed time.Now() and evolve as the background goroutine ticks), the
 // Charts and Health views must be byte-stable across polls so their handlers'
 // repeat-call equality tests hold. Every relative value they derive — day
@@ -1655,8 +1332,8 @@ const (
 )
 
 // Health implements DataSource. It derives the daemon liveness, fleet totals,
-// held locks, wedged jobs and recent failures from the fixed fakeHistory fixture
-// (and fixed lock fixtures), anchored on fakeChartsNow. Output is deterministic
+// held resource locks, wedged jobs and recent failures from the fixed
+// fakeHistory fixture (and fixed lock fixtures), anchored on fakeChartsNow. Output is deterministic
 // and byte-stable across calls.
 func (f *FakeDataSource) Health(ctx context.Context) (Health, error) {
 	recs := fakeHistory()
@@ -1683,17 +1360,10 @@ func (f *FakeDataSource) Health(ctx context.Context) (Health, error) {
 		}
 	}
 
-	// Branch/checkout locks, oldest first.
-	locks := []HealthLock{
-		{Repo: fakeRepo, Branch: "feat/export-csv", Owner: "implementer", AcquiredAt: now - 8*minute},
-		{Repo: "jerryfane/noted", Branch: "feat/bulk-delete", Owner: "implementer", AcquiredAt: now - 3*minute},
-	}
-	sort.SliceStable(locks, func(i, j int) bool { return locks[i].AcquiredAt < locks[j].AcquiredAt })
-
-	// Non-branch resource locks (runtime sessions, etc.), oldest first.
+	// Resource locks (runtime sessions, etc.), oldest first.
 	resLocks := []HealthResourceLock{
 		{Key: "runtime:claude:sess-7f3a", Owner: "researcher", AcquiredAt: now - 12*minute, ExpiresAt: now + 18*minute},
-		{Key: "skillopt-train-generation:acme", Owner: "ci-runner", AcquiredAt: now - 2*minute, ExpiresAt: now + 28*minute},
+		{Key: "runtime:codex:sess-91c2", Owner: "implementer", AcquiredAt: now - 2*minute, ExpiresAt: now + 28*minute},
 	}
 	sort.SliceStable(resLocks, func(i, j int) bool { return resLocks[i].AcquiredAt < resLocks[j].AcquiredAt })
 
@@ -1760,7 +1430,6 @@ func (f *FakeDataSource) Health(ctx context.Context) (Health, error) {
 			CheckedAt:       now - 30*minute,
 		},
 		Totals:         totals,
-		Locks:          locks,
 		ResourceLocks:  resLocks,
 		Stuck:          stuck,
 		RecentFailures: failures,
@@ -1781,18 +1450,14 @@ func (f *FakeDataSource) Config(ctx context.Context) (ConfigSnapshot, error) {
 				{Key: "rate_limit_per_hour", Value: 4200, Default: 4500, IsDefault: false, Kind: "int", Doc: "Reserve-aware GitHub request budget per hour."},
 			}},
 			{Name: "orchestrate", Knobs: []ConfigKnob{
-				{Key: "blocked_ttl", Value: "30m", Default: "30m", IsDefault: true, Kind: "duration", Doc: "Time a blocked orchestration remains resumable."},
-			}},
-			{Name: "skillopt", Knobs: []ConfigKnob{
-				{Key: "auto_promote", Value: false, Default: false, IsDefault: true, Kind: "flag", Doc: "Promote passing template candidates without a human gate."},
-				{Key: "pace_gate", Value: true, Default: true, IsDefault: true, Kind: "flag", Doc: "Require PACE quality gates during template optimization."},
+				{Key: "blocked_ttl", Value: "30m", Default: "30m", IsDefault: true, Kind: "duration", Doc: "Maximum time a blocked job remains awaiting a human; empty disables expiry."},
 			}},
 		},
 		Agents: []ConfigAgent{
-			{Name: "galaxy-impl", Runtime: "codex", Model: "gpt-5.6-codex", Capabilities: []string{"ask", "implement"}, AutonomyPolicy: "workspace-write", MaxBackground: 2},
-			{Name: "lead", Runtime: "claude", Model: "opus-4.6", Capabilities: []string{"ask", "implement", "review"}, AutonomyPolicy: "workspace-write", MaxBackground: 3},
-			{Name: "researcher", Runtime: "kimi", Model: "kimi-k2.5", Capabilities: []string{"ask", "review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
-			{Name: "reviewer", Runtime: "codex", Model: "gpt-5.6-codex", Capabilities: []string{"review"}, AutonomyPolicy: "read-only", MaxBackground: 1},
+			{Name: "galaxy-impl", Runtime: "codex", Model: "gpt-5.6-codex", Capabilities: []string{"ask", "implement"}, AutonomyPolicy: "workspace-write"},
+			{Name: "lead", Runtime: "claude", Model: "opus-4.6", Capabilities: []string{"ask", "implement", "review"}, AutonomyPolicy: "workspace-write"},
+			{Name: "researcher", Runtime: "kimi", Model: "kimi-k2.5", Capabilities: []string{"ask", "review"}, AutonomyPolicy: "read-only"},
+			{Name: "reviewer", Runtime: "codex", Model: "gpt-5.6-codex", Capabilities: []string{"review"}, AutonomyPolicy: "read-only"},
 		},
 		UnknownKeys: []string{"experimental.scheduler_bias", "plugins.private_token"},
 		Keychain:    fakeKeychain(),
@@ -1839,105 +1504,6 @@ func fakeMissingKeychain() KeychainView {
 		File: KeychainFileStatus{Path: "/home/operator/.config/gitmoot/keychain.env", Status: "missing"},
 		Keys: []KeychainKeyView{},
 	}
-}
-
-// fakeSkills builds the fixed SkillOpt evolution fixture behind the Learning
-// page's Skills view. Every timestamp is anchored on fakeChartsNow (never
-// time.Now()) so the view is byte-stable across polls. It models three templates
-// that together exercise the UI: a healthy rising-score template evolved through
-// five versions (researcher); a template with an in-flight canary being sampled
-// AND a freshly proposed pending candidate (reviewer); and a flat two-version
-// template whose score never moved (coordinator). Only real-emittable version
-// states are used: the live version is "current" and each promoted-then-replaced
-// predecessor is "superseded" (the store never emits a "promoted" version state —
-// PromoteAgentTemplateVersion writes 'current'/'superseded'), plus "canary" and
-// "pending" for in-flight candidates.
-func fakeSkills() Skills {
-	dA := func(n int) int64 { return fakeChartsNow.AddDate(0, 0, -n).UnixMilli() }
-	hA := func(n int) int64 { return fakeChartsNow.Add(-time.Duration(n) * time.Hour).UnixMilli() }
-
-	templates := []SkillTemplate{
-		// Healthy, rising score: four superseded predecessors and the live "current"
-		// version (the store supersedes the old current on each promotion).
-		{
-			TemplateID: "skill-researcher",
-			Name:       "researcher",
-			Agents:     []string{"researcher"},
-			Versions: []SkillVersion{
-				{Number: 1, State: "superseded", Score: 0.62, HasScore: true, CreatedAt: dA(20), PromotedAt: dA(19)},
-				{Number: 2, State: "superseded", Score: 0.68, HasScore: true, CreatedAt: dA(15), PromotedAt: dA(14)},
-				{Number: 3, State: "superseded", Score: 0.71, HasScore: true, CreatedAt: dA(10), PromotedAt: dA(9)},
-				{Number: 4, State: "superseded", Score: 0.77, HasScore: true, CreatedAt: dA(5), PromotedAt: dA(4)},
-				{Number: 5, State: "current", Score: 0.83, HasScore: true, CreatedAt: dA(2), PromotedAt: dA(1)},
-			},
-			CurrentVersion: 5,
-			CurrentState:   "current",
-			LastPromotedAt: dA(1),
-			Pending:        []SkillCandidate{},
-		},
-		// Active canary being sampled at 0.15, plus a pending candidate awaiting
-		// review while the live "current" version stays in production.
-		{
-			TemplateID: "skill-reviewer",
-			Name:       "reviewer",
-			Agents:     []string{"reviewer-kimi"},
-			Versions: []SkillVersion{
-				{Number: 1, State: "current", Score: 0.70, HasScore: true, CreatedAt: dA(9), PromotedAt: dA(8)},
-				{Number: 2, State: "canary", CreatedAt: dA(2)}, // mid-canary: no final score yet
-				{Number: 3, State: "pending", CreatedAt: hA(6)},
-			},
-			CurrentVersion:  1,
-			CurrentState:    "current",
-			CanarySample:    0.15,
-			CanaryStartedAt: dA(2),
-			LastPromotedAt:  dA(8),
-			Pending: []SkillCandidate{
-				{VersionID: "skill-reviewer-v3", Number: 3, Score: "0.81", CreatedAt: hA(6)},
-			},
-		},
-		// Flat: a superseded predecessor and the live "current" version, unchanged score.
-		{
-			TemplateID: "skill-coordinator",
-			Name:       "coordinator",
-			Agents:     []string{"project-lead"},
-			Versions: []SkillVersion{
-				{Number: 1, State: "superseded", Score: 0.75, HasScore: true, CreatedAt: dA(12), PromotedAt: dA(11)},
-				{Number: 2, State: "current", Score: 0.75, HasScore: true, CreatedAt: dA(6), PromotedAt: dA(5)},
-			},
-			CurrentVersion: 2,
-			CurrentState:   "current",
-			LastPromotedAt: dA(5),
-			Pending:        []SkillCandidate{},
-		},
-	}
-
-	// Pending-first, then most-recently-promoted (LastPromotedAt desc), with a
-	// TemplateID tie-break so the order is fully deterministic.
-	sort.SliceStable(templates, func(i, j int) bool {
-		pi, pj := len(templates[i].Pending) > 0, len(templates[j].Pending) > 0
-		if pi != pj {
-			return pi
-		}
-		if templates[i].LastPromotedAt != templates[j].LastPromotedAt {
-			return templates[i].LastPromotedAt > templates[j].LastPromotedAt
-		}
-		return templates[i].TemplateID < templates[j].TemplateID
-	})
-
-	skills := Skills{Templates: templates}
-	for i := range templates {
-		if templates[i].CanarySample > 0 {
-			skills.ActiveCanaries++
-		}
-		skills.PendingTotal += len(templates[i].Pending)
-	}
-	return skills
-}
-
-// Skills implements DataSource. It returns the fixed fakeSkills fixture; output
-// is deterministic and byte-stable across calls.
-func (f *FakeDataSource) Skills(ctx context.Context) (Skills, error) {
-	return fakeSkills(), nil
 }
 
 // fakeJobChecks builds the fixed job-detail failed-check fixture (gitmoot #711),
