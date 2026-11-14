@@ -1919,7 +1919,7 @@ class Component extends DCLogic {
     if (!this._galaxyGraph) return;
     const raw = this._galaxyRaw || { nodes: [], links: [] };
     // fresh clones so force-graph can mutate x/y and resolve source/target refs
-    const nodes = (raw.nodes || []).map(n => ({ id: n.id, type: n.type, label: n.label, state: n.state, agent: n.reviewer, repo: n.repo, run: n.root, jobCount: n.runCount, noteCount: n.noteCount, tokensIn: n.tokensIn, tokensOut: n.tokensOut }));
+    const nodes = (raw.nodes || []).map(n => ({ id: n.id, type: n.type, label: n.label, state: n.state, reviewer: n.reviewer, repo: n.repo, root: n.root, runCount: n.runCount, noteCount: n.noteCount, tokensIn: n.tokensIn, tokensOut: n.tokensOut }));
     const links = (raw.links || []).map(l => ({ source: (l.source && l.source.id) || l.source, target: (l.target && l.target.id) || l.target, kind: l.kind }));
     this.syncGalaxyWorkflowLegend(nodes.some(n => n.type === 'campaign'));
     // FIX-4: the legacy prefix is byte-identical to the original counts + id:state
@@ -2026,7 +2026,7 @@ class Component extends DCLogic {
       const n = nodes[i];
       if (n.type !== 'campaign') continue;
       workflowNodes++;
-      addWorkflow('n:' + (n.id || '') + ':' + (n.jobCount || 0) + ':' + (n.noteCount || 0) + ':' + (n.tokensIn || 0) + ':' + (n.tokensOut || 0));
+      addWorkflow('n:' + (n.id || '') + ':' + (n.runCount || 0) + ':' + (n.noteCount || 0) + ':' + (n.tokensIn || 0) + ':' + (n.tokensOut || 0));
     }
     for (let i = 0; i < links.length; i++) {
       const l = links[i];
@@ -2118,7 +2118,7 @@ class Component extends DCLogic {
   }
 
   _galaxyAgentName(node) {
-    return String((node && (node.agent || node.label)) || (node && node.id) || '').replace(/^agent::/, '');
+    return String((node && (node.reviewer || node.label)) || (node && node.id) || '').replace(/^agent::/, '');
   }
 
   _galaxyFetchJSON(url) {
