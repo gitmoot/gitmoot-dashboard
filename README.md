@@ -23,11 +23,11 @@ HTTP surface:
 | Route | Returns |
 | --- | --- |
 | `GET /api/overview` | `Overview` |
-| `GET /api/tasks` | `[]TaskSummary` |
-| `GET /api/workflows`, `GET /api/workflow/{label}` | `[]WorkflowIndexEntry`, `WorkflowView` |
-| `GET /api/jobs`, `GET /api/job/{id}` | `[]JobSummary`, `Node` |
-| `GET /api/job/{id}/checks` | `JobChecks` |
-| `GET /api/agents`, `GET /api/agent/{name}` | `[]AgentSummary`, `AgentDetail` |
+| `GET /api/prs` | `[]TaskSummary` |
+| `GET /api/campaigns`, `GET /api/campaign/{label}` | `[]WorkflowIndexEntry`, `WorkflowView` |
+| `GET /api/runs`, `GET /api/run/{id}` | `[]JobSummary`, `Node` |
+| `GET /api/run/{id}/checks` | `JobChecks` |
+| `GET /api/reviewers`, `GET /api/reviewer/{name}` | `[]AgentSummary`, `AgentDetail` |
 | `GET /api/org`, `GET /api/org/role/{name}` | `OrgView`, `OrgRoleView` |
 | `GET /api/graph?repo=` | `Graph` (Galaxy) |
 | `GET /api/charts?days=` | `Charts` |

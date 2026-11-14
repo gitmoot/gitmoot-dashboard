@@ -20,13 +20,13 @@ type Event struct {
 	Label string `json:"label"`
 }
 
-// Node is the full detail of a single job served by GET /api/job/{id}.
+// Node is the full detail of a single job served by GET /api/run/{id}.
 type Node struct {
 	ID        string    `json:"id"`
 	ParentID  string    `json:"parentId,omitempty"`
 	Deps      []string  `json:"deps,omitempty"`
 	Title     string    `json:"title"`
-	Agent     string    `json:"agent"`
+	Agent     string    `json:"reviewer"`
 	Runtime   string    `json:"runtime"` // codex | claude | kimi | shell
 	Model     string    `json:"model,omitempty"`
 	State     NodeState `json:"state"`
@@ -46,14 +46,14 @@ type Node struct {
 type JobSummary struct {
 	ID      string `json:"id"`
 	Title   string `json:"title"` // first line of prompt, fallback id
-	Agent   string `json:"agent,omitempty"`
+	Agent   string `json:"reviewer,omitempty"`
 	Runtime string `json:"runtime,omitempty"` // codex | claude | kimi | shell
 	Repo    string `json:"repo,omitempty"`
 	// Kind is the job's action/type: ask | review | implement | ...
 	Kind      string    `json:"kind,omitempty"`
 	State     NodeState `json:"state"`
-	Depth     int       `json:"depth"`         // job-tree depth (0 = root)
-	Run       string    `json:"run,omitempty"` // root/run id this job belongs to
+	Depth     int       `json:"depth"`          // job-tree depth (0 = root)
+	Run       string    `json:"root,omitempty"` // root/run id this job belongs to
 	PR        int       `json:"pr,omitempty"`
 	Started   int64     `json:"started,omitempty"`  // epoch ms
 	Updated   int64     `json:"updated,omitempty"`  // epoch ms
@@ -73,7 +73,7 @@ type AgentSummary struct {
 	Capabilities   []string `json:"capabilities,omitempty"`
 	AutonomyPolicy string   `json:"autonomyPolicy,omitempty"`
 	Health         string   `json:"health,omitempty"`
-	JobCount       int      `json:"jobCount"`
+	JobCount       int      `json:"runCount"`
 	RunningCount   int      `json:"runningCount"`
 	SucceededCount int      `json:"succeededCount"`
 	FailedCount    int      `json:"failedCount"`
@@ -99,28 +99,28 @@ type AgentDetail struct {
 	Config *AgentConfigInfo `json:"config,omitempty"`
 }
 
-// GraphNode is a node in the whole-history "galaxy" graph. Type is "job" (a real
-// job, colored by State), "repo" (a repository hub), "agent" (an agent hub), or
-// "workflow" (a label hub). The hubs are synthetic grouping nodes that cluster
+// GraphNode is a node in the whole-history "galaxy" graph. Type is "run" (a real
+// job, colored by State), "repo" (a repository hub), "reviewer" (an agent hub), or
+// "campaign" (a label hub). The hubs are synthetic grouping nodes that cluster
 // jobs and give the force-directed graph its structure. Rollup fields are only
 // populated on workflow hubs.
 type GraphNode struct {
 	ID        string    `json:"id"`
-	Type      string    `json:"type"` // job | repo | agent | workflow
+	Type      string    `json:"type"` // run | repo | reviewer | campaign
 	Label     string    `json:"label"`
 	State     NodeState `json:"state,omitempty"`
-	Agent     string    `json:"agent,omitempty"`
+	Agent     string    `json:"reviewer,omitempty"`
 	Repo      string    `json:"repo,omitempty"`
-	Run       string    `json:"run,omitempty"`
-	JobCount  int       `json:"jobCount,omitempty"`
+	Run       string    `json:"root,omitempty"`
+	JobCount  int       `json:"runCount,omitempty"`
 	NoteCount int       `json:"noteCount,omitempty"`
 	TokensIn  int       `json:"tokensIn,omitempty"`
 	TokensOut int       `json:"tokensOut,omitempty"`
 }
 
 // GraphLink is an edge in the galaxy graph. Kind is "parent"/"dep" (parent and
-// dependency links between jobs), "repo" (job -> its repo hub), "agent"
-// (job -> its agent hub), or "workflow" (labeled job -> its workflow hub).
+// dependency links between jobs), "repo" (job -> its repo hub), "reviewer"
+// (job -> its agent hub), or "campaign" (labeled job -> its workflow hub).
 type GraphLink struct {
 	Source string `json:"source"`
 	Target string `json:"target"`
@@ -142,7 +142,7 @@ type WorkflowSummary struct {
 	// Summary is an optional human-readable one-liner from workflow_meta. It is
 	// empty when unset and contains untrusted free text that clients must escape.
 	Summary   string `json:"summary"`
-	Jobs      int    `json:"jobs"`
+	Jobs      int    `json:"runs"`
 	Queued    int    `json:"queued"`
 	Running   int    `json:"running"`
 	Succeeded int    `json:"succeeded"`
@@ -166,7 +166,7 @@ type WorkflowCoordinator struct {
 
 // WorkflowCounts contains the index-level job outcomes and journal note count.
 type WorkflowCounts struct {
-	Jobs      int `json:"jobs"`
+	Jobs      int `json:"runs"`
 	Running   int `json:"running"`
 	Queued    int `json:"queued"`
 	Succeeded int `json:"succeeded"`
@@ -175,7 +175,7 @@ type WorkflowCounts struct {
 	Notes     int `json:"notes"`
 }
 
-// WorkflowIndexEntry is one row in GET /api/workflows. Namespace and Campaign
+// WorkflowIndexEntry is one row in GET /api/campaigns. Namespace and Campaign (wire: name)
 // are the first-slash split of Label; labels without a slash have an empty
 // Namespace. Timestamps are epoch milliseconds.
 type WorkflowIndexEntry struct {
@@ -184,7 +184,7 @@ type WorkflowIndexEntry struct {
 	// empty when unset and contains untrusted free text that clients must escape.
 	Summary     string              `json:"summary"`
 	Namespace   string              `json:"namespace"`
-	Campaign    string              `json:"campaign"`
+	Campaign    string              `json:"name"`
 	Auto        bool                `json:"auto"`
 	Coordinator WorkflowCoordinator `json:"coordinator"`
 	State       string              `json:"state"` // active | settled | stalled
@@ -199,13 +199,13 @@ type WorkflowIndexEntry struct {
 }
 
 // WorkflowNode is the compact job shape retained for complete workflow run
-// trees. Full job prompt, output, and events remain available from /api/job/{id}.
+// trees. Full job prompt, output, and events remain available from /api/run/{id}.
 type WorkflowNode struct {
 	ID        string    `json:"id"`
 	ParentID  string    `json:"parentId,omitempty"`
 	Deps      []string  `json:"deps,omitempty"`
 	Title     string    `json:"title"`
-	Agent     string    `json:"agent"`
+	Agent     string    `json:"reviewer"`
 	Runtime   string    `json:"runtime"`
 	Model     string    `json:"model,omitempty"`
 	State     NodeState `json:"state"`
@@ -218,7 +218,7 @@ type WorkflowNode struct {
 type WorkflowChild struct {
 	ID       string    `json:"id"`
 	Action   string    `json:"action"`
-	Agent    string    `json:"agent"`
+	Agent    string    `json:"reviewer"`
 	Runtime  string    `json:"runtime,omitempty"`
 	State    NodeState `json:"state"`
 	ElapsedS int64     `json:"elapsed_s"`
@@ -227,9 +227,9 @@ type WorkflowChild struct {
 // WorkflowRun is one complete run tree in a workflow page. Pagination is by
 // these roots, so Nodes is never split across pages.
 type WorkflowRun struct {
-	RunID     string          `json:"runId"`
+	RunID     string          `json:"rootId"`
 	Title     string          `json:"title"`
-	Agent     string          `json:"agent,omitempty"`
+	Agent     string          `json:"reviewer,omitempty"`
 	Runtime   string          `json:"runtime,omitempty"`
 	Repo      string          `json:"repo,omitempty"`
 	State     NodeState       `json:"state"`
@@ -259,9 +259,9 @@ type WorkflowView struct {
 	StalledForS    int64               `json:"stalled_for_s,omitempty"`
 	Coordinator    WorkflowCoordinator `json:"coordinator,omitempty"`
 	WorkDir        string              `json:"work_dir,omitempty"`
-	Runs           []WorkflowRun       `json:"runs"`
+	Runs           []WorkflowRun       `json:"roots"`
 	Notes          []WorkflowNoteView  `json:"notes"`
-	NextRunCursor  string              `json:"nextRunCursor"`
+	NextRunCursor  string              `json:"nextRootCursor"`
 	NextNoteCursor string              `json:"nextNoteCursor"`
 	Truncated      bool                `json:"truncated"`
 }
@@ -286,7 +286,7 @@ type WorkflowDataSource interface {
 // Link is either a dashboard path or an external URL. Stalled workflow cards
 // additionally carry the read-only coordinator handoff fields.
 type OverviewNeedsYou struct {
-	Kind      string `json:"kind"` // pr_awaiting_merge | blocked_job | unlabeled_jobs | stalled_workflow
+	Kind      string `json:"kind"` // pr_awaiting_merge | blocked_run | unlabeled_runs | stalled_campaign
 	Repo      string `json:"repo,omitempty"`
 	Ref       string `json:"ref,omitempty"`
 	Title     string `json:"title"`
@@ -304,22 +304,22 @@ type OverviewNeedsYou struct {
 type OverviewWorkflowActivity struct {
 	Label       string   `json:"label"`
 	Namespace   string   `json:"namespace"`
-	Campaign    string   `json:"campaign"`
+	Campaign    string   `json:"name"`
 	Running     int      `json:"running"`
-	Agents      []string `json:"agents"`
+	Agents      []string `json:"reviewers"`
 	StartedAgoS int64    `json:"started_ago_s"`
 }
 
 // OverviewActivity is the live fleet block on the Overview page.
 type OverviewActivity struct {
-	Workflows      []OverviewWorkflowActivity `json:"workflows"`
+	Workflows      []OverviewWorkflowActivity `json:"campaigns"`
 	UnattendedNote string                     `json:"unattended_note,omitempty"`
 	Queued         int                        `json:"queued"`
 }
 
 // OverviewNotable is one of the five most-recent terminal jobs shown today.
 type OverviewNotable struct {
-	Agent    string `json:"agent"`
+	Agent    string `json:"reviewer"`
 	Title    string `json:"title"`
 	Outcome  string `json:"outcome"` // succeeded | failed | cancelled
 	ElapsedS int64  `json:"elapsed_s"`
@@ -339,10 +339,10 @@ type OverviewToday struct {
 
 // OverviewFleet is one registered agent's compact daily rollup.
 type OverviewFleet struct {
-	Agent     string `json:"agent"`
+	Agent     string `json:"reviewer"`
 	Runtime   string `json:"runtime"`
 	Running   bool   `json:"running"`
-	JobsToday int    `json:"jobs_today"`
+	JobsToday int    `json:"runs_today"`
 }
 
 // Overview is the additive operator-first landing-page snapshot.
@@ -359,7 +359,7 @@ type OverviewDataSource interface {
 	Overview(ctx context.Context) (Overview, error)
 }
 
-// TaskSummary is one read-only lifecycle card on GET /api/tasks. UpdatedAt is
+// TaskSummary is one read-only lifecycle card on GET /api/prs. UpdatedAt is
 // epoch milliseconds; AgeS is the server-computed display age. Merged entries
 // are limited to the most recent seven days by the data source.
 type TaskSummary struct {
@@ -367,7 +367,7 @@ type TaskSummary struct {
 	Title         string `json:"title"`
 	Repo          string `json:"repo"`
 	State         string `json:"state"` // pr_open | blocked | merged
-	Agent         string `json:"agent,omitempty"`
+	Agent         string `json:"reviewer,omitempty"`
 	PRNumber      int    `json:"pr_number,omitempty"`
 	CI            string `json:"ci,omitempty"` // green | red | pending | ""
 	BlockedReason string `json:"blocked_reason,omitempty"`
@@ -436,14 +436,14 @@ type OrgBadges struct {
 	// answers "is the lane busy right now"; JobsToday answers "what
 	// happened today". Lets a role whose seat has gone idle still show as
 	// active while its dispatched workers are mid-flight (gitmoot#1127).
-	ActiveJobs int `json:"active_jobs,omitempty"`
+	ActiveJobs int `json:"active_runs,omitempty"`
 }
 
 // OrgEscalation is one open read-only escalation.
 type OrgEscalation struct {
 	From     string `json:"from"`
 	To       string `json:"to"`
-	Wf       string `json:"wf"`
+	Wf       string `json:"campaign"`
 	Question string `json:"question"`
 	At       string `json:"at"` // RFC3339
 }
@@ -497,7 +497,7 @@ type OrgRoleRecycle struct {
 
 // OrgRoleActivity is the role's aggregate activity for the current UTC day.
 type OrgRoleActivity struct {
-	JobsToday map[string]int `json:"jobs_today"`
+	JobsToday map[string]int `json:"runs_today"`
 	Notes     int            `json:"notes"`
 }
 
@@ -519,32 +519,32 @@ type ChartDay struct {
 type ChartAgent struct {
 	Name      string `json:"name"`
 	Runtime   string `json:"runtime,omitempty"`
-	Jobs      int    `json:"jobs"`
+	Jobs      int    `json:"runs"`
 	TokensOut int    `json:"tokensOut,omitempty"`
 }
 
 // ChartRepo is one repository's job count over the charted range.
 type ChartRepo struct {
 	Repo string `json:"repo"`
-	Jobs int    `json:"jobs"`
+	Jobs int    `json:"runs"`
 }
 
 // ChartTotals rolls up the whole charted range into headline figures.
 type ChartTotals struct {
-	Jobs         int `json:"jobs"`
+	Jobs         int `json:"runs"`
 	Succeeded    int `json:"succeeded"`
 	Failed       int `json:"failed"`
 	TokensIn     int `json:"tokensIn"`
 	TokensOut    int `json:"tokensOut"`
-	ActiveAgents int `json:"activeAgents"` // distinct agents with >=1 job in range
+	ActiveAgents int `json:"activeReviewers"` // distinct agents with >=1 job in range
 }
 
 // Charts is the data behind the Charts page: a per-day time series plus
 // top-agent/top-repo breakdowns and range totals.
 type Charts struct {
-	Days   []ChartDay   `json:"days"`   // oldest->newest, continuous zero-filled range
-	Agents []ChartAgent `json:"agents"` // top 12 by Jobs desc, name tie-break
-	Repos  []ChartRepo  `json:"repos"`  // top 12 by Jobs desc, repo tie-break
+	Days   []ChartDay   `json:"days"`      // oldest->newest, continuous zero-filled range
+	Agents []ChartAgent `json:"reviewers"` // top 12 by Jobs desc, name tie-break
+	Repos  []ChartRepo  `json:"repos"`     // top 12 by Jobs desc, repo tie-break
 	Totals ChartTotals  `json:"totals"`
 }
 
@@ -661,7 +661,7 @@ type HealthResourceLock struct {
 type HealthStuckJob struct {
 	ID     string `json:"id"`
 	Title  string `json:"title"`
-	Agent  string `json:"agent,omitempty"`
+	Agent  string `json:"reviewer,omitempty"`
 	Repo   string `json:"repo,omitempty"`
 	State  string `json:"state"`
 	Reason string `json:"reason,omitempty"`
@@ -672,7 +672,7 @@ type HealthStuckJob struct {
 type HealthFailure struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`
-	Agent string `json:"agent,omitempty"`
+	Agent string `json:"reviewer,omitempty"`
 	Repo  string `json:"repo,omitempty"`
 	At    int64  `json:"at,omitempty"` // epoch ms
 }
@@ -707,7 +707,7 @@ type ResultCheck struct {
 // not run; an empty Failed under "warn"/"block" means the job passed every
 // check.
 type JobChecks struct {
-	JobID  string        `json:"jobId"`
+	JobID  string        `json:"runId"`
 	Mode   string        `json:"mode"`   // off | warn | block
 	Failed []ResultCheck `json:"failed"` // failed checks, insertion order; never nil
 }
@@ -715,10 +715,10 @@ type JobChecks struct {
 // AttentionGate is a blocked job waiting on a human-satisfiable gate (gitmoot
 // #693 job_gates): one open (unsatisfied) need on a job.
 type AttentionGate struct {
-	JobID     string    `json:"jobId"`
+	JobID     string    `json:"runId"`
 	Need      string    `json:"need"`
 	Title     string    `json:"title,omitempty"`
-	Agent     string    `json:"agent,omitempty"`
+	Agent     string    `json:"reviewer,omitempty"`
 	Repo      string    `json:"repo,omitempty"`
 	State     NodeState `json:"state,omitempty"`
 	PR        int       `json:"pr,omitempty"`

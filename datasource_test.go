@@ -8,24 +8,24 @@ import (
 
 func TestWorkflowAdditiveJSONContracts(t *testing.T) {
 	t.Run("legacy graph node omits workflow fields", func(t *testing.T) {
-		node := GraphNode{ID: "job-1", Type: "job", Label: "legacy", State: "running"}
+		node := GraphNode{ID: "job-1", Type: "run", Label: "legacy", State: "running"}
 		got, err := json.Marshal(node)
 		if err != nil {
 			t.Fatalf("marshal legacy GraphNode: %v", err)
 		}
-		const wantNode = `{"id":"job-1","type":"job","label":"legacy","state":"running"}`
+		const wantNode = `{"id":"job-1","type":"run","label":"legacy","state":"running"}`
 		if string(got) != wantNode {
 			t.Fatalf("legacy GraphNode JSON = %s, want %s", got, wantNode)
 		}
 	})
 
 	t.Run("labeled graph node round trips", func(t *testing.T) {
-		const payload = `{"id":"workflow::panel","type":"workflow","label":"panel","jobCount":7,"noteCount":3,"tokensIn":22400,"tokensOut":9700}`
+		const payload = `{"id":"workflow::panel","type":"campaign","label":"panel","runCount":7,"noteCount":3,"tokensIn":22400,"tokensOut":9700}`
 		var node GraphNode
 		if err := json.Unmarshal([]byte(payload), &node); err != nil {
 			t.Fatalf("unmarshal workflow GraphNode: %v", err)
 		}
-		if node.Type != "workflow" || node.JobCount != 7 || node.NoteCount != 3 || node.TokensIn != 22400 || node.TokensOut != 9700 {
+		if node.Type != "campaign" || node.JobCount != 7 || node.NoteCount != 3 || node.TokensIn != 22400 || node.TokensOut != 9700 {
 			t.Fatalf("workflow GraphNode fields = %+v", node)
 		}
 		got, err := json.Marshal(node)
@@ -63,7 +63,7 @@ func TestOrgBadgesActiveJobsAdditiveJSONContract(t *testing.T) {
 		if err != nil {
 			t.Fatalf("marshal OrgBadges with ActiveJobs: %v", err)
 		}
-		const want = `{"missed_wakes":0,"active_jobs":3}`
+		const want = `{"missed_wakes":0,"active_runs":3}`
 		if string(got) != want {
 			t.Fatalf("OrgBadges JSON = %s, want %s", got, want)
 		}
