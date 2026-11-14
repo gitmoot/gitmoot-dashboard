@@ -228,7 +228,7 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 // statusForError maps a DataSource error to an HTTP status code: not-found
 // sentinels become 404, everything else 500.
 func statusForError(err error) int {
-	if errors.Is(err, ErrRunNotFound) || errors.Is(err, ErrJobNotFound) || errors.Is(err, ErrAgentNotFound) || errors.Is(err, ErrOrgRoleNotFound) || errors.Is(err, ErrWorkflowNotFound) {
+	if errors.Is(err, ErrJobNotFound) || errors.Is(err, ErrAgentNotFound) || errors.Is(err, ErrOrgRoleNotFound) || errors.Is(err, ErrWorkflowNotFound) {
 		return http.StatusNotFound
 	}
 	return http.StatusInternalServerError
@@ -531,21 +531,8 @@ func (s *server) handleWorkflow(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, view)
 }
 
-// handleRuns serves GET /api/runs -> []RunSummary.
-func (s *server) handleRuns(w http.ResponseWriter, r *http.Request) {
-	runs, err := s.ds.Runs(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if runs == nil {
-		runs = []RunSummary{}
-	}
-	writeJSON(w, http.StatusOK, runs)
-}
-
 // handleJobs serves GET /api/jobs -> []JobSummary, every job across all runs
-// (the client filters). Mirrors handleRuns.
+// (the client filters).
 func (s *server) handleJobs(w http.ResponseWriter, r *http.Request) {
 	jobs, err := s.ds.Jobs(r.Context())
 	if err != nil {
@@ -558,7 +545,7 @@ func (s *server) handleJobs(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, jobs)
 }
 
-// handleAgents serves GET /api/agents -> []AgentSummary. Mirrors handleRuns.
+// handleAgents serves GET /api/agents -> []AgentSummary.
 func (s *server) handleAgents(w http.ResponseWriter, r *http.Request) {
 	agents, err := s.ds.Agents(r.Context())
 	if err != nil {
@@ -584,15 +571,11 @@ func (s *server) handleAgent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), statusForError(err))
 		return
 	}
-	if detail.Versions == nil {
-		detail.Versions = []TemplateVersionInfo{}
-	}
 	writeJSON(w, http.StatusOK, detail)
 }
 
 // handleCharts serves GET /api/charts?days=N -> Charts. days accepts only 0
 // (all history), 7, 30 or 90; any missing/invalid/other value defaults to 30.
-// Mirrors handleRuns.
 func (s *server) handleCharts(w http.ResponseWriter, r *http.Request) {
 	days := 30
 	switch r.URL.Query().Get("days") {
@@ -622,15 +605,12 @@ func (s *server) handleCharts(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, charts)
 }
 
-// handleHealth serves GET /api/health -> Health. Mirrors handleRuns.
+// handleHealth serves GET /api/health -> Health.
 func (s *server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	h, err := s.ds.Health(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), statusForError(err))
 		return
-	}
-	if h.Locks == nil {
-		h.Locks = []HealthLock{}
 	}
 	if h.ResourceLocks == nil {
 		h.ResourceLocks = []HealthResourceLock{}
@@ -680,32 +660,9 @@ func (s *server) handleConfig(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, c)
 }
 
-// handleLearningSkills serves GET /api/learning/skills -> Skills, the SkillOpt
-// evolution overview. Mirrors handleRuns; every list is coerced non-nil so the
-// client always sees JSON arrays.
-func (s *server) handleLearningSkills(w http.ResponseWriter, r *http.Request) {
-	skills, err := s.ds.Skills(r.Context())
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	if skills.Templates == nil {
-		skills.Templates = []SkillTemplate{}
-	}
-	for i := range skills.Templates {
-		if skills.Templates[i].Versions == nil {
-			skills.Templates[i].Versions = []SkillVersion{}
-		}
-		if skills.Templates[i].Pending == nil {
-			skills.Templates[i].Pending = []SkillCandidate{}
-		}
-	}
-	writeJSON(w, http.StatusOK, skills)
-}
-
 // handleAttention serves GET /api/attention -> Attention, the "Needs a human"
-// view (gitmoot #528). Mirrors handleRuns; Gates is coerced non-nil so the
-// client always sees a JSON array.
+// view (gitmoot #528). Gates is coerced non-nil so the client always sees a
+// JSON array.
 func (s *server) handleAttention(w http.ResponseWriter, r *http.Request) {
 	att, err := s.ds.Attention(r.Context())
 	if err != nil {
@@ -736,18 +693,6 @@ func (s *server) handleJobChecks(w http.ResponseWriter, r *http.Request) {
 		checks.Failed = []ResultCheck{}
 	}
 	writeJSON(w, http.StatusOK, checks)
-}
-
-// handleState serves GET /api/state?run=<id> -> State. An empty run resolves to
-// the active/most-recent run.
-func (s *server) handleState(w http.ResponseWriter, r *http.Request) {
-	run := r.URL.Query().Get("run")
-	state, err := s.ds.State(r.Context(), run)
-	if err != nil {
-		http.Error(w, err.Error(), statusForError(err))
-		return
-	}
-	writeJSON(w, http.StatusOK, state)
 }
 
 // handleJob serves GET /api/job/{id} -> Node.

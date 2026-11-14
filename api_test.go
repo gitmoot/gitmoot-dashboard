@@ -252,38 +252,6 @@ func TestHandleChangeEventsRegistryCapAndCleanup(t *testing.T) {
 	}
 }
 
-func TestHandleRuns(t *testing.T) {
-	srv := httptest.NewServer(Serve(NewFakeDataSource()))
-	defer srv.Close()
-
-	resp, err := http.Get(srv.URL + "/api/runs")
-	if err != nil {
-		t.Fatalf("GET /api/runs: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200", resp.StatusCode)
-	}
-	if ct := resp.Header.Get("Content-Type"); !strings.HasPrefix(ct, "application/json") {
-		t.Fatalf("Content-Type = %q, want application/json", ct)
-	}
-
-	var runs []RunSummary
-	if err := json.NewDecoder(resp.Body).Decode(&runs); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	if len(runs) != 1 {
-		t.Fatalf("len(runs) = %d, want 1", len(runs))
-	}
-	if runs[0].RunID != fakeRunID {
-		t.Fatalf("runs[0].RunID = %q, want %q", runs[0].RunID, fakeRunID)
-	}
-	if runs[0].Title == "" || runs[0].State == "" {
-		t.Fatalf("run summary missing title/state: %+v", runs[0])
-	}
-}
-
 func TestHandleWorkflowUnsupportedDataSource(t *testing.T) {
 	ds := noWorkflowDataSource{DataSource: NewFakeDataSource()}
 	srv := httptest.NewServer(Serve(ds))
@@ -500,10 +468,10 @@ func TestFakeOrgContractAndDeterminism(t *testing.T) {
 	if len(org.Escalations) != 2 || org.Health.OpenEscalations != len(org.Escalations) {
 		t.Fatalf("org escalations health=%+v escalations=%+v", org.Health, org.Escalations)
 	}
-	if len(org.Feed) != 3 {
+	if len(org.Feed) != 2 {
 		t.Fatalf("org feed = %+v", org.Feed)
 	}
-	allowedKinds := map[string]bool{"blocked_since": true, "recycle_overdue": true, "recycle": true}
+	allowedKinds := map[string]bool{"blocked_since": true, "recycle": true}
 	for _, row := range org.Feed {
 		if !allowedKinds[row.Kind] || row.Role == "" || row.At == "" {
 			t.Fatalf("invalid org feed row = %+v", row)
@@ -690,14 +658,6 @@ func TestHandleWorkflowClampsCursorsAndLimits(t *testing.T) {
 func TestFakeWorkflowContractAndPagination(t *testing.T) {
 	t.Setenv("FAKEFEED_WORKFLOWS", "1")
 	ds := NewFakeDataSource()
-
-	state, err := ds.State(context.Background(), fakeRunID)
-	if err != nil {
-		t.Fatalf("State: %v", err)
-	}
-	if state.Workflow != fakeWorkflow {
-		t.Fatalf("State.Workflow = %q, want %q", state.Workflow, fakeWorkflow)
-	}
 	graph, err := ds.Graph(context.Background(), "")
 	if err != nil {
 		t.Fatalf("Graph: %v", err)
@@ -768,6 +728,7 @@ func TestFakeWorkflowContractAndPagination(t *testing.T) {
 }
 
 func TestFakeGalaxyAgentRecordCoverage(t *testing.T) {
+	const panelAgent = "project-lead"
 	ds := NewFakeDataSource()
 	agents, err := ds.Agents(context.Background())
 	if err != nil {
@@ -783,7 +744,7 @@ func TestFakeGalaxyAgentRecordCoverage(t *testing.T) {
 		t.Fatalf("Graph: %v", err)
 	}
 	seenPanelAgent := false
-	seenEphemeral := false
+	seenUnregistered := false
 	for _, node := range graph.Nodes {
 		if node.Type != "agent" {
 			continue
@@ -793,55 +754,55 @@ func TestFakeGalaxyAgentRecordCoverage(t *testing.T) {
 			name = node.Label
 		}
 		_, registered := byName[name]
-		if name == fakeEphemeralAgent {
-			seenEphemeral = true
+		if name == fakeUnregisteredName {
+			seenUnregistered = true
 			if registered {
-				t.Fatalf("ephemeral galaxy agent %q unexpectedly has an AgentSummary", name)
+				t.Fatalf("unregistered galaxy agent %q unexpectedly has an AgentSummary", name)
 			}
 			continue
 		}
 		if !registered {
 			t.Fatalf("registered galaxy agent %q has no matching AgentSummary", name)
 		}
-		if name == fakeGalaxyPanelAgent {
+		if name == panelAgent {
 			seenPanelAgent = true
 		}
 	}
 	if !seenPanelAgent {
-		t.Fatalf("graph missing full-panel fixture agent %q", fakeGalaxyPanelAgent)
+		t.Fatalf("graph missing full-panel fixture agent %q", panelAgent)
 	}
-	if !seenEphemeral {
-		t.Fatalf("graph missing ephemeral-panel fixture agent %q", fakeEphemeralAgent)
+	if !seenUnregistered {
+		t.Fatalf("graph missing unregistered-panel fixture agent %q", fakeUnregisteredName)
 	}
-	if _, err := ds.Agent(context.Background(), fakeEphemeralAgent); err != ErrAgentNotFound {
-		t.Fatalf("Agent(%q) error = %v, want %v", fakeEphemeralAgent, err, ErrAgentNotFound)
+	if _, err := ds.Agent(context.Background(), fakeUnregisteredName); err != ErrAgentNotFound {
+		t.Fatalf("Agent(%q) error = %v, want %v", fakeUnregisteredName, err, ErrAgentNotFound)
 	}
 
-	detail, err := ds.Agent(context.Background(), fakeGalaxyPanelAgent)
+	detail, err := ds.Agent(context.Background(), panelAgent)
 	if err != nil {
-		t.Fatalf("Agent(%q): %v", fakeGalaxyPanelAgent, err)
+		t.Fatalf("Agent(%q): %v", panelAgent, err)
 	}
-	if detail.Template == nil || len(detail.Versions) == 0 || !detail.Versions[0].Current {
-		t.Fatalf("full-panel fixture missing template/current version: %+v", detail)
+	if detail.Config == nil {
+		t.Fatalf("full-panel fixture missing config section: %+v", detail)
 	}
 	jobs, err := ds.Jobs(context.Background())
 	if err != nil {
 		t.Fatalf("Jobs: %v", err)
 	}
-	var hasTokenJob, hasEphemeralTokenJob bool
+	var hasTokenJob, hasUnregisteredTokenJob bool
 	for _, job := range jobs {
-		if job.Agent == fakeGalaxyPanelAgent && job.TokensIn > 0 && job.TokensOut > 0 {
+		if job.Agent == panelAgent && job.TokensIn > 0 && job.TokensOut > 0 {
 			hasTokenJob = true
 		}
-		if job.Agent == fakeEphemeralAgent && job.TokensIn > 0 && job.TokensOut > 0 {
-			hasEphemeralTokenJob = true
+		if job.Agent == fakeUnregisteredName && job.TokensIn > 0 && job.TokensOut > 0 {
+			hasUnregisteredTokenJob = true
 		}
 	}
 	if !hasTokenJob {
-		t.Fatalf("full-panel fixture agent %q has no token-bearing job", fakeGalaxyPanelAgent)
+		t.Fatalf("full-panel fixture agent %q has no token-bearing job", panelAgent)
 	}
-	if !hasEphemeralTokenJob {
-		t.Fatalf("ephemeral-panel fixture agent %q has no token-bearing job", fakeEphemeralAgent)
+	if !hasUnregisteredTokenJob {
+		t.Fatalf("unregistered-panel fixture agent %q has no token-bearing job", fakeUnregisteredName)
 	}
 }
 
@@ -938,13 +899,6 @@ func TestWorkflowSummaryJSONContract(t *testing.T) {
 func TestFakeWorkflowDisabled(t *testing.T) {
 	t.Setenv("FAKEFEED_WORKFLOWS", "0")
 	ds := NewFakeDataSource()
-	state, err := ds.State(context.Background(), fakeRunID)
-	if err != nil {
-		t.Fatalf("State: %v", err)
-	}
-	if state.Workflow != "" {
-		t.Fatalf("disabled State.Workflow = %q", state.Workflow)
-	}
 	graph, err := ds.Graph(context.Background(), "")
 	if err != nil {
 		t.Fatalf("Graph: %v", err)
@@ -1035,22 +989,10 @@ func TestHandleAgents(t *testing.T) {
 		t.Fatalf("len(agents) = 0, want > 0")
 	}
 
-	var ephemeral, registered int
 	for _, a := range agents {
 		if a.Name == "" || a.Runtime == "" {
 			t.Fatalf("agent missing name/runtime: %+v", a)
 		}
-		if a.Ephemeral {
-			ephemeral++
-		} else {
-			registered++
-		}
-	}
-	if ephemeral != 1 {
-		t.Fatalf("ephemeral rollup rows = %d, want exactly 1", ephemeral)
-	}
-	if registered == 0 {
-		t.Fatalf("registered agents = 0, want > 0")
 	}
 }
 
@@ -1058,100 +1000,35 @@ func TestHandleAgent(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	// The one seeded agent that carries a template + version history.
+	// researcher carries an [agents.<name>] config section.
 	var detail AgentDetail
-	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/agent/"+fakeTemplatedAgent), &detail); err != nil {
+	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/agent/researcher"), &detail); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if detail.Name != fakeTemplatedAgent {
-		t.Fatalf("detail.Name = %q, want %q", detail.Name, fakeTemplatedAgent)
+	if detail.Name != "researcher" {
+		t.Fatalf("detail.Name = %q, want researcher", detail.Name)
 	}
 	if detail.Runtime == "" {
 		t.Fatalf("detail missing embedded summary (runtime): %+v", detail)
 	}
-	if detail.Template == nil {
-		t.Fatalf("expected a template for %q", fakeTemplatedAgent)
-	}
-	if detail.Template.ID == "" {
-		t.Fatalf("template missing id: %+v", detail.Template)
-	}
-	// The seeded templated agent carries an [agents.<name>] config section, so the
-	// detail's config projection is exercised.
 	if detail.Config == nil {
-		t.Fatalf("expected a config section for %q", fakeTemplatedAgent)
+		t.Fatalf("expected a config section for researcher")
 	}
-	// Pool knobs are populated (parse-time defaults are folded in server-side).
-	if detail.Config.MaxBackground == 0 || detail.Config.IdleTimeout == "" || detail.Config.JobTimeout == "" {
-		t.Fatalf("expected config pool knobs populated: %+v", detail.Config)
-	}
-	// The per-agent detail carries the template's full prompt body (multi-line).
-	if !strings.Contains(detail.Template.Content, "\n") || !strings.Contains(detail.Template.Content, "Researcher agent") {
-		t.Fatalf("template content missing/not the multi-line prompt body: %q", detail.Template.Content)
-	}
-	if len(detail.Versions) != 3 {
-		t.Fatalf("len(Versions) = %d, want 3", len(detail.Versions))
-	}
-	// Newest first, exactly one Current marker, states cover current/canary/
-	// pending, the canary version carries a sample, and every version carries its
-	// own full prompt body — distinct per version so the content viewer is exercised.
-	var current, canarySample int
-	states := map[string]bool{}
-	seenContent := map[string]bool{}
-	for i, v := range detail.Versions {
-		if v.ID == "" || v.State == "" {
-			t.Fatalf("version missing id/state: %+v", v)
-		}
-		if v.Content == "" {
-			t.Fatalf("version %s missing content body: %+v", v.ID, v)
-		}
-		if seenContent[v.Content] {
-			t.Fatalf("versions share identical content (expected distinct per version): %+v", detail.Versions)
-		}
-		seenContent[v.Content] = true
-		states[v.State] = true
-		if i > 0 && detail.Versions[i-1].Number < v.Number {
-			t.Fatalf("versions not newest-first: %+v", detail.Versions)
-		}
-		if v.Current {
-			current++
-		}
-		if v.State == "canary" && v.CanarySample > 0 {
-			canarySample++
-		}
-	}
-	if current != 1 {
-		t.Fatalf("Current markers = %d, want exactly 1", current)
-	}
-	if canarySample == 0 {
-		t.Fatalf("expected a canary version with a CanarySample: %+v", detail.Versions)
-	}
-	for _, want := range []string{"current", "canary", "pending"} {
-		if !states[want] {
-			t.Fatalf("versions missing state %q: %+v", want, detail.Versions)
-		}
+	if detail.Config.JobTimeout == "" || detail.Config.Model == "" {
+		t.Fatalf("expected config knobs populated: %+v", detail.Config)
 	}
 }
 
-func TestHandleAgentNoTemplate(t *testing.T) {
+func TestHandleAgentWithoutConfig(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	// An agent without a template: Template omitted, Versions still non-nil.
 	var detail AgentDetail
 	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/agent/ci-runner"), &detail); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if detail.Name != "ci-runner" {
 		t.Fatalf("detail.Name = %q, want ci-runner", detail.Name)
-	}
-	if detail.Template != nil {
-		t.Fatalf("expected nil template for ci-runner: %+v", detail.Template)
-	}
-	if detail.Versions == nil {
-		t.Fatalf("Versions must be non-nil even without a template")
-	}
-	if len(detail.Versions) != 0 {
-		t.Fatalf("len(Versions) = %d, want 0 for a template-less agent", len(detail.Versions))
 	}
 	// ci-runner has no [agents.<name>] section, so its detail omits Config entirely.
 	if detail.Config != nil {
@@ -1178,99 +1055,11 @@ func TestHandleAgentDeterministic(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	// fakeTemplatedAgent does not appear in the seeded run, so its detail (summary
-	// + template + versions) is byte-stable across calls.
-	url := srv.URL + "/api/agent/" + fakeTemplatedAgent
+	// researcher does not appear in the seeded run, so its detail (summary +
+	// config) is byte-stable across calls.
+	url := srv.URL + "/api/agent/researcher"
 	if a, b := getRaw(t, url), getRaw(t, url); !bytes.Equal(a, b) {
 		t.Fatalf("agent detail not byte-stable across calls\nfirst:  %s\nsecond: %s", a, b)
-	}
-}
-
-func TestHandleState(t *testing.T) {
-	srv := httptest.NewServer(Serve(NewFakeDataSource()))
-	defer srv.Close()
-
-	resp, err := http.Get(srv.URL + "/api/state?run=" + fakeRunID)
-	if err != nil {
-		t.Fatalf("GET /api/state: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200", resp.StatusCode)
-	}
-
-	var st State
-	if err := json.NewDecoder(resp.Body).Decode(&st); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	if st.RunID != fakeRunID {
-		t.Fatalf("RunID = %q, want %q", st.RunID, fakeRunID)
-	}
-	if len(st.Nodes) != 6 {
-		t.Fatalf("len(Nodes) = %d, want 6 (coordinator + 3 implement + integrate + synthesize)", len(st.Nodes))
-	}
-
-	// Verify the graph shape: root, three parallel children, an integrate node
-	// depending on all three, and a synthesize continuation depending on it.
-	byID := map[string]Node{}
-	for _, n := range st.Nodes {
-		byID[n.ID] = n
-	}
-	root, ok := byID["job-1"]
-	if !ok || root.ParentID != "" || root.Depth != 0 {
-		t.Fatalf("root node malformed: %+v", root)
-	}
-	for _, id := range []string{"job-2", "job-3", "job-4"} {
-		n := byID[id]
-		if n.ParentID != "job-1" || n.Depth != 1 {
-			t.Fatalf("child %s malformed: %+v", id, n)
-		}
-	}
-	integ := byID["job-5"]
-	if len(integ.Deps) != 3 {
-		t.Fatalf("integrate node deps = %v, want 3", integ.Deps)
-	}
-	synth := byID["job-6"]
-	if len(synth.Deps) != 1 || synth.Deps[0] != "job-5" {
-		t.Fatalf("synthesize node deps = %v, want [job-5]", synth.Deps)
-	}
-}
-
-func TestHandleStateEmptyRunReturnsActive(t *testing.T) {
-	srv := httptest.NewServer(Serve(NewFakeDataSource()))
-	defer srv.Close()
-
-	resp, err := http.Get(srv.URL + "/api/state")
-	if err != nil {
-		t.Fatalf("GET /api/state: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		t.Fatalf("status = %d, want 200", resp.StatusCode)
-	}
-	var st State
-	if err := json.NewDecoder(resp.Body).Decode(&st); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	if st.RunID != fakeRunID {
-		t.Fatalf("empty run should resolve to active run; got %q", st.RunID)
-	}
-}
-
-func TestHandleStateNotFound(t *testing.T) {
-	srv := httptest.NewServer(Serve(NewFakeDataSource()))
-	defer srv.Close()
-
-	resp, err := http.Get(srv.URL + "/api/state?run=does-not-exist")
-	if err != nil {
-		t.Fatalf("GET /api/state: %v", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusNotFound {
-		t.Fatalf("status = %d, want 404", resp.StatusCode)
 	}
 }
 
@@ -1523,19 +1312,19 @@ func TestHandleHealth(t *testing.T) {
 	if u := h.Update.ReleaseURL; u != "" && !strings.HasPrefix(u, "https://") && !strings.HasPrefix(u, "http://") {
 		t.Fatalf("update release url not http(s): %q", u)
 	}
-	if h.Locks == nil || h.ResourceLocks == nil || h.Stuck == nil || h.RecentFailures == nil {
+	if h.ResourceLocks == nil || h.Stuck == nil || h.RecentFailures == nil {
 		t.Fatalf("health slices must be non-nil: %+v", h)
 	}
 	if len(h.Stuck) == 0 {
 		t.Fatalf("expected at least one stuck job")
 	}
-	if len(h.Locks) == 0 {
-		t.Fatalf("expected at least one branch lock")
+	if len(h.ResourceLocks) == 0 {
+		t.Fatalf("expected at least one resource lock")
 	}
-	// Locks oldest first.
-	for i := 1; i < len(h.Locks); i++ {
-		if h.Locks[i-1].AcquiredAt > h.Locks[i].AcquiredAt {
-			t.Fatalf("locks not oldest-first: %+v", h.Locks)
+	// Resource locks oldest first.
+	for i := 1; i < len(h.ResourceLocks); i++ {
+		if h.ResourceLocks[i-1].AcquiredAt > h.ResourceLocks[i].AcquiredAt {
+			t.Fatalf("resource locks not oldest-first: %+v", h.ResourceLocks)
 		}
 	}
 	// Stuck oldest first.
@@ -1593,8 +1382,6 @@ func TestHandleConfig(t *testing.T) {
 	}{
 		"github.rate_limit_per_hour": {"4200", "4500", "int", false},
 		"orchestrate.blocked_ttl":    {`"30m"`, `"30m"`, "duration", true},
-		"skillopt.auto_promote":      {"false", "false", "flag", true},
-		"skillopt.pace_gate":         {"true", "true", "flag", true},
 	}
 	gotKnobs := map[string]bool{}
 	for si, section := range cfg.Sections {
@@ -1835,131 +1622,13 @@ func assertContinuousDays(t *testing.T, days []ChartDay) {
 	}
 }
 
-// realSkillStates is the set of version states the live SkillOpt store can emit;
-// the fake feed must never present a state outside it. Promotion writes 'current'
-// to the live version and 'superseded' to the one it replaces (store.go
-// PromoteAgentTemplateVersion); there is NO 'promoted' version state. Candidates
-// are 'pending' or an in-flight 'canary', and a declined candidate is 'rejected'.
-var realSkillStates = map[string]bool{"current": true, "superseded": true, "canary": true, "pending": true, "rejected": true}
-
-func TestHandleLearningSkills(t *testing.T) {
+func TestJSONResponseIsIndented(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	var skills Skills
-	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/learning/skills"), &skills); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	if skills.Templates == nil {
-		t.Fatalf("Templates must be non-nil: %+v", skills)
-	}
-	if n := len(skills.Templates); n < 2 || n > 3 {
-		t.Fatalf("len(Templates) = %d, want 2..3", n)
-	}
-
-	var canaryTemplates, pendingSum, roseFive int
-	for _, tpl := range skills.Templates {
-		if tpl.TemplateID == "" {
-			t.Fatalf("template missing id: %+v", tpl)
-		}
-		if tpl.Versions == nil || len(tpl.Versions) == 0 {
-			t.Fatalf("template %s has no versions", tpl.TemplateID)
-		}
-		if tpl.Pending == nil {
-			t.Fatalf("template %s Pending must be non-nil", tpl.TemplateID)
-		}
-		// Versions ascending by Number (sparkline order); states real-emittable;
-		// scored versions carry HasScore.
-		var scored []float64
-		for i, v := range tpl.Versions {
-			if !realSkillStates[v.State] {
-				t.Fatalf("template %s version %d has non-real state %q", tpl.TemplateID, v.Number, v.State)
-			}
-			if i > 0 && tpl.Versions[i-1].Number >= v.Number {
-				t.Fatalf("template %s versions not ascending by Number: %+v", tpl.TemplateID, tpl.Versions)
-			}
-			if v.HasScore {
-				scored = append(scored, v.Score)
-			}
-		}
-		if tpl.CanarySample > 0 {
-			canaryTemplates++
-		}
-		pendingSum += len(tpl.Pending)
-		// The healthy template is the 5-version one with a strictly rising score.
-		if len(tpl.Versions) == 5 {
-			rising := len(scored) == 5
-			for i := 1; i < len(scored); i++ {
-				if scored[i] <= scored[i-1] {
-					rising = false
-				}
-			}
-			if rising {
-				roseFive++
-			}
-		}
-		// Every pending candidate must map to a real version number in the template.
-		for _, c := range tpl.Pending {
-			if c.VersionID == "" {
-				t.Fatalf("pending candidate missing versionId: %+v", c)
-			}
-			found := false
-			for _, v := range tpl.Versions {
-				if v.Number == c.Number {
-					found = true
-				}
-			}
-			if !found {
-				t.Fatalf("pending candidate %d not among template %s versions", c.Number, tpl.TemplateID)
-			}
-		}
-	}
-	if roseFive != 1 {
-		t.Fatalf("want exactly one healthy 5-version rising-score template, got %d", roseFive)
-	}
-	if canaryTemplates == 0 {
-		t.Fatalf("expected at least one template with an active canary")
-	}
-	if skills.ActiveCanaries != canaryTemplates {
-		t.Fatalf("ActiveCanaries = %d, want %d (templates with CanarySample>0)", skills.ActiveCanaries, canaryTemplates)
-	}
-	if skills.PendingTotal != pendingSum {
-		t.Fatalf("PendingTotal = %d, want %d (sum of per-template Pending)", skills.PendingTotal, pendingSum)
-	}
-	if skills.PendingTotal == 0 {
-		t.Fatalf("expected at least one pending candidate")
-	}
-
-	// Sort order: pending-first, then most-recently-promoted (LastPromotedAt desc).
-	for i := 1; i < len(skills.Templates); i++ {
-		a, b := skills.Templates[i-1], skills.Templates[i]
-		ap, bp := len(a.Pending) > 0, len(b.Pending) > 0
-		if !ap && bp {
-			t.Fatalf("templates not pending-first: %q(pending=%v) before %q(pending=%v)", a.TemplateID, ap, b.TemplateID, bp)
-		}
-		if ap == bp && a.LastPromotedAt < b.LastPromotedAt {
-			t.Fatalf("templates not most-recently-promoted within group: %q(%d) before %q(%d)", a.TemplateID, a.LastPromotedAt, b.TemplateID, b.LastPromotedAt)
-		}
-	}
-}
-
-func TestHandleLearningSkillsDeterministic(t *testing.T) {
-	srv := httptest.NewServer(Serve(NewFakeDataSource()))
-	defer srv.Close()
-
-	url := srv.URL + "/api/learning/skills"
-	if a, b := getRaw(t, url), getRaw(t, url); !bytes.Equal(a, b) {
-		t.Fatalf("skills not byte-stable across calls\nfirst:  %s\nsecond: %s", a, b)
-	}
-}
-
-func TestStateResponseIsIndented(t *testing.T) {
-	srv := httptest.NewServer(Serve(NewFakeDataSource()))
-	defer srv.Close()
-
-	resp, err := http.Get(srv.URL + "/api/state")
+	resp, err := http.Get(srv.URL + "/api/job/job-1")
 	if err != nil {
-		t.Fatalf("GET /api/state: %v", err)
+		t.Fatalf("GET /api/job/job-1: %v", err)
 	}
 	defer resp.Body.Close()
 

@@ -1,38 +1,42 @@
 # gitmoot-dashboard
 
 Read-only web backend for the [gitmoot](https://github.com/jerryfane/gitmoot)
-orchestration dashboard. It serves a live orchestration-DAG UI and streams run
-state from gitmoot's store.
+dashboard. It serves the embedded dashboard UI and a JSON API over gitmoot's
+store.
 
-This is a small Go module (stdlib only, no third-party dependencies). The React
-UI lives under `web/` and is built into `web/dist`, which is embedded into the
-binary; a minimal placeholder ships until the UI lands.
+This is a small Go module (stdlib only, no third-party dependencies). The UI
+lives in `web/dist` and is embedded into the binary.
 
 ## Contract
 
-The package exposes a frozen `DataSource` interface and an HTTP `Serve` entry
-point (see `datasource.go`):
+The package exposes a `DataSource` interface (plus optional extensions such as
+`WorkflowDataSource`, `OverviewDataSource`, `TasksDataSource`,
+`OrgDataSource` and `ChangeCursorDataSource`) and an HTTP `Serve` entry point;
+see `datasource.go`.
 
 ```go
-type DataSource interface {
-    Runs(ctx context.Context) ([]RunSummary, error)
-    State(ctx context.Context, runID string) (State, error) // runID "" => active/most-recent
-    Job(ctx context.Context, jobID string) (Node, error)
-    Subscribe(ctx context.Context, runID string) (<-chan State, func(), error) // for SSE
-}
-
 func Serve(ds DataSource) http.Handler
 ```
 
 HTTP surface:
 
-| Route                   | Returns                              |
-| ----------------------- | ------------------------------------ |
-| `GET /api/runs`         | `[]RunSummary`                       |
-| `GET /api/state?run=<id>` | `State`                            |
-| `GET /api/job/{id}`     | `Node`                               |
-| `GET /events?run=<id>`  | SSE stream of `State`                |
-| everything else         | embedded static UI (SPA fallback)    |
+| Route | Returns |
+| --- | --- |
+| `GET /api/overview` | `Overview` |
+| `GET /api/tasks` | `[]TaskSummary` |
+| `GET /api/workflows`, `GET /api/workflow/{label}` | `[]WorkflowIndexEntry`, `WorkflowView` |
+| `GET /api/jobs`, `GET /api/job/{id}` | `[]JobSummary`, `Node` |
+| `GET /api/job/{id}/checks` | `JobChecks` |
+| `GET /api/agents`, `GET /api/agent/{name}` | `[]AgentSummary`, `AgentDetail` |
+| `GET /api/org`, `GET /api/org/role/{name}` | `OrgView`, `OrgRoleView` |
+| `GET /api/graph?repo=` | `Graph` (Galaxy) |
+| `GET /api/charts?days=` | `Charts` |
+| `GET /api/health` | `Health` |
+| `GET /api/config` | `ConfigSnapshot` |
+| `GET /api/attention` | `Attention` |
+| `GET /api/events` | SSE change pings (`event: changed`) |
+| other `/api/...` paths and `/events` | 404 |
+| everything else | embedded static UI (SPA fallback) |
 
 The server is **read-only** and must never run in the gitmoot daemon path.
 

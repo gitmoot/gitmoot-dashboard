@@ -12,25 +12,21 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/elkjs@0.9.3/lib/elk.bundled.js"></script>
 <script src="https://unpkg.com/force-graph@1.43.5/dist/force-graph.min.js"></script>
 <style>
  :root{--gm-bg:#07080f;--gm-surface-raised:#0f1120;--gm-border-raised:rgba(160,168,220,.13);--gm-text-strong:#eef0ff;--gm-text-muted:#8b90b8;--gm-text-faint:#5a6088}
  html,body{height:100%;margin:0;background:#07080f;overflow:hidden}
  *{box-sizing:border-box}
- @keyframes runpulse{0%,100%{box-shadow:0 0 0 0 var(--gc)}50%{box-shadow:0 0 28px 1px var(--gc)}}
  @keyframes dotpulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.7);opacity:.45}}
- @keyframes dashflow{to{stroke-dashoffset:-18}}
  @keyframes livedot{0%,100%{opacity:1}50%{opacity:.3}}
  @keyframes panelin{from{transform:translateX(22px);opacity:0}to{transform:translateX(0);opacity:1}}
- @keyframes nodein{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
  ::-webkit-scrollbar{width:9px;height:9px}
  ::-webkit-scrollbar-thumb{background:rgba(160,168,220,0.16);border-radius:6px}
  ::-webkit-scrollbar-track{background:transparent}
  .gm-copy{display:inline-flex;align-items:center;gap:5px;border:none;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;line-height:1;cursor:pointer;padding:4px 9px;transition:background .15s ease,color .15s ease;background:rgba(160,168,220,0.1);color:#a8aecf}
  .gm-copy:hover{background:rgba(160,168,220,0.16);color:#c7c9e5}
  .gm-copy.done{background:rgba(158,206,106,0.16);color:#c5f882}
- .ov-scroll,.wfi-scroll,.wfd-scroll,.tk-col-body,.tk-detail-body,.jb-tablewrap,.jd-body,.ag-list,.ag-pane,.gd-body,.ch-scroll,.at-scroll,.hl-body,.cfg-scroll,.xd-body,#lr-skills,.gm-graph-detail-body,.gm-more-sheet,.gm-runs-list{overscroll-behavior-y:contain}
+ .ov-scroll,.wfi-scroll,.wfd-scroll,.tk-col-body,.tk-detail-body,.jb-tablewrap,.jd-body,.ag-list,.ag-pane,.gd-body,.ch-scroll,.at-scroll,.hl-body,.cfg-scroll,.xd-body,.gm-more-sheet{overscroll-behavior-y:contain}
  .ov-fleet-list{overscroll-behavior-x:contain}
  .gm-ptr-indicator{position:fixed;left:0;top:0;z-index:120;height:0;display:flex;justify-content:center;overflow:visible;pointer-events:none;opacity:0;transform:translateY(-18px);transition:opacity .14s ease,transform .14s ease}
  .gm-ptr-indicator span{display:inline-flex;align-items:center;gap:7px;height:24px;padding:0 10px;border:1px solid rgba(160,168,220,.14);border-radius:12px;background:rgba(13,15,28,.94);box-shadow:0 5px 18px rgba(0,0,0,.28);color:#7b82aa;font:9px 'JetBrains Mono',monospace;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
@@ -105,7 +101,7 @@
     </div>
 
     <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:14px 10px 7px">FLEET</div>
-    <div onClick="{{ showAgents }}" title="Registered agents + ephemeral workers" style="{{ agentsNavStyle }}">
+    <div onClick="{{ showAgents }}" title="Registered agents" style="{{ agentsNavStyle }}">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="11" rx="2.5"/><path d="M12 8V5"/><circle cx="12" cy="3.6" r="1"/><path d="M9.6 13h.01"/><path d="M14.4 13h.01"/></svg>
       <span style="flex:1">Agents</span>
       <span style="{{ agentsNavDotStyle }}"></span>
@@ -126,11 +122,6 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="12" width="3.2" height="8" rx="1" fill="currentColor"/><rect x="10.4" y="7" width="3.2" height="13" rx="1" fill="currentColor"/><rect x="16.8" y="4" width="3.2" height="16" rx="1" fill="currentColor"/></svg>
       <span style="flex:1">Charts</span>
       <span style="{{ chartsNavDotStyle }}"></span>
-    </div>
-    <div onClick="{{ showLearning }}" title="SkillOpt evolution" style="{{ learningNavStyle }}">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.4.9 1 .9 1.6v.5h5.2v-.5c0-.6.3-1.2.9-1.6A6 6 0 0 0 12 3z"/><path d="M9.6 20h4.8"/><path d="M10.6 22h2.8"/></svg>
-      <span style="flex:1">Learning</span>
-      <span style="{{ learningNavDotStyle }}"></span>
     </div>
 
     <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:14px 10px 7px">SYSTEM</div>
@@ -156,122 +147,7 @@
     </div>
   </aside>
 
-  {{ runsColumnEl }}
-
-  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
-
-    <div style="flex:1;position:relative;min-height:0">
-      <div ref="{{ canvasRef }}" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onPointerLeave="{{ onUp }}" onWheel="{{ onWheel }}" style="position:absolute;inset:0;overflow:hidden;cursor:grab;background:#050609;background-image:radial-gradient(rgba(160,168,220,0.09) 1px,transparent 1px);background-size:26px 26px;touch-action:none">
-        <div style="position:absolute;left:0;top:0;width:4200px;height:2600px;transform-origin:0 0;will-change:transform;transform:{{ worldTransform }}">
-          {{ edgesEl }}
-          {{ nodesEl }}
-        </div>
-      </div>
-
-      <sc-if value="{{ runsTabVisible }}" hint-placeholder-val="{{ false }}">
-        <button onClick="{{ toggleRuns }}" title="Show the Runs column" style="position:absolute;left:16px;top:16px;z-index:6;display:flex;align-items:center;gap:8px;padding:8px 13px;background:rgba(15,17,32,0.85);border:1px solid rgba(160,168,220,0.14);border-radius:8px;color:#a8aecf;font-family:'JetBrains Mono';font-size:11.5px;letter-spacing:0.04em;cursor:pointer;backdrop-filter:blur(6px)">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="7" height="16" rx="1.5"/><path d="M13.5 7h7M13.5 12h7M13.5 17h4"/></svg>
-          Runs
-        </button>
-      </sc-if>
-
-      <div style="{{ zoomCtrlStyle }}">
-        <button onClick="{{ zoomIn }}" style="width:34px;height:34px;background:rgba(15,17,32,0.85);border:1px solid rgba(160,168,220,0.14);border-radius:8px;color:#a8aecf;font-size:18px;cursor:pointer;backdrop-filter:blur(6px)">+</button>
-        <button onClick="{{ zoomOut }}" style="width:34px;height:34px;background:rgba(15,17,32,0.85);border:1px solid rgba(160,168,220,0.14);border-radius:8px;color:#a8aecf;font-size:18px;cursor:pointer;backdrop-filter:blur(6px)">−</button>
-        <button onClick="{{ fit }}" title="Fit to view" style="width:34px;height:34px;background:rgba(15,17,32,0.85);border:1px solid rgba(160,168,220,0.14);border-radius:8px;color:#a8aecf;font-size:14px;cursor:pointer;backdrop-filter:blur(6px)">⤢</button>
-      </div>
-
-      {{ minimapEl }}
-
-      <sc-if value="{{ hasSelected }}" hint-placeholder-val="{{ false }}">
-        <aside style="{{ detailAsideStyle }}">
-          <div style="padding:18px 20px 14px;border-bottom:1px solid rgba(160,168,220,0.08)">
-            <div style="display:flex;align-items:flex-start;gap:10px">
-              <span style="{{ detail.dotStyle }}"></span>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:15px;font-weight:600;color:#eef0ff;font-family:Inter;line-height:1.3">{{ detail.title }}</div>
-                <div style="font-family:'JetBrains Mono';font-size:11px;color:#868db5;margin-top:3px">{{ detail.sub }}</div>
-              </div>
-              <button onClick="{{ closePanel }}" style="width:26px;height:26px;flex:none;background:rgba(160,168,220,0.08);border:1px solid rgba(160,168,220,0.12);border-radius:7px;color:#868db5;font-size:14px;cursor:pointer;line-height:1">✕</button>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
-              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:7px;font-family:'JetBrains Mono';font-size:11px;font-weight:600;color:{{ detail.stateColor }};background:{{ detail.stateBg }};border:1px solid {{ detail.stateBorder }}">{{ detail.stateLabel }}</span>
-              <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:7px;font-family:'JetBrains Mono';font-size:11px;color:#868db5;background:rgba(160,168,220,0.06);border:1px solid rgba(160,168,220,0.1)">▲ {{ detail.worker }}</span>
-            </div>
-          </div>
-
-          <div class="gm-graph-detail-body" style="flex:1;overflow-y:auto;padding:16px 20px 24px">
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px">
-              <div style="background:rgba(10,11,22,0.6);border:1px solid rgba(160,168,220,0.08);border-radius:9px;padding:10px 11px">
-                <div style="font-size:10px;color:#5a6088;letter-spacing:0.04em;text-transform:uppercase">Started</div>
-                <div style="font-family:'JetBrains Mono';font-size:13px;color:#a8aecf;margin-top:4px">{{ detail.startedLabel }}</div>
-              </div>
-              <div style="background:rgba(10,11,22,0.6);border:1px solid rgba(160,168,220,0.08);border-radius:9px;padding:10px 11px">
-                <div style="font-size:10px;color:#5a6088;letter-spacing:0.04em;text-transform:uppercase">Elapsed</div>
-                <div style="font-family:'JetBrains Mono';font-size:13px;color:#eef0ff;margin-top:4px">{{ detail.elapsedLabel }}</div>
-              </div>
-              <div style="background:rgba(10,11,22,0.6);border:1px solid rgba(160,168,220,0.08);border-radius:9px;padding:10px 11px">
-                <div style="font-size:10px;color:#5a6088;letter-spacing:0.04em;text-transform:uppercase">Runtime</div>
-                <div style="font-family:'JetBrains Mono';font-size:13px;color:#a8aecf;margin-top:4px">{{ detail.runtime }}</div>
-              </div>
-            </div>
-
-            <div style="font-size:10.5px;color:#5a6088;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">Events</div>
-            <div style="display:flex;flex-direction:column;gap:0;margin-bottom:22px">
-              <sc-for list="{{ detail.events }}" as="ev" hint-placeholder-count="3">
-                <div style="display:flex;gap:12px;align-items:flex-start;position:relative;padding-bottom:14px">
-                  <div style="display:flex;flex-direction:column;align-items:center;flex:none;padding-top:3px">
-                    <span style="width:7px;height:7px;border-radius:50%;background:{{ ev.color }};box-shadow:0 0 6px {{ ev.color }}"></span>
-                    <span style="width:1px;flex:1;background:rgba(160,168,220,0.12);margin-top:3px"></span>
-                  </div>
-                  <div style="flex:1;min-width:0;padding-bottom:2px">
-                    <div style="font-size:12.5px;color:#c7c9e5;line-height:1.35">{{ ev.label }}</div>
-                    <div style="font-family:'JetBrains Mono';font-size:10px;color:#5a6088;margin-top:2px">{{ ev.time }}</div>
-                  </div>
-                </div>
-              </sc-for>
-            </div>
-
-            <button onClick="{{ togglePrompt }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:0 0 10px;cursor:pointer">
-              <span style="font-size:10.5px;color:#5a6088;letter-spacing:0.1em;text-transform:uppercase">Prompt</span>
-              <span style="color:#5a6088;font-size:11px;font-family:'JetBrains Mono'">{{ promptChev }}</span>
-            </button>
-            <sc-if value="{{ showPrompt }}" hint-placeholder-val="{{ true }}">
-              <div style="background:#0a0b16;border:1px solid rgba(160,168,220,0.1);border-radius:9px;padding:12px 13px;font-family:'JetBrains Mono';font-size:11.5px;line-height:1.6;color:#c7c9e5;white-space:pre-wrap;margin-bottom:18px">{{ detail.prompt }}</div>
-            </sc-if>
-
-            <button onClick="{{ toggleOutput }}" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:none;padding:0 0 10px;cursor:pointer">
-              <span style="font-size:10.5px;color:#5a6088;letter-spacing:0.1em;text-transform:uppercase">Output</span>
-              <span style="color:#5a6088;font-size:11px;font-family:'JetBrains Mono'">{{ outputChev }}</span>
-            </button>
-            <sc-if value="{{ showOutput }}" hint-placeholder-val="{{ false }}">
-              <div style="background:#0a0b16;border:1px solid rgba(160,168,220,0.1);border-radius:9px;padding:12px 13px;font-family:'JetBrains Mono';font-size:11.5px;line-height:1.6;color:#c7c9e5;white-space:pre-wrap;margin-bottom:18px">{{ detail.output }}</div>
-            </sc-if>
-
-            <sc-if value="{{ detail.hasPr }}" hint-placeholder-val="{{ false }}">
-              <a href="{{ detail.prUrl }}" target="_blank" style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(158,206,106,0.1);border:1px solid rgba(158,206,106,0.24);border-radius:10px;color:#c5f882;text-decoration:none;font-size:13px;font-weight:500">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="2.4"/><circle cx="6" cy="18" r="2.4"/><circle cx="18" cy="15" r="2.4"/><path d="M6 8.4v7.2M18 12.6V9a3 3 0 0 0-3-3h-4"/><path d="M12.5 4.5 11 6l1.5 1.5"/></svg>
-                <span style="flex:1;font-family:'JetBrains Mono';font-size:12px">{{ detail.prLabel }}</span>
-                <span style="color:#868db5">↗</span>
-              </a>
-            </sc-if>
-          </div>
-        </aside>
-      </sc-if>
-    </div>
-
-    <footer style="{{ footerStyle }}">
-      <div style="display:flex;align-items:center;gap:7px"><span>nodes</span><span style="font-family:'JetBrains Mono';font-size:12.5px;color:#a8aecf">{{ stat.total }}</span></div>
-      <div style="width:1px;height:14px;background:rgba(160,168,220,0.1)"></div>
-      <div style="display:flex;align-items:center;gap:7px"><span>running</span><span style="font-family:'JetBrains Mono';font-size:12.5px;color:#7aa2f7">{{ stat.running }}</span></div>
-      <div style="display:flex;align-items:center;gap:7px"><span>done</span><span style="font-family:'JetBrains Mono';font-size:12.5px;color:#9ece6a">{{ stat.done }}</span></div>
-      <div style="display:flex;align-items:center;gap:7px"><span>failed</span><span style="font-family:'JetBrains Mono';font-size:12.5px;color:#f7768e">{{ stat.failed }}</span></div>
-      <div style="width:1px;height:14px;background:rgba(160,168,220,0.1)"></div>
-      <div style="display:flex;align-items:center;gap:7px"><span>depth</span><span style="font-family:'JetBrains Mono';font-size:12.5px;color:#a8aecf">{{ stat.depth }}</span></div>
-      <div style="display:flex;align-items:center;gap:7px"><span>width</span><span style="font-family:'JetBrains Mono';font-size:12.5px;color:#a8aecf">{{ stat.width }}</span></div>
-      <div style="margin-left:auto;display:flex;align-items:center;gap:7px"><span>elapsed</span><span style="font-family:'JetBrains Mono';font-size:12.5px;color:#eef0ff">{{ stat.elapsed }}</span></div>
-    </footer>
-  </div>
+  <main style="flex:1;min-width:0"></main>
 
   </div>
 
@@ -284,7 +160,7 @@
       <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:12px 8px 5px">FLEET</div>
       <div onClick="{{ showAgentsFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Agents</div><div onClick="{{ showOrgFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Org</div>
       <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:12px 8px 5px">INSIGHT</div>
-      <div onClick="{{ showGalaxyFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Galaxy</div><div onClick="{{ showChartsFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Charts</div><div onClick="{{ showLearningFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Learning</div>
+      <div onClick="{{ showGalaxyFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Galaxy</div><div onClick="{{ showChartsFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Charts</div>
       <div style="font-family:'JetBrains Mono';font-size:9.5px;letter-spacing:0.15em;color:#5a6088;padding:12px 8px 5px">SYSTEM</div>
       <div onClick="{{ showAttentionFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Needs a human</div><div onClick="{{ showHealthFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Health</div><div onClick="{{ showConfigFromMore }}" style="padding:10px;color:#c8cce6;cursor:pointer">Config</div>
     </div>
@@ -305,7 +181,7 @@
       <span style="{{ tabLabelStyle }}">Workflows</span>
       <span style="{{ tabWorkflowsAttnStyle }}"></span>
     </div>
-    <div onClick="{{ showMore }}" title="More - Galaxy, Charts, Learning, Config" style="{{ tabMoreStyle }}">
+    <div onClick="{{ showMore }}" title="More - Galaxy, Charts, Config" style="{{ tabMoreStyle }}">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
       <span style="{{ tabLabelStyle }}">More</span>
       <span style="{{ tabMoreAttnStyle }}"></span>
@@ -313,11 +189,7 @@
   </nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{
-  &quot;accent&quot;: {&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#9ece6a&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Theme&quot;},
-  &quot;showMinimap&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;},
-  &quot;curvedEdges&quot;: {&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Canvas&quot;}
-}">
+<script type="text/x-dc" data-dc-script data-props="{}">
 class Component extends DCLogic {
   constructor(props) {
     super(props);
@@ -334,33 +206,28 @@ class Component extends DCLogic {
       if (r.view === 'agents' && r.agent) this._pendingAgentDetail = r.agent;
       if (r.view === 'workflows') this._pendingWorkflowLabel = r.name || null;
       // Normalize unknown paths to '/' (Overview). Also tidy a non-canonical known
-      // path (e.g. a trailing slash). Never rewrite a graph URL, so a
-      // '/?run=<id>' deep-link survives to connectLive().
+      // path (e.g. a trailing slash or a retired '/?run=<id>' graph link).
       if (r.unknown) {
         try { history.replaceState(null, '', '/'); } catch (e) {}
-      } else if (r.view !== 'graph') {
-        const canon = this._routeUrl(r.view, { agent: r.agent, tab: r.tab, name: r.name });
+      } else {
+        const canon = this._routeUrl(r.view, { agent: r.agent, name: r.name });
         if ((location.pathname + location.search) !== canon) {
           try { history.replaceState(null, '', canon); } catch (e) {}
         }
       }
-      try { document.title = this._routeTitle(r.view, { agent: r.agent, tab: r.tab, name: r.name }); } catch (e) {}
+      try { document.title = this._routeTitle(r.view, { agent: r.agent, name: r.name }); } catch (e) {}
     } catch (e) {}
   }
 
   // ---- client-side router ----------------------------------------------------
-  // Route table:  / -> overview (or graph when ?run= is present) | /tasks |
-  //   /galaxy | /jobs[?agent=<name>] | /agents | /org |
+  // Route table:  / -> overview | /tasks | /workflows[/<label>] |
+  //   /galaxy | /jobs[?agent=<name>] | /agents | /org | /attention |
   //   /agents/<name> | /charts | /health | /config. Agent names are encode/decode-
   //   URIComponent'd and treated as one path segment after /agents/.
   _parseRoute(pathname, search) {
     let p = pathname || '/';
     if (p.length > 1) p = p.replace(/\/+$/, '') || '/'; // drop trailing slash(es)
-    if (p === '/' || p === '') {
-      let run = '';
-      try { run = new URLSearchParams(search || '').get('run') || ''; } catch (e) {}
-      return run ? { view: 'graph' } : { view: 'overview' };
-    }
+    if (p === '/' || p === '') return { view: 'overview' };
     if (p === '/tasks') return { view: 'tasks' };
     if (p === '/galaxy') return { view: 'galaxy' };
     if (p === '/charts') return { view: 'charts' };
@@ -368,9 +235,6 @@ class Component extends DCLogic {
     if (p === '/config') return { view: 'config' };
     if (p === '/attention') return { view: 'attention' };
     if (p === '/org') return { view: 'org' };
-    // /learning normalizes to /learning/skills (constructor/_onPopState canonicalize).
-    if (p === '/learning') return { view: 'learning', tab: 'skills' };
-    if (p === '/learning/skills') return { view: 'learning', tab: 'skills' };
     if (p === '/jobs') { const a = this._routeQueryAgent(search); return a ? { view: 'jobs', agent: a } : { view: 'jobs' }; }
     if (p === '/workflows') return { view: 'workflows' };
     if (p.indexOf('/workflows/') === 0) {
@@ -418,17 +282,6 @@ class Component extends DCLogic {
       case 'health': return '/health';
       case 'config': return '/config';
       case 'attention': return '/attention';
-      case 'learning': return '/learning/skills';
-      case 'graph': {
-        // graph: keep a '?run=<id>' deep-link if the URL already carries one, so
-        // selecting a run (which replaceState's ?run) survives a Graph-tab click.
-        // Fall back to the currently-loaded run so the deep-link also survives a
-        // detour through a runless tab (galaxy/jobs/…) that dropped ?run.
-        let run = '';
-        try { run = new URLSearchParams(location.search).get('run') || ''; } catch (e) {}
-        if (!run) run = this.currentRunId || '';
-        return run ? '/?run=' + encodeURIComponent(run) : '/';
-      }
       default: return '/';
     }
   }
@@ -446,8 +299,6 @@ class Component extends DCLogic {
       case 'health': return 'gitmoot · health';
       case 'config': return 'gitmoot · config';
       case 'attention': return 'gitmoot · needs a human';
-      case 'learning': return 'gitmoot · learning · skills';
-      case 'graph':  return 'gitmoot · graph';
       default:       return 'gitmoot';
     }
   }
@@ -474,7 +325,7 @@ class Component extends DCLogic {
     try { r = this._parseRoute(location.pathname, location.search); } catch (e) { r = { view: 'overview' }; }
     this._routing = true;
     try {
-      try { document.title = this._routeTitle(r.view, { agent: r.agent, tab: r.tab, name: r.name }); } catch (e) {}
+      try { document.title = this._routeTitle(r.view, { agent: r.agent, name: r.name }); } catch (e) {}
       if (r.view === 'workflows') {
         this._workflowLabel = r.name || '';
         if (this.state.view === 'workflows' && this._workflowRoot && r.name) {
@@ -505,17 +356,10 @@ class Component extends DCLogic {
     }
   };
 
-  W = 216; H = 96;
-
   state = {
-    positions: {}, panX: 0, panY: 0, zoom: 1,
-    selectedId: null, collapsed: {}, clock: 0,
-    vw: 900, vh: 560, showPrompt: true, showOutput: false,
-    view: 'overview', // bare / is operator overview; graph survives only at /?run=<id>
-    // Runs column
-    runsOpen: true, runsQuery: '', facets: { status: [], agent: [], repo: [] },
-    openFacet: null, oneShotsExpanded: false, oneShotLimit: 6,
-    selectedRunId: null, hoverRun: null, listLoading: true, listError: false,
+    // clock ticks every second so the top bar's daemon uptime stays current.
+    clock: 0,
+    view: 'overview',
     // Persistent top bar: daemon liveness for the "daemon · up … · ● LIVE" chip.
     // daemonUp starts true because this page is served over HTTP by a live process;
     // the seed fetch (_navSeed) corrects it within the first cycle and keeps it live.
@@ -523,8 +367,8 @@ class Component extends DCLogic {
     // Nav "needs you" amber dots (repurposed from the old you-are-here dot). Each is
     // seeded once on load (_navSeed), piggybacks the matching view's poll while open,
     // and re-seeds every 60s.
-    healthAttn: false, learningAttn: false, workflowsAttn: false, tasksAttn: false, attnAttn: false,
-    // Mobile: the "More" bottom sheet (Galaxy/Charts/Learning). Transient, not persisted.
+    healthAttn: false, workflowsAttn: false, tasksAttn: false, attnAttn: false,
+    // Mobile: the "More" bottom sheet (Galaxy/Charts/Config). Transient, not persisted.
     moreOpen: false,
     // Mobile responsiveness: seeded from matchMedia so the very first render is
     // correct; kept live by a matchMedia('(max-width:768px)') listener wired in
@@ -533,21 +377,7 @@ class Component extends DCLogic {
     isMobile: (typeof window !== 'undefined' && window.matchMedia) ? window.matchMedia('(max-width: 768px)').matches : false
   };
 
-  // ---- run data (a real SSE feed could replace this by pushing the same shapes) ----
-  // ---- live data (populated from /api/state + /api/runs + /events) ----
-  base = [];          // graph nodes for the selected run (see applyState)
-  EDGES = [];         // graph edges (parentId / deps) for the selected run
-  LOOP = 1;           // legacy replay period; unused under the live wall clock
-  runs = [];          // RunSummary[] from /api/runs (see loadRuns)
-  runTitleLive = '';
   MIN = 60000; HR = 3600000; DAY = 86400000;   // relTime() units
-    facetDefs = {
-    status: ['running','succeeded','failed','blocked','cancelled'],
-    agent:  ['codex','claude','kimi'],
-    repo:   ['acme/webapp','quant/pricing','ops/waybread','data/warehouse']
-  };
-  facetLabels = { status:'Status', agent:'Agent', repo:'Repo' };
-  kindColors = { orchestrate:'#9ece6a', goal:'#bb9af7', implement:'#7aa2f7', ask:'#7dcfff', review:'#e0af68' };
 
   relTime(ago) {
     if (ago < 45000) return 'just now';
@@ -557,17 +387,10 @@ class Component extends DCLogic {
   }
 
   componentDidMount() {
-    this.byId = {};
     this.startClock();
-    let open = true;
-    try { const v = localStorage.getItem('gitmoot.runsOpen'); if (v != null) open = v === '1'; } catch (e) {}
-    // On phones the Runs column becomes a full-screen drawer, so default it CLOSED
-    // (graph visible; the floating "Runs" tab reopens it). Mobile-only, not persisted.
-    if (this.state.isMobile) open = false;
-    this.setState({ runsOpen: open });
     // ---- responsive: track the 768px breakpoint + a coarse-pointer flag ----
     // The breakpoint listener drives state.isMobile (re-renders the DC shell: rail,
-    // tab bar, crumb, runs drawer) AND re-docks the body-appended overlay roots
+    // tab bar, crumb) AND re-docks the body-appended overlay roots
     // (left/bottom), which live outside DC and must be repositioned imperatively.
     // The coarse-pointer flag only sizes touch targets (galaxy hit-testing) so it
     // needs no re-render.
@@ -608,27 +431,17 @@ class Component extends DCLogic {
       else if (this._mqCoarse.addListener) this._mqCoarse.addListener(this._onCoarseChange);
     } catch (e) {}
     this._startPullToRefresh();
-    window.addEventListener('resize', this.onResize);
     window.addEventListener('popstate', this._onPopState); // back/forward -> view state
-    // safety: never leave the Runs column stuck on skeletons if /api/runs hangs
-    this._loadTO = setTimeout(() => { if (this.state.listLoading) this.setState({ listLoading: false }); }, 8000);
-    this.connectLive();
     this.startLiveStream();
-    this.loadRuns();
-    // poll the run list so newly-created / state-changed runs surface live
-    // (the selected run's graph already streams via SSE); background refresh.
-    this._runsPoll = setInterval(() => this.loadRuns(), 15000);
     // Seed the persistent top bar (daemon liveness) + the needs-you nav dots
-    // (health/learning/attention) from a light batch fetch, then re-seed
+    // (health/workflows/tasks/attention) from a light batch fetch, then re-seed
     // every 60s so the background stays live without adding per-view polls.
     this._navSeed();
     this._navSeedTimer = setInterval(() => this._navSeed(), 60000);
   }
   componentWillUnmount() {
     clearInterval(this._t);
-    clearInterval(this._runsPoll);
     clearInterval(this._navSeedTimer);
-    clearTimeout(this._loadTO);
     this.stopGalaxyPoll();
     this.stopJobsPoll();
     this.stopAgentsPoll();
@@ -637,14 +450,11 @@ class Component extends DCLogic {
     this.stopHealthPoll();
     this.stopConfigPoll();
     this.stopAttentionPoll();
-    this.stopSkillsPoll();
     this.stopWorkflowPoll();
     this.stopOverviewPoll();
     this.stopTasksPoll();
     this._stopPullToRefresh();
     this.stopLiveStream();
-    try { if (this._es) this._es.close(); } catch (e) {}
-    window.removeEventListener('resize', this.onResize);
     try { window.removeEventListener('popstate', this._onPopState); } catch (e) {}
     try { if (this._mqMobile) { if (this._mqMobile.removeEventListener) this._mqMobile.removeEventListener('change', this._onMobileChange); else if (this._mqMobile.removeListener) this._mqMobile.removeListener(this._onMobileChange); } } catch (e) {}
     try { if (this._mqCoarse) { if (this._mqCoarse.removeEventListener) this._mqCoarse.removeEventListener('change', this._onCoarseChange); else if (this._mqCoarse.removeListener) this._mqCoarse.removeListener(this._onCoarseChange); } } catch (e) {}
@@ -667,9 +477,7 @@ class Component extends DCLogic {
     try { if (this._healthRoot) this._healthRoot.remove(); } catch (e) {}
     try { if (this._configRoot) this._configRoot.remove(); } catch (e) {}
     try { if (this._attentionRoot) this._attentionRoot.remove(); } catch (e) {}
-    try { if (this._learningRoot) this._learningRoot.remove(); } catch (e) {}
     try { if (this._workflowRoot) this._workflowRoot.remove(); } catch (e) {}
-    try { if (this._workflowStrip) this._workflowStrip.remove(); } catch (e) {}
     try { if (this._overviewRoot) this._overviewRoot.remove(); } catch (e) {}
     try { if (this._tasksRoot) this._tasksRoot.remove(); } catch (e) {}
   }
@@ -732,10 +540,6 @@ class Component extends DCLogic {
       this._liveStreamBackoff = 1000;
       this._scheduleLiveRefresh();
       this._connectLiveStream();
-      // The run-canvas uses a separate /events stream; replace its potentially
-      // frozen connection and reload its snapshot alongside the shared stream.
-      this.loadState();
-      this.subscribeEvents();
     }, Math.max(0, Number(delay) || 0));
   }
   _connectLiveStream() {
@@ -801,11 +605,6 @@ class Component extends DCLogic {
     else if (view === 'health') this.fetchHealth(true);
     else if (view === 'config') this.fetchConfig(true);
     else if (view === 'attention') this.fetchAttention(true);
-    else if (view === 'learning') this.fetchSkills(true);
-    else if (view === 'graph') {
-      this.loadState();
-      this.loadRuns();
-    }
   }
 
   // ---- shared mobile pull-to-refresh controller ----------------------------
@@ -839,9 +638,7 @@ class Component extends DCLogic {
       charts: ['#charts-root .ch-scroll'],
       attention: ['#attention-root .at-scroll'],
       health: ['#health-root .hl-body'],
-      config: ['#config-root .cfg-scroll'],
-      learning: ['#learning-root #lr-skills'],
-      graph: ['.gm-runs-list']
+      config: ['#config-root .cfg-scroll']
     };
     return selectors[this.state.view] || [];
   }
@@ -964,7 +761,6 @@ class Component extends DCLogic {
   // sanitizer never touches the canvas. Created lazily on first
   // show and reused; toggled via display only. See applyView().
   // ============================================================
-  showGraph = () => { this.setState({ view: 'graph' }); this._navRoute('graph'); };
   showOverview = () => { this.setState({ view: 'overview' }); this._navRoute('overview'); };
   showTasks = () => { this.setState({ view: 'tasks' }); this._navRoute('tasks'); };
   showGalaxy = () => { this.setState({ view: 'galaxy' }); this._navRoute('galaxy'); };
@@ -1125,17 +921,6 @@ class Component extends DCLogic {
       this.stopAttentionPoll();
       if (this._attentionRoot) this._attentionRoot.style.display = 'none';
     }
-    // Learning overlay: the Skills surface (agent-template evolution). Same
-    // body-appended overlay pattern as galaxy/jobs/agents/charts/health.
-    if (v === 'learning') {
-      const root = this.ensureLearningDom();
-      root.style.display = 'flex';
-      this.startSkillsPoll();
-      this.fetchSkills(false);
-    } else {
-      this.stopSkillsPoll();
-      if (this._learningRoot) this._learningRoot.style.display = 'none';
-    }
     this._queuePullToRefreshSync();
   }
 
@@ -1289,7 +1074,7 @@ class Component extends DCLogic {
       "#workflow-root .wf-stalled-banner{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;margin:0 0 18px;padding:14px 16px;border:1px solid rgba(224,175,104,.42);border-radius:10px;background:rgba(224,175,104,.055)}.wf-stalled-banner>div{min-width:0}.wf-stalled-title{color:#e8c58a;font-weight:600;font-size:12px}.wf-stalled-copy{margin-top:7px;color:#a88a55;font-size:11px;line-height:1.55}.wf-last-note{max-width:100%;margin-top:10px;padding:9px 10px;border:1px solid rgba(224,175,104,.15);border-radius:7px;background:#0b0c14;color:#8c7449;font:9.5px 'JetBrains Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.wf-go{min-width:0;padding-left:16px;border-left:1px solid rgba(224,175,104,.18)}.wf-go h4{margin:0 0 8px;color:#9a7d49;font:600 9px 'JetBrains Mono';letter-spacing:.12em;text-transform:uppercase}.wf-go-row{display:flex;justify-content:space-between;gap:10px;margin:5px 0;color:#676e98;font:9.5px 'JetBrains Mono'}.wf-go-row b{color:#c7c9e5;font-weight:500}.wf-resume{min-width:0;display:flex;align-items:center;gap:8px;margin-top:9px;padding:8px 9px;border:1px solid rgba(160,168,220,.14);border-radius:7px;background:#0d0f1c;color:#b6e88f;font:9.5px 'JetBrains Mono';overflow:hidden}.wf-resume code{min-width:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wf-readonly{margin-top:7px;color:#555c83;font:8.5px 'JetBrains Mono'}",
       "#workflow-root .wft-head{display:flex;align-items:center;gap:8px;margin:14px 0 8px;color:#8b90b8;font:600 10px 'JetBrains Mono';letter-spacing:.13em;text-transform:uppercase}.wft-head small{color:#565d85;font-size:9px;letter-spacing:0;text-transform:none;font-weight:400}.wft-live{margin-left:auto;color:#9ece6a;letter-spacing:0;text-transform:none}.wft-list{position:relative;padding-left:43px}.wft-list:before{content:'';position:absolute;left:13px;top:8px;bottom:8px;width:1px;background:rgba(160,168,220,.15)}.wft-item{position:relative;margin-bottom:14px}.wft-marker{position:absolute;left:-43px;top:2px;width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:#111322;color:#8b90b8;border:1px solid rgba(160,168,220,.2);box-shadow:0 0 0 4px #080a14;font:10px 'JetBrains Mono';z-index:1}.wft-marker.note{left:-36px;top:5px;width:11px;height:11px;border:0;background:#bb9af7;box-shadow:0 0 0 4px #080a14,0 0 7px rgba(187,154,247,.5)}.wft-marker.running{color:#9ece6a;border-color:rgba(158,206,106,.4);background:rgba(158,206,106,.1);animation:dotpulse 1.8s infinite}.wft-marker.succeeded{color:#9ece6a}.wft-marker.failed{color:#f7768e;border-color:rgba(247,118,142,.4)}.wft-marker.blocked{color:#e0af68}",
       "#workflow-root .wf-run-block{border:1px solid rgba(160,168,220,.14);border-radius:9px;background:#101222;overflow:hidden}.wf-run-block.running{border-color:rgba(158,206,106,.33)}.wf-run-top{display:grid;grid-template-columns:16px minmax(0,1fr) auto auto;align-items:center;gap:10px;padding:10px 12px 5px;cursor:pointer}.wf-chev{color:#68709b;font-size:10px;transition:transform .15s}.wf-chev.open{transform:rotate(90deg)}.wf-run-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#e2e4f3;font-weight:600;font-size:12px}.wf-run-status{padding:2px 7px;border-radius:5px;font:9px 'JetBrains Mono'}.wf-run-status.running,.wf-run-status.succeeded{color:#9ece6a;background:rgba(158,206,106,.09);border:1px solid rgba(158,206,106,.22)}.wf-run-status.failed{color:#f7768e;background:rgba(247,118,142,.09);border:1px solid rgba(247,118,142,.25)}.wf-run-status.blocked{color:#e0af68;border:1px solid rgba(224,175,104,.25)}.wf-run-status.queued{color:#697099;border:1px solid rgba(160,168,220,.13)}.wf-elapsed{color:#697099;font:9px 'JetBrains Mono';white-space:nowrap}",
-      "#workflow-root .wf-run-meta{display:flex;align-items:center;gap:8px;padding:0 12px 10px 35px;color:#5c638d;font:9.5px 'JetBrains Mono'}.wf-agent{padding:2px 7px;border:1px solid rgba(160,168,220,.14);border-radius:4px}.wf-agent.claude{color:#cabff2;background:rgba(187,154,247,.1)}.wf-agent.codex{color:#8fd3ff;background:rgba(110,198,255,.1)}.wf-agent.kimi{color:#e8c58a;background:rgba(224,175,104,.1)}.wf-graph-link{margin-left:auto;color:#6ec6ff;text-decoration:none;font:9.5px 'JetBrains Mono'}",
+      "#workflow-root .wf-run-meta{display:flex;align-items:center;gap:8px;padding:0 12px 10px 35px;color:#5c638d;font:9.5px 'JetBrains Mono'}.wf-agent{padding:2px 7px;border:1px solid rgba(160,168,220,.14);border-radius:4px}.wf-agent.claude{color:#cabff2;background:rgba(187,154,247,.1)}.wf-agent.codex{color:#8fd3ff;background:rgba(110,198,255,.1)}.wf-agent.kimi{color:#e8c58a;background:rgba(224,175,104,.1)}",
       "#workflow-root .wf-children{margin:0 12px 9px;padding:7px 0 0 22px;border-top:1px solid rgba(160,168,220,.08)}.wf-child{display:grid;grid-template-columns:9px 80px minmax(0,1fr) 80px 55px;align-items:center;gap:8px;min-height:27px;color:#7179a5;font:9.5px 'JetBrains Mono'}.wf-child-dot{width:7px;height:7px;border-radius:50%;background:#697099}.wf-child-dot.running,.wf-child-dot.succeeded{background:#9ece6a}.wf-child-dot.failed{background:#f7768e}.wf-child-dot.blocked{background:#e0af68}.wf-action{padding:2px 6px;border:1px solid rgba(160,168,220,.12);border-radius:4px;color:#8fd3ff;text-align:center}.wf-child-state{text-align:right}.wf-child-state.running,.wf-child-state.succeeded{color:#9ece6a}.wf-child-state.failed{color:#f7768e}.wf-child-state.blocked{color:#e0af68}",
       "#workflow-root .wf-note{padding:0 0 2px;cursor:pointer}.wf-note-head{display:flex;align-items:center;gap:8px;color:#5a6088;font:9.5px 'JetBrains Mono'}.wf-note-author{color:#cabff2;font-weight:600}.wf-note-tag{padding:1px 4px;border:1px solid rgba(160,168,220,.12);border-radius:3px;font-size:7.5px;text-transform:uppercase}.wf-note-body{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;margin-top:6px;color:#c7c9e5;font-size:11.5px;line-height:1.55;white-space:pre-wrap;word-break:break-word}.wf-note.open .wf-note-body{display:block}.wf-history-sentinel{height:1px;pointer-events:none}.wf-load-earlier{display:block;margin:6px 0;padding:7px 10px;border:0;background:transparent;color:#697099;font:9.5px 'JetBrains Mono';cursor:pointer}.wf-load-earlier:disabled{cursor:default;color:#515777}.wfd-skeleton{display:grid;gap:12px}.wfd-skeleton .wf-shimmer{height:84px;border-radius:9px}",
       "@media(max-width:768px){#workflow-root{left:0!important;top:54px!important;bottom:calc(60px + env(safe-area-inset-bottom))!important}#workflow-root.detail-open{top:0!important;bottom:0!important;z-index:80!important}.wfi-head{height:auto!important;display:block!important;padding:14px 15px 10px!important}.wfi-title{font-size:20px!important}.wfi-summary{float:right;margin-top:-20px}.wfi-controls{margin-top:10px!important;display:grid!important;grid-template-columns:minmax(0,1fr) 60px!important}.wfi-search-wrap{width:auto!important}.wfi-controls .wfi-select:not(#wfi-range){display:none}.wfi-scroll{padding:10px 15px 24px!important}.wfi-list{border:0!important;background:transparent!important;display:grid;gap:8px;overflow:visible!important}.wfi-row{position:relative;display:grid!important;grid-template-columns:12px minmax(0,1fr) auto!important;gap:8px!important;min-height:0!important;padding:11px 12px!important;border:1px solid rgba(160,168,220,.13)!important;border-radius:8px;background:#0d0f1c}.wfi-group.stalled .wfi-row{border-color:rgba(224,175,104,.35)!important}.wfi-main{grid-column:2/4}.wfi-outcomes{grid-column:2}.wfi-numbers{grid-column:3;text-align:right}.wfi-time{position:absolute;right:12px;top:11px}.wfi-time div:last-child{display:none}.wfi-meta{padding-right:62px}.wfi-note{white-space:normal;-webkit-line-clamp:1}.wf-empty{min-height:340px!important}.wfd-scroll{padding:12px 15px 28px!important}.wfd-head{align-items:flex-start!important;flex-wrap:wrap}.wfd-label{font-size:16px!important;flex:1}.wfd-label .ns{font-size:13px!important}.wfd-coord{order:4;width:100%;margin-left:0!important;justify-content:space-between}.wfd-stats{display:flex!important;overflow-x:auto}.wfd-stat{min-width:104px!important}.wfd-stat:nth-child(2){min-width:145px!important}.wf-stalled-banner{grid-template-columns:minmax(0,1fr)!important}.wf-go{padding:12px 0 0!important;border-left:0!important;border-top:1px solid rgba(224,175,104,.18)}.wft-list{padding-left:36px!important}.wft-list:before{left:10px!important}.wft-marker{left:-36px!important}.wft-marker.note{left:-31px!important}.wf-run-top{grid-template-columns:12px minmax(0,1fr) auto!important}.wf-run-top .wf-elapsed{display:none}.wf-run-title{font-size:11.5px!important}.wf-run-meta{padding-left:27px!important}.wf-run-meta>span:nth-child(2){display:none}.wf-child{grid-template-columns:8px 70px minmax(0,1fr) 58px!important}.wf-child .wf-elapsed{display:none}.wft-head small{display:none}}"
@@ -1316,8 +1101,6 @@ class Component extends DCLogic {
     root.addEventListener('click', e => {
       const copy = e.target.closest && e.target.closest('[data-wf-copy]');
       if (copy) { e.preventDefault(); e.stopPropagation(); this._gmCopyChip(copy, copy.getAttribute('data-wf-copy') || ''); return; }
-      const graph = e.target.closest && e.target.closest('[data-wf-graph]');
-      if (graph) { e.preventDefault(); e.stopPropagation(); this.openWorkflowGraph(graph.getAttribute('data-wf-graph')); return; }
       if (e.target.closest && e.target.closest('.wf-back')) { e.preventDefault(); this.showWorkflows(); return; }
       const row = e.target.closest && e.target.closest('[data-workflow-label]');
       if (row) { this.showWorkflow(row.getAttribute('data-workflow-label')); return; }
@@ -1491,16 +1274,11 @@ class Component extends DCLogic {
   _wfTimelineRun(run) {
     const r=this._wfRunShape(run),open=!!this._workflowExpanded[r.id];
     const children=open&&r.children.length?'<div class="wf-children">'+r.children.map(c=>{const state=c.state||'queued';return '<div class="wf-child"><span class="wf-child-dot '+this._wfEsc(state)+'"></span><span class="wf-action">'+this._wfEsc(c.action||'job')+'</span><span>'+this._wfEsc(c.agent||'agent')+'</span><span class="wf-child-state '+this._wfEsc(state)+'">'+this._wfEsc(state)+'</span><span class="wf-elapsed">'+this._wfEsc(c.elapsed_s?this._wfDuration(c.elapsed_s):'-')+'</span></div>';}).join('')+'</div>':'';
-    return '<article class="wft-item" data-wf-entry-key="run:'+this._wfEsc(r.id)+'"><span class="wft-marker '+this._wfEsc(r.state)+'">'+this._wfStatusGlyph(r.state)+'</span><div class="wf-run-block '+this._wfEsc(r.state)+'"><div class="wf-run-top" data-wf-run="'+this._wfEsc(r.id)+'" role="button" tabindex="0"><span class="wf-chev '+(open?'open':'')+'">▸</span><span class="wf-run-title">'+this._wfEsc(r.title)+'</span><span class="wf-run-status '+this._wfEsc(r.state)+'">'+this._wfEsc(r.state==='succeeded'?'done':r.state)+'</span><span class="wf-elapsed">'+this._wfEsc(this._wfDuration(r.elapsed))+'</span></div><div class="wf-run-meta"><span class="wf-agent '+this._wfRuntime(r.runtime)+'">'+this._wfEsc(r.agent||'agent')+'</span><span>'+this._wfEsc(r.repo||'repository')+'</span><a class="wf-graph-link" href="/?run='+encodeURIComponent(r.id)+'" data-wf-graph="'+this._wfEsc(r.id)+'">view as graph ↗</a></div>'+children+'</div></article>';
+    return '<article class="wft-item" data-wf-entry-key="run:'+this._wfEsc(r.id)+'"><span class="wft-marker '+this._wfEsc(r.state)+'">'+this._wfStatusGlyph(r.state)+'</span><div class="wf-run-block '+this._wfEsc(r.state)+'"><div class="wf-run-top" data-wf-run="'+this._wfEsc(r.id)+'" role="button" tabindex="0"><span class="wf-chev '+(open?'open':'')+'">▸</span><span class="wf-run-title">'+this._wfEsc(r.title)+'</span><span class="wf-run-status '+this._wfEsc(r.state)+'">'+this._wfEsc(r.state==='succeeded'?'done':r.state)+'</span><span class="wf-elapsed">'+this._wfEsc(this._wfDuration(r.elapsed))+'</span></div><div class="wf-run-meta"><span class="wf-agent '+this._wfRuntime(r.runtime)+'">'+this._wfEsc(r.agent||'agent')+'</span><span>'+this._wfEsc(r.repo||'repository')+'</span></div>'+children+'</div></article>';
   }
   _wfTimelineNote(note) {
     const id=String(note.id),open=!!this._workflowExpanded['note:'+id];
     return '<article class="wft-item wf-note '+(open?'open':'')+'" data-wf-entry-key="note:'+this._wfEsc(id)+'" data-wf-note="'+this._wfEsc(id)+'" role="button" tabindex="0"><span class="wft-marker note"></span><div class="wf-note-head"><span class="wf-note-author">'+this._wfEsc(note.author||'coordinator')+'</span><span>'+this._wfEsc(this._wfDate(note.createdAt))+' · '+this._wfEsc(this._wfAge(note.createdAt))+' ago</span><span class="wf-note-tag">note</span></div><div class="wf-note-body">'+this._wfEsc(note.body||'')+'</div></article>';
-  }
-  openWorkflowGraph(id) {
-    if(!id)return; this.currentRunId=id;this._fitted=false;
-    try{history.pushState(null,'','/?run='+encodeURIComponent(id));document.title='gitmoot · graph';}catch(e){}
-    this.setState({view:'graph',selectedRunId:id,selectedId:null},()=>{this.loadState();this.subscribeEvents();});
   }
   renderWorkflow(data) {
     if(!this._workflowRoot)return; this._wfShowDetail();data=data||{};
@@ -1613,9 +1391,6 @@ class Component extends DCLogic {
       "#galaxy-root .ga-val.mono{font-family:'JetBrains Mono',monospace;font-size:11px}",
       "#galaxy-root .ga-caps{display:flex;gap:5px;flex-wrap:wrap}",
       "#galaxy-root .ga-cap{padding:2px 6px;border:1px solid rgba(160,168,220,.13);border-radius:5px;background:#090b16;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:#8b90b8}",
-      "#galaxy-root .ga-template{display:flex;align-items:center;gap:8px;padding:10px 11px;background:#090b16;border:1px solid rgba(160,168,220,.13);border-radius:8px}",
-      "#galaxy-root .ga-template-name{flex:1;min-width:0;font-size:12px;color:#c8cbe6;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
-      "#galaxy-root .ga-template-ver{font-family:'JetBrains Mono',monospace;font-size:10px;color:#cabff2}",
       "#galaxy-root .ga-action{display:flex;align-items:center;justify-content:space-between;margin-top:15px;padding:9px 11px;border:1px solid rgba(160,168,220,.13);border-radius:8px;color:#cabff2;text-decoration:none;font-size:11.5px;background:#090b16}",
       "#galaxy-root .ga-action:hover{border-color:rgba(202,191,242,.34);background:rgba(202,191,242,.06)}",
       "#galaxy-root .ga-empty{padding:14px 2px;color:#8b90b8;font-size:12px;line-height:1.5}",
@@ -1633,14 +1408,14 @@ class Component extends DCLogic {
     const root = document.createElement('div');
     root.id = 'galaxy-root';
     // fill the content area (right of the 216px nav rail); opaque so it fully
-    // covers the per-run canvas / minimap / detail panel underneath.
+    // covers the empty shell underneath.
     root.style.cssText = 'position:fixed;left:216px;top:54px;right:0;bottom:0;z-index:40;background:#07080f;display:none';
     root.innerHTML = [
       '<div id="g-graph"></div>',
       '<div id="g-loading">summoning the galaxy…</div>',
       '<div id="g-title" class="g-chip">',
       '  <div class="g-brand">gitmoot<span class="g-dot">·</span>galaxy</div>',
-      '  <div class="g-sub">delegation graph · force-directed</div>',
+      '  <div class="g-sub">job graph · force-directed</div>',
       '  <div id="g-count">showing <b id="g-nCount">0</b> nodes / <b id="g-lCount">0</b> links</div>',
       '</div>',
       '<div id="g-filterWrap" class="g-chip">',
@@ -2402,7 +2177,7 @@ class Component extends DCLogic {
       if (recordError && recordError.status !== 404) {
         this.renderGalaxyAgentDetail(node, null, null, jobs, 'error', recordError);
       } else {
-        this.renderGalaxyAgentDetail(node, summary, detail, jobs, summary ? 'ok' : 'ephemeral');
+        this.renderGalaxyAgentDetail(node, summary, detail, jobs, summary ? 'ok' : 'unregistered');
       }
     });
   }
@@ -2482,11 +2257,11 @@ class Component extends DCLogic {
     const lastJobAt = agentJobs.reduce((latest, j) => Math.max(latest, Number(j.updated || j.started) || 0), 0);
     const jobsHref = '/jobs?agent=' + encodeURIComponent(name);
     const actionHTML = '<a class="ga-action" href="' + jobsHref + '"><span>Jobs for this agent</span><span>↗</span></a>';
-    if (status === 'ephemeral') {
+    if (status === 'unregistered') {
       const activityHTML = lastJobAt ? '<div class="ga-section">Profile</div><div class="ga-profile"><div class="ga-row"><span class="ga-key">last activity</span><span class="ga-val mono">' + esc(this._agRelShort(lastJobAt) || 'now') + '</span></div></div>' : '';
-      const body = '<div class="ga-empty">One-off worker spawned for a single job or delegation; no persistent record.</div>' +
+      const body = '<div class="ga-empty">Not a registered agent; only its job history remains.</div>' +
         '<div class="ga-section">Activity</div><div class="ga-stats">' + stats + '</div>' + activityHTML + actionHTML;
-      const el = this._galaxyPanelShell({ className: 'gd-agent-panel', title: name, subtitle: 'ephemeral worker · not registered', color: '#656b91', headerMeta: '', body: body });
+      const el = this._galaxyPanelShell({ className: 'gd-agent-panel', title: name, subtitle: 'not registered', color: '#656b91', headerMeta: '', body: body });
       const link = el.querySelector('.ga-action');
       if (link) link.addEventListener('click', (e) => { e.preventDefault(); this.closeGalaxyDetail(); this.showJobs(name); });
       return;
@@ -2499,15 +2274,9 @@ class Component extends DCLogic {
     if (capabilities.length) rows.push('<div class="ga-row"><span class="ga-key">capabilities</span><span class="ga-caps">' + capabilities.map(c => '<span class="ga-cap">' + esc(c) + '</span>').join('') + '</span></div>');
     if (a.lastActive || d.lastActive) rows.push('<div class="ga-row"><span class="ga-key">last activity</span><span class="ga-val mono">' + esc(this._agRelShort(a.lastActive || d.lastActive) || 'now') + '</span></div>');
 
-    const tmpl = d.template || null;
-    const versions = Array.isArray(d.versions) ? d.versions : [];
-    const current = versions.find(v => v && v.current) || versions[0] || null;
-    const templateName = (tmpl && (tmpl.name || tmpl.id)) || cfg.template || '';
-    const version = current && current.number != null ? ('v' + current.number) : '';
-    const templateHTML = templateName ? '<div class="ga-section">Template</div><div class="ga-template"><span class="ga-template-name">' + esc(templateName) + '</span>' + (version ? '<span class="ga-template-ver">' + esc(version) + '</span>' : '') + '</div>' : '';
     const body = '<div class="ga-section">Activity</div><div class="ga-stats">' + stats + '</div>' +
       (rows.length ? '<div class="ga-section">Profile</div><div class="ga-profile">' + rows.join('') + '</div>' : '') +
-      templateHTML + actionHTML;
+      actionHTML;
     const el = this._galaxyPanelShell({ className: 'gd-agent-panel', title: name, subtitle: 'agent', color: color, headerMeta: headerMeta, body: body });
     const link = el.querySelector('.ga-action');
     if (link) link.addEventListener('click', (e) => { e.preventDefault(); this.closeGalaxyDetail(); this.showJobs(name); });
@@ -2664,7 +2433,6 @@ class Component extends DCLogic {
   showHealth = () => { this.setState({ view: 'health' }); this._navRoute('health'); };
   showConfig = () => { this.setState({ view: 'config' }); this._navRoute('config'); };
   showAttention = () => { this.setState({ view: 'attention' }); this._navRoute('attention'); };
-  showLearning = () => { this.setState({ view: 'learning' }); this._navRoute('learning'); };
 
   startJobsPoll() {
     if (this._jobsPoll) return;
@@ -3140,7 +2908,7 @@ class Component extends DCLogic {
     ).join('') + '</div>';
   }
   _orgFeedHTML(items) {
-    const colors = { blocked_since: '#ff9e64', recycle_overdue: '#e0af68', recycle: '#9ece6a' };
+    const colors = { blocked_since: '#ff9e64', recycle: '#9ece6a' };
     const rows = Array.isArray(items) ? items : [];
     if (!rows.length) return '<div class="org-quiet"><span class="org-check">✓</span><span>No current signals.</span></div>';
     return rows.map(f => {
@@ -3830,11 +3598,9 @@ class Component extends DCLogic {
   // ============================================================
   // Agents view (wave 5a redesign): a two-pane FLEET WORKBENCH — a
   // persistent left rail (search + runtime segmented filter + clickable
-  // status rollup + dense agent rows + pinned ephemeral-workers fleet
-  // footer) beside a persistent right detail pane that fills the width
-  // (monogram header + derived-status chip, 4 stat tiles, CONFIG card,
-  // TEMPLATE card with the shared collapsible prompt viewer, VERSION
-  // HISTORY chip strip, and a RECENT RUNS list populated client-side from
+  // status rollup + dense agent rows) beside a persistent right detail pane
+  // that fills the width (monogram header + derived-status chip, 4 stat
+  // tiles, CONFIG card, and a RECENT RUNS list populated client-side from
   // /api/jobs filtered by the selected agent). Body-appended imperative
   // overlay (#agents-root), same sanitizer-skip pattern as jobs/charts.
   // DERIVED STATUS (busy | failing | idle) replaces the raw health string
@@ -3896,12 +3662,6 @@ class Component extends DCLogic {
       "#agents-root .ag-rspace{flex:1;min-width:6px}",
       "#agents-root .ag-rmini{font-family:'JetBrains Mono',monospace;font-size:10.5px;flex:none}",
       "#agents-root .ag-ractive{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--gm-text-faint);flex:none;min-width:52px;text-align:right;white-space:nowrap}",
-      "#agents-root .ag-fleet{flex:none;margin:8px;padding:12px 13px;border:1px solid var(--gm-border-raised);border-radius:8px;background:var(--gm-surface-raised)}",
-      "#agents-root .ag-fleet-top{display:flex;align-items:center;gap:9px}",
-      "#agents-root .ag-fleet-dot{width:8px;height:8px;border-radius:50%;background:#7dcfff;box-shadow:0 0 8px rgba(125,207,255,0.6);flex:none;animation:dotpulse 1.4s ease-in-out infinite}",
-      "#agents-root .ag-fleet-name{font-size:12.5px;font-weight:600;color:#cdeaff}",
-      "#agents-root .ag-fleet-tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;color:#7dcfff;background:rgba(125,207,255,0.1);border:1px solid rgba(125,207,255,0.28);border-radius:7px;padding:3px 9px}",
-      "#agents-root .ag-fleet-stats{display:flex;align-items:center;gap:12px;margin-top:7px;padding-left:17px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#7c9fc0}",
       // ---- RIGHT PANE ----
       "#agents-root .ag-pane{flex:1;display:flex;flex-direction:column;min-width:0;overflow:auto;background:var(--gm-bg)}",
       "#agents-root .ag-pane-inner{padding:20px 24px 28px;display:flex;flex-direction:column;gap:20px}",
@@ -3918,27 +3678,12 @@ class Component extends DCLogic {
       "#agents-root .ag-tile{padding:16px 18px;background:var(--gm-surface-raised);border:1px solid var(--gm-border-raised);border-radius:8px;display:flex;flex-direction:column;gap:3px}",
       "#agents-root .ag-tile-l{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:0.12em;color:var(--gm-text-muted)}",
       "#agents-root .ag-tile-v{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;line-height:1;margin-top:7px}",
-      "#agents-root .ag-cols{display:grid;grid-template-columns:1fr 1.35fr;gap:16px}",
-      "#agents-root .ag-colL{display:flex;flex-direction:column;gap:16px}",
       "#agents-root .ag-sec{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:0.13em;color:var(--gm-text-faint);margin-bottom:10px}",
       "#agents-root .ag-cfg{background:var(--gm-surface-raised);border:1px solid var(--gm-border-raised);border-radius:8px;padding:6px 14px}",
       "#agents-root .ag-cfg-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid rgba(160,168,220,0.06)}",
       "#agents-root .ag-cfg-row:last-child{border-bottom:none}",
       "#agents-root .ag-cfg-k{font-size:12px;color:var(--gm-text-muted)}",
       "#agents-root .ag-cfg-v{font-family:'JetBrains Mono',monospace;font-size:12px;color:#e7e9f7;text-align:right;word-break:break-word}",
-      "#agents-root .ag-vh{display:flex;gap:8px;flex-wrap:wrap}",
-      "#agents-root .ag-vchip{display:flex;flex-direction:column;gap:2px;padding:8px 12px;border-radius:7px;border:1px solid var(--gm-border-raised);background:var(--gm-surface-raised)}",
-      "#agents-root .ag-vchip.cur{border-color:rgba(158,206,106,0.28);background:rgba(158,206,106,0.1)}",
-      "#agents-root .ag-vchip-num{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#a8aecf}",
-      "#agents-root .ag-vchip.cur .ag-vchip-num{color:#9ece6a}",
-      "#agents-root .ag-vchip-when{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--gm-text-faint)}",
-      "#agents-root .ag-vempty{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gm-text-faint)}",
-      "#agents-root .ag-tmpl-head{display:flex;align-items:center;gap:9px;margin-bottom:10px;flex-wrap:wrap}",
-      "#agents-root .ag-tmpl-name{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--gm-text-strong);word-break:break-word}",
-      "#agents-root .ag-tmpl-ver{font-family:'JetBrains Mono',monospace;font-size:10px;color:#a8aecf;background:rgba(160,168,220,0.08);border-radius:5px;padding:1px 6px}",
-      "#agents-root .ag-tmpl-box{background:var(--gm-surface-raised);border:1px solid var(--gm-border-raised);border-radius:8px;padding:14px 16px}",
-      "#agents-root .ag-tmpl-excerpt{font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.6;color:#c7c9e5;white-space:pre-wrap;word-break:break-word;max-height:150px;overflow:hidden;-webkit-mask-image:linear-gradient(#000 70%,transparent);mask-image:linear-gradient(#000 70%,transparent)}",
-      "#agents-root .ag-tmpl-none{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gm-text-faint);background:#0a0b16;border:1px dashed rgba(160,168,220,0.14);border-radius:11px;padding:16px;text-align:center}",
       "#agents-root .ag-runs{background:var(--gm-surface-raised);border:1px solid var(--gm-border-raised);border-radius:8px;overflow:hidden}",
       "#agents-root .ag-run{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(160,168,220,0.06);cursor:pointer}",
       "#agents-root .ag-run:last-child{border-bottom:none}",
@@ -3949,20 +3694,10 @@ class Component extends DCLogic {
       "#agents-root .ag-run-dur{font-family:'JetBrains Mono',monospace;font-size:11px;color:#7c83a8;width:66px;text-align:right;flex:none}",
       "#agents-root .ag-run-age{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--gm-text-faint);width:56px;text-align:right;flex:none}",
       "#agents-root .ag-runs-empty{background:var(--gm-surface-raised);border:1px solid var(--gm-border-raised);border-radius:8px;padding:20px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--gm-text-faint)}",
-      // shared collapsible prompt viewer (template card)
-      "#agents-root .ad-prompt{margin-top:12px}",
-      "#agents-root .ad-prompt-bar{display:flex;align-items:center;gap:8px}",
-      "#agents-root .ad-prompt-toggle{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:none;border:0;padding:2px 0;margin:0;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#868db5;text-align:left}",
-      "#agents-root .ad-prompt-toggle:hover{color:#c7c9e5}",
-      "#agents-root .ad-prompt-chev{display:inline-block;width:9px;flex:none;color:#7f86ad}",
-      "#agents-root .ad-prompt-lbl{flex:none}",
-      "#agents-root .ad-prompt-hint{color:var(--gm-text-faint);font-size:9.5px;margin-left:2px;white-space:nowrap}",
-      "#agents-root .ad-prompt-view{margin-top:8px;max-height:44vh;overflow:auto;background:#07080f;border:1px solid rgba(160,168,220,0.14);border-radius:8px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.55;color:#c7c9e5;white-space:pre-wrap;word-break:break-word}",
-      "#agents-root .ad-prompt-view[hidden]{display:none}",
       // Mobile: rail and pane each fill the width; show the rail by default and swap to
       // the pane (full-screen sheet) when #agents-root carries .ag-detail. The back
       // button returns to the list.
-      "@media (max-width:768px){#agents-root .ag-rail{width:100%;border-right:none}#agents-root .ag-pane{display:none}#agents-root.ag-detail .ag-rail{display:none}#agents-root.ag-detail .ag-pane{display:flex}#agents-root .ag-back{display:inline-block}#agents-root .ag-cols{grid-template-columns:1fr}#agents-root .ag-tiles{grid-template-columns:repeat(2,1fr)}#agents-root .ag-pane-inner{padding-left:16px;padding-right:16px}}"
+      "@media (max-width:768px){#agents-root .ag-rail{width:100%;border-right:none}#agents-root .ag-pane{display:none}#agents-root.ag-detail .ag-rail{display:none}#agents-root.ag-detail .ag-pane{display:flex}#agents-root .ag-back{display:inline-block}#agents-root .ag-tiles{grid-template-columns:repeat(2,1fr)}#agents-root .ag-pane-inner{padding-left:16px;padding-right:16px}}"
     ].join('\n');
     document.head.appendChild(st);
 
@@ -3976,7 +3711,6 @@ class Component extends DCLogic {
       '  <div class="ag-rtfilter"><div class="ag-rtseg" id="ag-rtseg"></div></div>',
       '  <div class="ag-rollup" id="ag-rollup"></div>',
       '  <div class="ag-list" id="ag-list"></div>',
-      '  <div id="ag-fleet"></div>',
       '</div>',
       '<div class="ag-pane" id="ag-pane"></div>'
     ].join('\n');
@@ -4010,27 +3744,13 @@ class Component extends DCLogic {
       const row = (e.target.closest && e.target.closest('[data-agent]')) || null;
       if (row) { const nm = row.getAttribute('data-agent'); if (nm) this.openAgentsDetail(nm); }
     });
-    // Pane interactions (delegated once): mobile back, recent-run row -> shared job
-    // rail, and the collapsible prompt viewer toggle/copy.
+    // Pane interactions (delegated once): mobile back and recent-run row -> shared
+    // job rail.
     root.querySelector('#ag-pane').addEventListener('click', (e) => {
       const t = e.target;
       if (t.closest && t.closest('.ag-back')) { this.closeAgentsDetail(); return; }
       const runRow = t.closest && t.closest('[data-run]');
       if (runRow) { this._agOpenRun(runRow.getAttribute('data-run')); return; }
-      const tog = t.closest && t.closest('.ad-prompt-toggle');
-      if (tog) {
-        const box = tog.closest('.ad-prompt');
-        const view = box && box.querySelector('.ad-prompt-view');
-        const chev = box && box.querySelector('.ad-prompt-chev');
-        if (view) { const willOpen = view.hasAttribute('hidden'); view.toggleAttribute('hidden'); if (chev) chev.textContent = willOpen ? '▾' : '▸'; }
-        return;
-      }
-      const copy = t.closest && t.closest('.gm-copy');
-      if (copy) {
-        const box = copy.closest('.ad-prompt');
-        const view = box && box.querySelector('.ad-prompt-view');
-        if (view) this._gmCopyChip(copy, view.textContent);
-      }
     });
     // Escape on mobile returns from the detail sheet to the list.
     this._agentsKeydown = (e) => { if (e.key === 'Escape' && this.state.view === 'agents' && this.state.isMobile && this._agMobileDetail) this.closeAgentsDetail(); };
@@ -4046,7 +3766,7 @@ class Component extends DCLogic {
         this._agentsLoaded = true;
         this.renderAgents();
         this._agEnsureSelection();
-        this.renderAgentsPane(!isPoll); // poll: signature-skip preserves an open prompt viewer
+        this.renderAgentsPane(!isPoll); // poll: signature-skip avoids redundant re-renders
       })
       .catch(err => {
         if (isPoll) return; // keep current rail/pane on a transient poll failure
@@ -4057,12 +3777,10 @@ class Component extends DCLogic {
       });
   }
 
-  // The non-ephemeral agents (the fleet footer row is rendered separately).
-  _agRealAgents() { return (this._agentsData || []).filter(a => !a.ephemeral); }
   // Ensure a valid selection: keep the current one if it still exists, else default
-  // to the first real agent (URL canonicalized to /agents/<name> via replaceState).
+  // to the first agent (URL canonicalized to /agents/<name> via replaceState).
   _agEnsureSelection() {
-    const reals = this._agRealAgents();
+    const reals = this._agentsData || [];
     if (!reals.length) return;
     const has = this._agentsSelected && reals.some(a => a.name === this._agentsSelected);
     if (has) { this._agEnsureDetail(this._agentsSelected); this._agEnsureRecent(this._agentsSelected); return; }
@@ -4071,7 +3789,7 @@ class Component extends DCLogic {
 
   renderAgents() {
     if (!this._agentsRoot) return;
-    const reals = this._agRealAgents();
+    const reals = this._agentsData || [];
     const withStatus = reals.map(a => ({ a, st: this._agDerivedStatus(a) }));
     const rollup = { busy: 0, idle: 0, failing: 0 };
     withStatus.forEach(x => { rollup[x.st]++; });
@@ -4120,13 +3838,6 @@ class Component extends DCLogic {
         list.innerHTML = filtered.map(({ a, st }) => this._agRowHtml(a, st)).join('');
       }
     }
-
-    // Ephemeral-workers fleet footer.
-    const fleetEl = this._agentsRoot.querySelector('#ag-fleet');
-    if (fleetEl) {
-      const eph = (this._agentsData || []).find(a => a.ephemeral);
-      fleetEl.innerHTML = eph ? this._agFleetHtml(eph) : '';
-    }
   }
 
   _agRowHtml(a, st) {
@@ -4153,23 +3864,9 @@ class Component extends DCLogic {
     '</div>';
   }
 
-  _agFleetHtml(eph) {
-    const running = eph.runningCount || 0;
-    const done = Math.max(0, (eph.jobCount || 0) - running);
-    const fmt = (n) => { try { return n.toLocaleString(); } catch (e) { return String(n); } };
-    return '<div class="ag-fleet">' +
-      '<div class="ag-fleet-top">' +
-        '<span class="ag-fleet-dot"></span>' +
-        '<span class="ag-fleet-name">ephemeral workers</span>' +
-        '<span class="ag-fleet-tag">fleet</span>' +
-      '</div>' +
-      '<div class="ag-fleet-stats"><span>' + fmt(running) + ' running</span><span>·</span><span>' + fmt(done) + ' done</span></div>' +
-    '</div>';
-  }
-
   // ---- selection + persistent detail pane ----
   // openAgentsDetail is the public "select this agent" entry (row click, deep link,
-  // Skills cross-nav, popstate). It pushes /agents/<name> and, on mobile, opens the
+  // popstate). It pushes /agents/<name> and, on mobile, opens the
   // full-screen detail sheet.
   openAgentsDetail(name) {
     if (!name) return;
@@ -4277,7 +3974,6 @@ class Component extends DCLogic {
     const runtime = a.runtime || '';
     const rtCol = this._runtimeColor(runtime);
     const detailReady = this._agDetailName === name;
-    const status = detailReady ? (this._agDetailStatus || 'ok') : 'loading';
     const d = (detailReady && this._agDetail) ? this._agDetail : {};
     const cfg = d.config || null;
 
@@ -4296,54 +3992,14 @@ class Component extends DCLogic {
 
     // Config rows (contract fields only — no tokens row; the contract lacks it).
     const model = (cfg && cfg.model) || a.model || '';
-    const concurrency = (cfg && cfg.maxBackground) ? String(cfg.maxBackground) : '-';
-    const timeout = (cfg && (cfg.jobTimeout || cfg.idleTimeout)) || '-';
+    const timeout = (cfg && cfg.jobTimeout) || '-';
     const cfgRow = (k, v) => '<div class="ag-cfg-row"><span class="ag-cfg-k">' + esc(k) + '</span><span class="ag-cfg-v">' + esc(v) + '</span></div>';
     const cfgHtml = '<div class="ag-cfg">' +
       cfgRow('runtime', runtime || '-') +
       cfgRow('model', model || '-') +
-      cfgRow('concurrency', concurrency) +
-      cfgRow('timeout', timeout) +
+      cfgRow('job timeout', timeout) +
       cfgRow('avg duration', avgDur) +
     '</div>';
-
-    // Version history chip strip (newest first; current highlighted — no double
-    // "current" badge, superseding the old CURRENT CURRENT bug).
-    const versions = Array.isArray(d.versions) ? d.versions : [];
-    let vhHtml;
-    if (versions.length) {
-      vhHtml = '<div class="ag-vh">' + versions.map(v => {
-        const cur = !!v.current;
-        const when = this._agRelShort(v.promotedAt || v.createdAt) || '-';
-        const num = v.number != null ? ('v' + v.number) : 'v?';
-        const stateTxt = String(v.state == null ? '' : v.state);
-        const desc = v.description || v.name || '';
-        const tip = (stateTxt ? stateTxt : '') + (desc ? (stateTxt ? ' · ' : '') + desc : '');
-        return '<div class="ag-vchip' + (cur ? ' cur' : '') + '"' + (tip ? ' title="' + esc(tip) + '"' : '') + '>' +
-          '<span class="ag-vchip-num">' + esc(num) + '</span>' +
-          '<span class="ag-vchip-when">' + esc(cur ? 'now' : when) + '</span>' +
-        '</div>';
-      }).join('') + '</div>';
-    } else {
-      vhHtml = '<div class="ag-vempty">' + (status === 'loading' ? 'loading…' : 'no versions recorded') + '</div>';
-    }
-
-    // Template card: name + current-version chip + excerpt + shared collapsible viewer.
-    const tmpl = d.template || null;
-    let tmplHtml;
-    if (tmpl) {
-      const curV = versions.find(v => v.current) || versions[0] || null;
-      const tmplVer = (curV && curV.number != null) ? ('v' + curV.number) : '';
-      const content = tmpl.content || '';
-      const excerpt = content ? String(content).split('\n').slice(0, 6).join('\n') : '';
-      tmplHtml = '<div class="ag-tmpl-head"><span class="ag-tmpl-name">' + esc(tmpl.name || tmpl.id || '-') + '</span>' + (tmplVer ? '<span class="ag-tmpl-ver">' + esc(tmplVer) + '</span>' : '') + '</div>' +
-        '<div class="ag-tmpl-box">' +
-          (excerpt ? '<div class="ag-tmpl-excerpt">' + esc(excerpt) + '</div>' : '<div class="ag-vempty">no prompt recorded</div>') +
-          (content ? this._promptViewerHtml(esc, 'view full prompt', content, true) : '') +
-        '</div>';
-    } else {
-      tmplHtml = '<div class="ag-tmpl-none">' + (status === 'loading' ? 'loading…' : 'no template') + '</div>';
-    }
 
     // Recent runs.
     let runsHtml;
@@ -4384,43 +4040,8 @@ class Component extends DCLogic {
         this._agTileHtml('RUNNING', String(running), '#7aa2f7') +
         this._agTileHtml('FAILED', String(failed), failed > 0 ? '#f7768e' : '#868db5') +
       '</div>' +
-      '<div class="ag-cols">' +
-        '<div class="ag-colL">' +
-          '<div><div class="ag-sec">CONFIG</div>' + cfgHtml + '</div>' +
-          '<div><div class="ag-sec">VERSION HISTORY</div>' + vhHtml + '</div>' +
-        '</div>' +
-        '<div><div class="ag-sec">TEMPLATE</div>' + tmplHtml + '</div>' +
-      '</div>' +
+      '<div><div class="ag-sec">CONFIG</div>' + cfgHtml + '</div>' +
       '<div><div class="ag-sec">RECENT RUNS · last 8</div>' + runsHtml + '</div>' +
-    '</div>';
-  }
-
-  // A byte/line hint for a prompt body (e.g. "1.2 KB · 34 lines"). Bytes are the
-  // UTF-8 encoded length; lines are '\n'-split. Pure numeric/derived output.
-  _promptHint(content) {
-    const str = String(content == null ? '' : content);
-    let bytes;
-    try { bytes = new TextEncoder().encode(str).length; } catch (e) { bytes = str.length; }
-    const size = bytes < 1024 ? (bytes + ' B') : ((bytes / 1024).toFixed(1) + ' KB');
-    const lines = str.length ? str.replace(/\n$/, '').split('\n').length : 0;
-    return size + ' · ' + lines + ' line' + (lines === 1 ? '' : 's');
-  }
-  // Collapsible prompt viewer: a toggle row (chevron + label + byte/line hint) and a
-  // scrollable mono <pre> block holding the FULL escaped content. Collapsed by default
-  // ([hidden]). content is repo-controlled text — always escaped, rendered as text,
-  // never as markup. withCopy adds a clipboard button. Toggle/copy wiring is attached
-  // generically via the delegated #ag-pane click listener.
-  _promptViewerHtml(esc, label, content, withCopy) {
-    return '<div class="ad-prompt">' +
-      '<div class="ad-prompt-bar">' +
-        '<button type="button" class="ad-prompt-toggle">' +
-          '<span class="ad-prompt-chev">▸</span>' +
-          '<span class="ad-prompt-lbl">' + esc(label) + '</span>' +
-          '<span class="ad-prompt-hint">' + esc(this._promptHint(content)) + '</span>' +
-        '</button>' +
-        (withCopy ? '<button type="button" class="gm-copy" title="copy prompt">copy</button>' : '') +
-      '</div>' +
-      '<pre class="ad-prompt-view" hidden>' + esc(content) + '</pre>' +
     '</div>';
   }
 
@@ -5084,13 +4705,10 @@ class Component extends DCLogic {
       "#health-root .hl-lheld{font-size:11.5px;color:#5a6088;flex:none;white-space:nowrap}",
       "#health-root .hl-esc{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.05em;text-transform:uppercase;border-radius:5px;padding:2px 7px;flex:none}",
       "#health-root .hl-lage{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;flex:none}",
-      "#health-root .hl-cmd{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 11px;background:#0a0b16;border:1px solid rgba(160,168,220,0.14);border-radius:8px;flex:0 1 auto;min-width:96px;max-width:520px;overflow:hidden}",
-      "#health-root .hl-cmd code{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#c5f882;white-space:nowrap;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}",
-      "#health-root .hl-cmd .gm-copy{flex:none}",
       "#health-root .hl-exppill{display:flex;align-items:center;gap:6px;padding:6px 11px;background:#0a0b16;border:1px solid rgba(160,168,220,0.12);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#7f86ad;flex:none}",
       "#health-root .hl-empty{padding:22px 14px;text-align:center;color:#5a6088;font-size:12.5px;background-color:#0b0d18;border:1px dashed rgba(160,168,220,0.12);border-radius:11px}",
       "#health-root .hl-ok{color:#9ece6a}",
-      "@media (max-width:768px){#health-root .hl-body{padding:16px 14px 40px}#health-root .hl-banner{flex-wrap:wrap}#health-root .hl-bnright{width:100%;flex-direction:row;justify-content:flex-start;align-items:center}#health-root .hl-vitals{grid-template-columns:1fr 1fr}#health-root .hl-sline{flex-wrap:wrap}#health-root .hl-lrow{flex-wrap:wrap}#health-root .hl-srepo{max-width:120px}#health-root .hl-lname{max-width:200px}#health-root .hl-cmd{width:100%}#health-root .hl-cmd code{white-space:normal;word-break:break-all}}"
+      "@media (max-width:768px){#health-root .hl-body{padding:16px 14px 40px}#health-root .hl-banner{flex-wrap:wrap}#health-root .hl-bnright{width:100%;flex-direction:row;justify-content:flex-start;align-items:center}#health-root .hl-vitals{grid-template-columns:1fr 1fr}#health-root .hl-sline{flex-wrap:wrap}#health-root .hl-lrow{flex-wrap:wrap}#health-root .hl-srepo{max-width:120px}#health-root .hl-lname{max-width:200px}}"
     ].join('\n');
     document.head.appendChild(st);
 
@@ -5110,14 +4728,12 @@ class Component extends DCLogic {
     this._dockOverlay(root); // mobile: left:0 + bottom clears the tab bar
     this._healthRoot = root;
 
-    // Delegated click handling for the whole overlay: copy chips, the
-    // preview-all-clear toggle, per-row "why" expanders, agent cross-links, and
-    // stuck-row -> in-place job detail (the last, so a bare row click still opens).
+    // Delegated click handling for the whole overlay: the preview-all-clear
+    // toggle, per-row "why" expanders, agent cross-links, and stuck-row ->
+    // in-place job detail (the last, so a bare row click still opens).
     root.addEventListener('click', (e) => {
       const el = (e.target && e.target.closest) ? e.target : (e.target && e.target.parentElement);
       const q = (sel) => (el && el.closest) ? el.closest(sel) : null;
-      const copy = q('.gm-copy');
-      if (copy) { e.stopPropagation(); this._gmCopyChip(copy); return; }
       const tog = q('[data-hl-toggle]');
       if (tog) { e.stopPropagation(); this._hlOverride = this._hlAllClear ? 'live' : 'clear'; this.renderHealth(this._healthData); return; }
       const why = q('[data-hl-why]');
@@ -5163,24 +4779,18 @@ class Component extends DCLogic {
     const dm = data.daemon || {};
     const t = data.totals || {};
     const stuck = Array.isArray(data.stuck) ? data.stuck : [];
-    const branchLocks = Array.isArray(data.locks) ? data.locks : [];
     const resLocks = Array.isArray(data.resourceLocks) ? data.resourceLocks : [];
     const failures = Array.isArray(data.recentFailures) ? data.recentFailures : [];
     const now = Date.now();
     const DAY = 86400000;
 
-    // Unified lock model: branch/checkout locks (carry the real release command)
-    // plus non-branch resource locks (TTL'd runtime sessions etc. — shown with an
-    // expiry countdown instead of a release command). Aged past 24h -> AGING, 7d -> CRITICAL.
-    const allLocks = branchLocks.map(l => ({
-      kind: 'branch', name: (l.branch || '?') + ' @ ' + (l.repo || '?'), owner: l.owner || '-',
-      since: l.acquiredAt || 0, exp: 0,
-      cmd: 'gitmoot lock release ' + (l.repo || '') + ' ' + (l.branch || '') + ' --owner ' + (l.owner || '')
-    })).concat(resLocks.map(l => {
+    // Resource locks (TTL'd runtime sessions etc.), shown with an expiry
+    // countdown. Aged past 24h -> AGING, 7d -> CRITICAL.
+    const allLocks = resLocks.map(l => {
       const key = l.key || ''; const ci = key.indexOf(':');
       return { kind: ci > 0 ? key.slice(0, ci) : 'lock', name: ci > 0 ? key.slice(ci + 1) : (key || '?'),
-        owner: l.owner || '-', since: l.acquiredAt || 0, exp: l.expiresAt || 0, cmd: '' };
-    }));
+        owner: l.owner || '-', since: l.acquiredAt || 0, exp: l.expiresAt || 0 };
+    });
     const agingLocks = allLocks.filter(l => l.since > 0 && (now - l.since) > DAY);
 
     // Vitals (computed client-side).
@@ -5326,16 +4936,14 @@ class Component extends DCLogic {
       '</div>' + body + '</div>';
   }
 
-  // Lock row: dot . kind.name . held by X . AGING/CRITICAL chip . age . release cmd
-  // (branch locks) or an expiry countdown (TTL'd resource locks).
+  // Lock row: dot . kind.name . held by X . AGING/CRITICAL chip . age . expiry
+  // countdown.
   _hlLockRow(l, tone, lvl) {
     const esc = (s) => this._galaxyEsc(s);
     const dot = '<span class="hl-dot" style="background:' + tone + ';box-shadow:0 0 8px ' + tone + '"></span>';
     const chip = lvl ? '<span class="hl-esc" style="color:' + tone + ';background:' + this._hlTint(tone, 0.12) + ';border:1px solid ' + this._hlTint(tone, 0.28) + '">' + lvl + '</span>' : '';
     const age = '<span class="hl-lage hl-age" data-since="' + (l.since || 0) + '" style="color:' + tone + '">-</span>';
-    const tail = l.cmd
-      ? '<div class="hl-cmd"><code>' + esc(l.cmd) + '</code><button class="gm-copy" data-cmd="' + esc(l.cmd) + '" type="button">copy</button></div>'
-      : '<div class="hl-exppill">ttl <span class="hl-exp" data-exp="' + (l.exp || 0) + '">-</span></div>';
+    const tail = '<div class="hl-exppill">ttl <span class="hl-exp" data-exp="' + (l.exp || 0) + '">-</span></div>';
     return '<div class="hl-lrow">' + dot +
       '<span class="hl-lname"><span class="hl-lkind">' + esc(l.kind) + '</span> · ' + esc(l.name) + '</span>' +
       '<span class="hl-lheld">held by ' + esc(l.owner) + '</span>' + chip +
@@ -5853,400 +5461,9 @@ class Component extends DCLogic {
     if (scroll) { scroll.scrollTop = Math.min(oldTop, Math.max(0, scroll.scrollHeight - scroll.clientHeight)); }
     this._configSyncAnchor();
   }
-
-  // ============================================================
-  // Learning page: the Skills surface over /api/learning/skills — the agent
-  // template evolution table (version history, current version, pending
-  // candidates). Body-appended, position:fixed overlay (same pattern as
-  // galaxy/jobs/agents/charts/health), polled every 12s with a
-  // change-signature skip.
-  // ============================================================
-  startSkillsPoll() {
-    if (this._skillsPoll) return;
-    this._skillsPoll = setInterval(() => {
-      if (this.state.view !== 'learning') return;
-      this.fetchSkills(true);
-    }, 12000);
-  }
-  stopSkillsPoll() { try { clearInterval(this._skillsPoll); } catch (e) {} this._skillsPoll = null; }
-
-  ensureLearningDom() {
-    if (this._learningRoot) return this._learningRoot;
-    const st = document.createElement('style');
-    st.textContent = [
-      "#learning-root{font-family:Inter,system-ui,sans-serif;color:#c8cce6;flex-direction:column}",
-      "#learning-root .lr-head{display:flex;align-items:center;gap:16px;padding:18px 24px 14px;flex:none;flex-wrap:wrap}",
-      "#learning-root .lr-page-title{font:600 13px 'JetBrains Mono',monospace;color:#c7c9e5}",
-      "#learning-root .lr-title{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;color:#eef0ff;letter-spacing:-0.02em}",
-      "#learning-root .lr-title .lr-tdot{color:#bb9af7;margin-left:1px}",
-      "#learning-root .lr-body{flex:1;position:relative;min-height:0}",
-      "#learning-root #lr-skills{position:absolute;inset:0;overflow-y:auto}",
-      "#learning-root .lr-skbody{padding:22px 24px 40px}",
-      "#learning-root .lr-skcol{display:flex;flex-direction:column;gap:20px}",
-      "#learning-root .lr-needs{background:linear-gradient(180deg,rgba(224,175,104,0.07),#111325);border:1px solid rgba(224,175,104,0.26);border-left:3px solid #e0af68;border-radius:12px;overflow:hidden}",
-      "#learning-root .lr-ndhead{display:flex;align-items:center;gap:9px;padding:13px 16px}",
-      "#learning-root .lr-nd{width:7px;height:7px;border-radius:50%;background:#e0af68;box-shadow:0 0 8px rgba(224,175,104,0.7);flex:none}",
-      "#learning-root .lr-ndlabel{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:0.13em;color:#e6c07f;font-weight:600}",
-      "#learning-root .lr-ndcount{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#a98c52}",
-      "#learning-root .lr-ndok{font-family:'JetBrains Mono',monospace;font-size:12px;color:#9ece6a}",
-      "#learning-root .lr-nsp{flex:1}",
-      "#learning-root .lr-ndbody{padding:0 12px 12px;display:flex;flex-direction:column;gap:7px}",
-      "#learning-root .lr-nrow{display:flex;align-items:center;gap:12px;padding:11px 13px;background:#0f1120;border:1px solid rgba(160,168,220,0.12);border-radius:10px;flex-wrap:wrap}",
-      "#learning-root .lr-nname{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#eef0ff;font-weight:600}",
-      "#learning-root .lr-nprom{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#7dcfff;background:rgba(125,207,255,0.1);border-radius:5px;padding:1px 7px}",
-      "#learning-root .lr-nsc{font-family:'JetBrains Mono',monospace;font-size:11px;color:#9ece6a}",
-      "#learning-root .lr-nage{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#5a6088}",
-      "#learning-root .lr-needs-empty{display:flex;align-items:center;gap:9px;padding:11px 16px;background:#0d0f1c;border:1px solid rgba(160,168,220,0.1);border-radius:12px}",
-      "#learning-root .lr-needs-empty .lr-nd{background:#5a6088;box-shadow:none}",
-      "#learning-root .lr-needs-empty .lr-ndlabel{color:#7f86ad}",
-      "#learning-root .lr-needs-empty .lr-ndcount{color:#5a6088}",
-      "#learning-root .lr-cmd{display:flex;align-items:center;gap:8px;padding:6px 8px 6px 11px;background:#0a0b16;border:1px solid rgba(160,168,220,0.14);border-radius:8px;flex:0 1 auto;min-width:0;max-width:100%;overflow:hidden}",
-      "#learning-root .lr-cmd code{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#c5f882;white-space:nowrap;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}",
-      "#learning-root .lr-cmd .gm-copy{flex:none}",
-      "#learning-root .lr-sech{display:flex;align-items:center;gap:8px;margin-bottom:11px}",
-      "#learning-root .lr-sech-tog{cursor:pointer}",
-      "#learning-root .lr-secchev{font-size:10px;color:#5a6088;width:10px}",
-      "#learning-root .lr-sect{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.14em;color:#868db5;font-weight:600}",
-      "#learning-root .lr-secn{font-family:'JetBrains Mono',monospace;font-size:10px;color:#5a6088}",
-      "#learning-root .lr-secmute{font-family:'JetBrains Mono',monospace;font-size:11px;color:#5a6088;padding:2px 2px 6px}",
-      "#learning-root .lr-ttbl{border:1px solid rgba(160,168,220,0.1);border-radius:11px;overflow:hidden}",
-      "#learning-root .lr-trow{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid rgba(160,168,220,0.05)}",
-      "#learning-root .lr-trow:last-child{border-bottom:none}",
-      "#learning-root .lr-thead{padding:9px 16px;background:#0f1120;border-bottom:1px solid rgba(160,168,220,0.1);font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:0.08em;color:#5a6088}",
-      "#learning-root .lr-tdata[data-agent]{cursor:pointer}",
-      "#learning-root .lr-tdata[data-agent]:hover{background:rgba(160,168,220,0.04)}",
-      "#learning-root .lr-c-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}",
-      "#learning-root .lr-c-ver{width:70px;flex:none}",
-      "#learning-root .lr-c-score{width:150px;flex:none;display:flex;align-items:center;gap:9px}",
-      "#learning-root .lr-c-changed{width:110px;flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5a6088}",
-      "#learning-root .lr-tn{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#eef0ff}",
-      "#learning-root .lr-vchip{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#a8aecf;background:rgba(160,168,220,0.08);border-radius:5px;padding:2px 7px}",
-      "#learning-root .lr-bar{width:64px;height:5px;background:rgba(160,168,220,0.12);border-radius:3px;overflow:hidden;flex:none}",
-      "#learning-root .lr-barfill{display:block;height:100%;border-radius:3px}",
-      "#learning-root .lr-scv{font-family:'JetBrains Mono',monospace;font-size:11.5px}",
-      "#learning-root .lr-empty-tbl{padding:60px 20px;text-align:center;color:#5a6088;font-size:13px}",
-      "@media (max-width:768px){#learning-root .lr-head{padding-left:16px;padding-right:16px}#learning-root .lr-skbody{padding-left:14px;padding-right:14px}#learning-root .lr-thead{display:none}#learning-root .lr-trow{flex-wrap:wrap;gap:6px 10px}#learning-root .lr-c-name{flex:1 1 100%;white-space:normal}#learning-root .lr-c-ver,#learning-root .lr-c-changed{width:auto;flex:none}#learning-root .lr-c-score{width:auto;flex:1}#learning-root .lr-nrow{gap:8px}#learning-root .lr-cmd{width:100%;max-width:none}#learning-root .lr-cmd code{white-space:normal;word-break:break-all}}"
-    ].join('\n');
-    document.head.appendChild(st);
-
-    const root = document.createElement('div');
-    root.id = 'learning-root';
-    root.style.cssText = 'position:fixed;left:216px;top:54px;right:0;bottom:0;z-index:40;background:#07080f;display:none';
-    root.innerHTML = [
-      '<div class="lr-head">',
-      '  <div class="lr-page-title">Skills</div>',
-      '</div>',
-      '<div class="lr-body">',
-      '  <div id="lr-skills">',
-      '    <div class="lr-skbody" id="lr-skills-body"></div>',
-      '  </div>',
-      '</div>'
-    ].join('\n');
-    document.body.appendChild(root);
-    this._dockOverlay(root); // mobile: left:0 + bottom clears the tab bar
-    this._learningRoot = root;
-    // Skills delegation: copy chip > section disclosure toggle > row-nav-to-agent.
-    const sbody = root.querySelector('#lr-skills-body');
-    sbody.addEventListener('click', (e) => {
-      const copy = (e.target.closest && e.target.closest('.gm-copy')) || null;
-      if (copy) { e.stopPropagation(); this._gmCopyChip(copy); return; }
-      const tog = (e.target.closest && e.target.closest('[data-tog]')) || null;
-      if (tog) { e.stopPropagation(); this._lrToggleSection(tog.getAttribute('data-tog')); return; }
-      const row = (e.target.closest && e.target.closest('.lr-tdata')) || null;
-      if (row && row.getAttribute('data-agent')) this._learningGotoAgent(row.getAttribute('data-agent'));
-    });
-    return root;
-  }
-
-  // ---- Skills tab ------------------------------------------------------------
-  fetchSkills(isPoll) {
-    fetch('/api/learning/skills', { cache: 'no-store' })
-      .then(r => r.ok ? r.text() : Promise.reject(new Error('HTTP ' + r.status)))
-      .then(txt => {
-        if (isPoll && this._skillsSig === txt) return; // unchanged — skip the re-render
-        this._skillsSig = txt;
-        let json = null; try { json = JSON.parse(txt); } catch (e) { json = null; }
-        this._skillsData = json || { templates: [], activeCanaries: 0, pendingTotal: 0 };
-        this._navApplySkills(this._skillsData);
-        this._skillsLoaded = true;
-        this.renderSkills();
-      })
-      .catch(err => {
-        if (isPoll) return; // keep the current table on a transient poll failure
-        this._skillsLoaded = true;
-        const body = this._learningRoot && this._learningRoot.querySelector('#lr-skills-body');
-        if (body) body.innerHTML = '<div class="lr-empty-tbl" style="color:#f7768e">could not load /api/learning/skills (' + this._galaxyEsc(err && err.message) + ')</div>';
-      });
-  }
-
-  renderSkills() {
-    if (!this._learningRoot) return;
-    const data = this._skillsData || { templates: [], activeCanaries: 0, pendingTotal: 0 };
-    const tpls = Array.isArray(data.templates) ? data.templates : [];
-    const body = this._learningRoot.querySelector('#lr-skills-body');
-    if (!body) return;
-    if (!tpls.length) { body.innerHTML = '<div class="lr-skcol"><div class="lr-empty-tbl">' + (this._skillsLoaded ? 'no templates tracked yet' : 'loading…') + '</div></div>'; return; }
-
-    // NEEDS YOU: a FLAT list of every pending candidate across every template
-    // (newest first), each carrying its own copyable promote command.
-    const needs = [];
-    tpls.forEach(t => { (Array.isArray(t.pending) ? t.pending : []).forEach(c => needs.push({ t: t, c: c })); });
-    needs.sort((a, b) => (b.c.createdAt || 0) - (a.c.createdAt || 0));
-
-    // CHANGED RECENTLY = a pending candidate OR a version event in the last 7d;
-    // everything else lands in the collapsed ALL TEMPLATES disclosure.
-    const now = Date.now(), WEEK = 7 * 24 * 3600 * 1000;
-    const meta = tpls.map(t => this._lrTplMeta(t));
-    const changed = meta.filter(m => m.pendingCount > 0 || (m.changedMs && (now - m.changedMs) <= WEEK));
-    const allOpen = !!this._lrAllOpen;
-
-    const changedSec =
-      '<div>' +
-        '<div class="lr-sech"><span class="lr-sect">CHANGED RECENTLY</span><span class="lr-secn">(' + changed.length + ')</span></div>' +
-        (changed.length
-          ? '<div class="lr-ttbl">' + this._lrTableHead() + changed.map(m => this._lrTplRow(m)).join('') + '</div>'
-          : '<div class="lr-secmute">nothing changed in the last 7 days</div>') +
-      '</div>';
-
-    const allSec =
-      '<div>' +
-        '<div class="lr-sech lr-sech-tog" data-tog="all"><span class="lr-secchev">' + (allOpen ? '▾' : '▸') + '</span><span class="lr-sect">ALL TEMPLATES</span><span class="lr-secn">(' + meta.length + ')</span></div>' +
-        (allOpen ? '<div class="lr-ttbl">' + this._lrTableHead() + meta.map(m => this._lrTplRow(m)).join('') + '</div>' : '') +
-      '</div>';
-
-    body.innerHTML = '<div class="lr-skcol">' + this._lrNeedsPanel(needs) + changedSec + allSec + '</div>';
-  }
-
-  // The pinned amber NEEDS-YOU queue: every pending candidate listed flat, each
-  // with the exact `gitmoot skillopt promote <versionId>` command + a copy chip.
-  // Collapses to a single muted line when the queue is empty.
-  _lrNeedsPanel(needs) {
-    const esc = (s) => this._galaxyEsc(s);
-    const n = needs.length;
-    if (n === 0) {
-      return '<div class="lr-needs-empty"><span class="lr-nd"></span><span class="lr-ndlabel">NEEDS YOU</span><span class="lr-ndcount">(0)</span><span class="lr-nsp"></span><span class="lr-ndok">✓ nothing pending</span></div>';
-    }
-    const rows = needs.map(x => {
-      const t = x.t, c = x.c;
-      const cmd = 'gitmoot skillopt promote ' + (c.versionId || '');
-      const scoreHtml = (c.score != null && String(c.score) !== '') ? '<span class="lr-nsc">score ' + esc(c.score) + '</span>' : '';
-      const ageHtml = c.createdAt ? '<span class="lr-nage">' + esc(this._relFromMs(c.createdAt)) + '</span>' : '';
-      return '<div class="lr-nrow">' +
-        '<span class="lr-nname">' + esc(t.name || t.templateId) + '</span>' +
-        '<span class="lr-nprom">promote → v' + esc(c.number != null ? c.number : '?') + '</span>' +
-        scoreHtml + ageHtml +
-        '<span class="lr-nsp"></span>' +
-        '<div class="lr-cmd"><code>' + esc(cmd) + '</code><button class="gm-copy" data-cmd="' + esc(cmd) + '" type="button">copy</button></div>' +
-      '</div>';
-    }).join('');
-    return '<div class="lr-needs">' +
-      '<div class="lr-ndhead"><span class="lr-nd"></span><span class="lr-ndlabel">NEEDS YOU</span><span class="lr-ndcount">(' + n + ')</span></div>' +
-      '<div class="lr-ndbody">' + rows + '</div>' +
-    '</div>';
-  }
-
-  // Per-template row model for the CHANGED RECENTLY / ALL TEMPLATES tables: the
-  // current-version score (falling back to the newest scored version) and the
-  // most-recent activity time (promotions, version + candidate creations).
-  _lrTplMeta(t) {
-    const versions = Array.isArray(t.versions) ? t.versions : [];
-    const pend = Array.isArray(t.pending) ? t.pending : [];
-    let score = null;
-    const cur = versions.find(v => v && v.number === t.currentVersion && v.hasScore);
-    if (cur) score = cur.score;
-    else { const scored = versions.filter(v => v && v.hasScore); if (scored.length) score = scored[scored.length - 1].score; }
-    let changedMs = 0;
-    const bump = (x) => { if (x && x > changedMs) changedMs = x; };
-    bump(t.lastPromotedAt); bump(t.canaryStartedAt);
-    versions.forEach(v => { bump(v.createdAt); bump(v.promotedAt); });
-    pend.forEach(c => bump(c.createdAt));
-    return { name: t.name || t.templateId, version: t.currentVersion || 0, score: score, changedMs: changedMs, pendingCount: pend.length, firstAgent: (Array.isArray(t.agents) && t.agents.length) ? t.agents[0] : '' };
-  }
-
-  _lrTableHead() {
-    return '<div class="lr-trow lr-thead"><span class="lr-c-name">TEMPLATE</span><span class="lr-c-ver">VERSION</span><span class="lr-c-score">SCORE</span><span class="lr-c-changed">CHANGED</span></div>';
-  }
-
-  // A determinate mini-bar (fill = score) + the score-colored number. A
-  // determinate bar is honest for a single/flat score — no misleading trend line.
-  // No USES column: the /api/learning/skills contract carries no uses/runs field.
-  _lrTplRow(m) {
-    const esc = (s) => this._galaxyEsc(s);
-    const s = m.score, hasScore = (s != null && !isNaN(s));
-    const col = hasScore ? this._lrScoreColor(s) : '#5a6088';
-    const pct = hasScore ? Math.max(0, Math.min(100, s * 100)) : 0;
-    const scoreCell = hasScore
-      ? '<span class="lr-bar"><span class="lr-barfill" style="width:' + pct.toFixed(0) + '%;background:' + col + '"></span></span><span class="lr-scv" style="color:' + col + '">' + esc(s.toFixed(2)) + '</span>'
-      : '<span class="lr-scv" style="color:#5a6088">no score</span>';
-    const rowAttr = m.firstAgent ? ' data-agent="' + esc(m.firstAgent) + '" title="view ' + esc(m.firstAgent) + '"' : '';
-    return '<div class="lr-trow lr-tdata"' + rowAttr + '>' +
-      '<span class="lr-c-name lr-tn">' + esc(m.name) + '</span>' +
-      '<span class="lr-c-ver"><span class="lr-vchip">v' + esc(m.version) + '</span></span>' +
-      '<span class="lr-c-score">' + scoreCell + '</span>' +
-      '<span class="lr-c-changed">' + esc(m.changedMs ? this._relFromMs(m.changedMs) : '-') + '</span>' +
-    '</div>';
-  }
-
-  _lrScoreColor(s) { return s >= 0.85 ? '#9ece6a' : (s >= 0.75 ? '#e0af68' : '#f7768e'); }
-
-  // ALL TEMPLATES discloses the full table; the toggle persists across the 12s
-  // poll re-render (renderSkills reads _lrAllOpen).
-  _lrToggleSection(which) {
-    if (which === 'all') this._lrAllOpen = !this._lrAllOpen;
-    this.renderSkills();
-  }
-
   _copyFallback(text) {
     try { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); } catch (e) {}
   }
-
-  // Navigate to /agents/<name> and open that agent's detail panel (the existing
-  // Agents panel carries the version history). Mirrors the deep-link path.
-  _learningGotoAgent(name) {
-    if (!name) return;
-    this._pendingAgentDetail = name; // applyView opens the panel after Agents mounts
-    this.setState({ view: 'agents' });
-    this._navRoute('agents', { agent: name });
-  }
-
-  // ---- live feed: /api/state (graph) + /events (SSE) + /api/runs (list) ----
-  connectLive() {
-    this.currentRunId = new URLSearchParams(location.search).get('run') || '';
-    this.loadState();
-    this.subscribeEvents();
-  }
-  subscribeEvents() {
-    try { if (this._es) this._es.close(); } catch (e) {}
-    try {
-      const run = this.currentRunId || '';
-      this._es = new EventSource('/events' + (run ? '?run=' + encodeURIComponent(run) : ''));
-      this._es.onmessage = (e) => { try { this.applyState(JSON.parse(e.data)); } catch (_) {} };
-    } catch (e) {}
-  }
-  loadState() {
-    const run = this.currentRunId || '';
-    fetch('/api/state' + (run ? '?run=' + encodeURIComponent(run) : ''))
-      .then(r => r.ok ? r.json() : null)
-      .then(s => { if (s && (this.currentRunId || '') === run) this.applyState(s); })  // drop stale after a switch
-      .catch(() => {});
-  }
-  loadRuns() {
-    fetch('/api/runs').then(r => r.ok ? r.json() : []).then(rs => {
-      if (!Array.isArray(rs)) { this.setState({ listLoading: false }); return; }
-      const now = Date.now();
-      this.runs = rs.map(r => ({
-        runId: r.runId, title: r.title || r.runId, state: r.state || 'queued',
-        kind: r.kind || '', significance: r.significance || 'one-shot',
-        agent: r.agent || '', repo: r.repo || '', pr: r.pr || 0,
-        nodeCount: r.nodeCount || 0, depth: r.depth || 1, doneCount: r.doneCount || 0,
-        snippet: r.snippet || '', ago: (r.updated && r.updated > 0) ? Math.max(0, now - r.updated) : Number.MAX_SAFE_INTEGER
-      }));
-      const uniq = (k) => Array.from(new Set(this.runs.map(r => r[k]).filter(Boolean)));
-      this.facetDefs = Object.assign({}, this.facetDefs, { agent: uniq('agent'), repo: uniq('repo') });
-      // NB: the graph load (applyState) owns currentRunId/selectedRunId — see below.
-      this.setState({ listLoading: false, listError: false });
-    }).catch(() => this.setState({ listLoading: false, listError: !this.runs.length }));  // keep the list on a transient poll failure
-  }
-  renderWorkflowContext(label) {
-    this.currentWorkflow = label || '';
-    if (!label) {
-      try { if (this._workflowStrip) this._workflowStrip.remove(); } catch (e) {}
-      this._workflowStrip = null;
-      return;
-    }
-    if (!this._canvas || !this._canvas.parentNode) return;
-    let el = this._workflowStrip;
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'run-workflow-context';
-      el.style.cssText = "position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:8;display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:9px;background:rgba(13,15,28,.9);border:1px solid rgba(45,212,191,.28);box-shadow:0 8px 24px rgba(0,0,0,.35);font-family:'JetBrains Mono',monospace;font-size:10.5px;color:#868db5;backdrop-filter:blur(8px)";
-      const prefix = document.createElement('span');
-      prefix.textContent = 'part of workflow';
-      const link = document.createElement('a');
-      link.href = '#';
-      link.style.cssText = 'color:#5eead4;text-decoration:none;font-weight:600';
-      link.addEventListener('click', (e) => { e.preventDefault(); this.showWorkflow(this.currentWorkflow); });
-      el.appendChild(prefix);
-      el.appendChild(link);
-      this._canvas.parentNode.appendChild(el);
-      this._workflowStrip = el;
-    }
-    const link = el.querySelector('a');
-    if (link) { link.textContent = label; link.setAttribute('aria-label', 'Open workflow ' + label); }
-  }
-  applyState(s) {
-    if (!s || !Array.isArray(s.nodes)) return;
-    const nodes = s.nodes.map(n => ({
-      id: n.id, parentId: n.parentId || null, deps: (n.deps && n.deps.length) ? n.deps : null,
-      title: n.title || n.id, agent: n.agent || '', runtime: n.runtime || '', model: n.model || '',
-      workerId: n.workerId || '', prompt: n.prompt || '', output: n.output || '',
-      events: Array.isArray(n.events) ? n.events.map(ev => ({ t: (ev.t > 1e11 ? ev.t / 1000 : ev.t), label: ev.label })) : [],
-      state: n.state || 'queued', startedAt: n.startedAt || 0, endedAt: n.endedAt || 0, prUrl: n.prUrl || null
-    }));
-    const ids = new Set(nodes.map(n => n.id));
-    const parents = new Set(nodes.filter(n => n.parentId && ids.has(n.parentId)).map(n => n.parentId));
-    nodes.forEach(n => { n.hasChildren = parents.has(n.id); });
-    const edges = [];
-    nodes.forEach(n => {
-      if (n.deps) { n.deps.forEach(d => { if (ids.has(d)) edges.push({ s: d, t: n.id }); }); }
-      else if (n.parentId && ids.has(n.parentId)) { edges.push({ s: n.parentId, t: n.id }); }
-    });
-    const setChanged = nodes.length !== this.base.length || nodes.some(n => !this.byId || !this.byId[n.id]);
-    const runChanged = (s.runId || this.currentRunId || '') !== (this.baseRunId || '');
-    this.base = nodes;
-    this.EDGES = edges;
-    this.byId = Object.fromEntries(nodes.map(n => [n.id, n]));
-    if (s.runId) this.currentRunId = s.runId;
-    this.baseRunId = s.runId || this.currentRunId;   // which run this.base belongs to
-    if (s.title) this.runTitleLive = s.title;
-    this.renderWorkflowContext(s.workflow || '');
-    // structural change (new run or new nodes) => pre-place synchronously so the
-    // switched-to graph never piles at 0,0, then let elk refine + re-fit.
-    const structural = setChanged || runChanged;
-    const done = () => { if (structural) { this.initLayout(!this._fitted); this._fitted = true; } };
-    const patch = {};
-    if (structural) patch.positions = this.fallbackLayout();
-    // the graph is the source of truth for the selected run: reconcile the column
-    // highlight + breadcrumb (which key off selectedRunId) with the loaded run.
-    if (this.baseRunId && this.state.selectedRunId !== this.baseRunId) patch.selectedRunId = this.baseRunId;
-    if (Object.keys(patch).length) this.setState(patch, done); else { done(); this.forceUpdate(); }
-  }
-
-  // ---- Runs column interactions ----  // ---- Runs column interactions ----
-  toggleRuns = () => {
-    this.setState(s => {
-      const open = !s.runsOpen;
-      try { localStorage.setItem('gitmoot.runsOpen', open ? '1' : '0'); } catch (e) {}
-      return { runsOpen: open, openFacet: null };
-    }, () => setTimeout(this.remeasureFit, 40));
-  };
-  remeasureFit = () => {
-    const el = this._canvas; if (!el) return;
-    const r = el.getBoundingClientRect();
-    this.setState({ vw: r.width, vh: r.height }, () => this.fit());
-  };
-  setQuery = (e) => this.setState({ runsQuery: e.target.value });
-  clearQuery = () => this.setState({ runsQuery: '' });
-  toggleFacetPanel = (cat) => this.setState(s => ({ openFacet: s.openFacet === cat ? null : cat }));
-  toggleFacet = (cat, val) => this.setState(s => {
-    const cur = s.facets[cat]; const has = cur.includes(val);
-    return { facets: { ...s.facets, [cat]: has ? cur.filter(x => x !== val) : [...cur, val] } };
-  });
-  clearFacets = () => this.setState({ facets: { status: [], agent: [], repo: [] }, runsQuery: '', openFacet: null });
-  selectRun = (id) => {
-    if (!id || id === this.state.selectedRunId) return;
-    this.currentRunId = id;
-    try { const url = new URL(location.href); url.searchParams.set('run', id); history.replaceState(null, '', url); } catch (e) {}
-    const r = (this.runs || []).find(x => x.runId === id);
-    if (r && r.title) this.runTitleLive = r.title;
-    this._fitted = false;                 // let the next snapshot re-fit the graph
-    this.setState({ selectedRunId: id, selectedId: null });
-    this.loadState();
-    this.subscribeEvents();
-  };
-  toggleOneShots = () => this.setState(s => ({ oneShotsExpanded: !s.oneShotsExpanded }));
-  loadMoreOneShots = () => this.setState(s => ({ oneShotLimit: s.oneShotLimit + 6 }));
-  setHoverRun = (id) => { if (this.state.hoverRun !== id) this.setState({ hoverRun: id }); };
 
   // wall-clock driven so it self-corrects and survives hot-reload / re-mount
   startClock() {
@@ -6254,27 +5471,15 @@ class Component extends DCLogic {
     this._t = setInterval(() => { this.setState({ clock: Date.now() / 1000 }); }, 1000);
   }
 
-    onResize = () => {
-    const el = this._canvas;
-    if (el) { const r = el.getBoundingClientRect(); this.setState({ vw: r.width, vh: r.height }); }
-  };
-  canvasRef = (el) => {
-    if (el && !this._canvas) {
-      this._canvas = el;
-      const r = el.getBoundingClientRect();
-      this.setState({ vw: r.width, vh: r.height });
-    }
-  };
-
   // ---- responsive overlay docking -------------------------------------------
-  // The six body-appended overlay roots (galaxy/jobs/agents/charts/health/
-  // learning) sit to the right of the 216px nav rail on desktop. On mobile the rail is hidden
+  // The body-appended overlay roots (overview/tasks/workflows/galaxy/jobs/agents/
+  // org/charts/attention/health/config) sit to the right of the 216px nav rail on desktop. On mobile the rail is hidden
   // and a 60px bottom tab bar appears, so the roots dock to left:0 and stop above
   // the tab bar. Shared here so the creation-time cssText and the breakpoint
   // re-dock can never drift.
   // ---- Persistent top bar + nav "needs you" dots ----------------------------
   // One light batch fetch that feeds the always-visible signals (daemon liveness
-  // for the top bar; amber needs-you dots for Health/Learning/Attention).
+  // for the top bar; amber needs-you dots for Health/Workflows/Tasks/Attention).
   // Runs once on load and every 60s; the per-view fetches also call the same
   // _*Apply* updaters so an open view keeps its own dot live between seeds.
   _navSeed() {
@@ -6282,7 +5487,6 @@ class Component extends DCLogic {
     fetch('/api/health', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (j && healthSeq === this._healthFetchSeq) this._tbApplyHealth(j); }).catch(() => {});
     fetch('/api/workflows', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (Array.isArray(j)) this._navApplyWorkflows(j); }).catch(() => {});
     fetch('/api/tasks', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (Array.isArray(j)) this._navApplyTasks(j); }).catch(() => {});
-    fetch('/api/learning/skills', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (j) this._navApplySkills(j); }).catch(() => {});
     fetch('/api/attention', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => { if (j) this._navApplyAttention(j); }).catch(() => {});
   }
   _tbApplyHealth(data) {
@@ -6325,10 +5529,6 @@ class Component extends DCLogic {
     const blocked = (Array.isArray(arr) ? arr : []).some(t => t && t.state === 'blocked');
     if (blocked !== this.state.tasksAttn) this.setState({ tasksAttn: blocked });
   }
-  _navApplySkills(data) {
-    const on = !!(data && (data.pendingTotal || 0) > 0);
-    if (on !== this.state.learningAttn) this.setState({ learningAttn: on });
-  }
   _navApplyAttention(data) {
     data = data || {};
     const total = (typeof data.total === 'number') ? data.total
@@ -6337,7 +5537,7 @@ class Component extends DCLogic {
     if (on !== this.state.attnAttn) this.setState({ attnAttn: on });
   }
 
-  // ---- Mobile "More" bottom sheet (Galaxy / Charts / Learning) --------------
+  // ---- Mobile "More" bottom sheet (every section; tab bar shows four) -------
   _navOpenMore = () => { this.setState({ moreOpen: true }); };
   _navCloseMore = () => { this.setState({ moreOpen: false }); };
   _dismissBuildSkew = () => {
@@ -6352,7 +5552,6 @@ class Component extends DCLogic {
   _navMoreWorkflows = () => { this.setState({ moreOpen: false }); this.showWorkflows(); };
   _navMoreJobs = () => { this.setState({ moreOpen: false }); this.showJobs(); };
   _navMoreCharts = () => { this.setState({ moreOpen: false }); this.showCharts(); };
-  _navMoreLearning = () => { this.setState({ moreOpen: false }); this.showLearning(); };
   _navMoreConfig = () => { this.setState({ moreOpen: false }); this.showConfig(); };
   _navMoreAgents = () => { this.setState({ moreOpen: false }); this.showAgents(); };
   _navMoreOrg = () => { this.setState({ moreOpen: false }); this.showOrg(); };
@@ -6360,8 +5559,8 @@ class Component extends DCLogic {
   _navMoreHealth = () => { this.setState({ moreOpen: false }); this.showHealth(); };
 
   // ---- Shared copy chip -----------------------------------------------------
-  // Unified copy affordance (Learning / Agents). Reads the command from
-  // data-cmd, or takes an explicit text override (Agents copies a prompt's text),
+  // Unified copy affordance (Workflows). Reads the command from data-cmd, or
+  // takes an explicit text override,
   // writes to the clipboard, and flashes "✓ copied" via the global .gm-copy.done class.
   _gmCopyChip(btn, textOverride) {
     if (!btn) return;
@@ -6381,377 +5580,8 @@ class Component extends DCLogic {
     el.style.bottom = this._overlayBottom();
   }
   _redockOverlays() {
-    [this._overviewRoot, this._tasksRoot, this._galaxyRoot, this._workflowRoot, this._jobsRoot, this._agentsRoot, this._orgRoot, this._chartsRoot, this._healthRoot, this._configRoot, this._learningRoot]
+    [this._overviewRoot, this._tasksRoot, this._galaxyRoot, this._workflowRoot, this._jobsRoot, this._agentsRoot, this._orgRoot, this._chartsRoot, this._healthRoot, this._configRoot]
       .forEach(r => this._dockOverlay(r));
-  }
-
-  // ---- live state: each node's real state/timestamps come from the feed ----
-  simulate(p) {
-    const m = {};
-    for (const n of this.base) {
-      m[n.id] = {
-        s: n.state || 'queued',
-        st: (n.startedAt && n.startedAt > 0) ? n.startedAt / 1000 : null,
-        en: (n.endedAt && n.endedAt > 0) ? n.endedAt / 1000 : null,
-        pr: n.prUrl || null
-      };
-    }
-    return m;
-  }
-
-    colors() {
-    const accent = this.props.accent || '#9ece6a';
-    return {
-      queued:{c:'#5a6088',g:'rgba(90,96,136,0.0)'},
-      running:{c:'#7aa2f7',g:'rgba(122,162,247,0.5)'},
-      succeeded:{c:accent,g:'rgba(158,206,106,0.42)'},
-      failed:{c:'#f7768e',g:'rgba(247,118,142,0.5)'},
-      blocked:{c:'#e0af68',g:'rgba(224,175,104,0.4)'},
-      cancelled:{c:'#5a6088',g:'rgba(90,96,136,0.0)'}
-    };
-  }
-
-  isHidden(n, collapsed) { return n.parentId && collapsed[n.parentId]; }
-  visibleNodes() { return this.base.filter(n => !this.isHidden(n, this.state.collapsed)); }
-  visibleEdges() {
-    const vis = new Set(this.visibleNodes().map(n => n.id));
-    return this.EDGES.filter(e => vis.has(e.s) && vis.has(e.t));
-  }
-
-  fallbackLayout() {
-    // synchronous depth-based grid so nodes never pile at 0,0 before elk resolves
-    const vis = this.visibleNodes();
-    const ids = new Set(vis.map(n => n.id));
-    const depth = {};
-    const getDepth = (n, seen) => {
-      if (depth[n.id] != null) return depth[n.id];
-      if (seen.has(n.id)) return 0;
-      seen.add(n.id);
-      const parents = [];
-      if (n.parentId && ids.has(n.parentId)) parents.push(n.parentId);
-      (n.deps || []).forEach(d => { if (ids.has(d)) parents.push(d); });
-      let d = 0;
-      parents.forEach(pid => { d = Math.max(d, getDepth(this.byId[pid], seen) + 1); });
-      depth[n.id] = d;
-      return d;
-    };
-    vis.forEach(n => getDepth(n, new Set()));
-    const cols = {};
-    vis.forEach(n => { (cols[depth[n.id]] = cols[depth[n.id]] || []).push(n.id); });
-    const gapX = this.W + 128, gapY = this.H + 38;
-    const pos = {};
-    Object.keys(cols).forEach(k => {
-      const col = cols[k];
-      col.forEach((id, i) => {
-        pos[id] = { x: (+k) * gapX, y: (i - (col.length - 1) / 2) * gapY };
-      });
-    });
-    return pos;
-  }
-
-  async computeLayout(nodeIds, edges) {
-    for (let i = 0; i < 40 && !window.ELK; i++) await new Promise(r => setTimeout(r, 80));
-    if (!window.ELK) return null;
-    const elk = new window.ELK();
-    const g = {
-      id: 'root',
-      layoutOptions: {
-        'elk.algorithm': 'layered', 'elk.direction': 'RIGHT',
-        'elk.layered.spacing.nodeNodeBetweenLayers': '128',
-        'elk.spacing.nodeNode': '38',
-        'elk.layered.spacing.edgeNodeBetweenLayers': '38',
-        'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX'
-      },
-      children: nodeIds.map(id => ({ id, width: this.W, height: this.H })),
-      edges: edges.map((e, i) => ({ id: 'e' + i, sources: [e.s], targets: [e.t] }))
-    };
-    const res = await elk.layout(g);
-    const pos = {};
-    (res.children || []).forEach(c => { pos[c.id] = { x: c.x, y: c.y }; });
-    return pos;
-  }
-
-  async initLayout(doFit) {
-    const pos = await this.computeLayout(this.visibleNodes().map(n => n.id), this.visibleEdges());
-    if (!pos) return;
-    this.setState({ positions: pos }, () => { if (doFit) this.fit(); });
-  }
-
-  fit = () => {
-    const ps = Object.values(this.state.positions);
-    if (!ps.length) return;
-    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    ps.forEach(p => {
-      minX = Math.min(minX, p.x); minY = Math.min(minY, p.y);
-      maxX = Math.max(maxX, p.x + this.W); maxY = Math.max(maxY, p.y + this.H);
-    });
-    const cw = maxX - minX, ch = maxY - minY;
-    const padX = 90, padY = 70;
-    const rightRoom = this.state.selectedId ? 360 : 0;
-    let z = Math.min((this.state.vw - rightRoom - padX * 2) / cw, (this.state.vh - padY * 2) / ch);
-    z = Math.min(z, 1.05); z = Math.max(z, 0.3);
-    const panX = ((this.state.vw - rightRoom) - cw * z) / 2 - minX * z;
-    const panY = (this.state.vh - ch * z) / 2 - minY * z;
-    this.setState({ zoom: z, panX, panY });
-  };
-
-  // ---- pan / zoom ----
-  onDown = (e) => {
-    this._drag = { x: e.clientX, y: e.clientY, px: this.state.panX, py: this.state.panY, moved: false };
-    this._dragging = true;
-    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
-  };
-  onMove = (e) => {
-    if (!this._dragging) return;
-    const d = this._drag;
-    this.setState({ panX: d.px + (e.clientX - d.x), panY: d.py + (e.clientY - d.y) });
-  };
-  onUp = () => { this._dragging = false; };
-  onWheel = (e) => {
-    e.preventDefault();
-    const el = this._canvas; if (!el) return;
-    const r = el.getBoundingClientRect();
-    const mx = e.clientX - r.left, my = e.clientY - r.top;
-    const z = this.state.zoom;
-    const nz = Math.min(2.4, Math.max(0.3, z * (e.deltaY < 0 ? 1.1 : 0.9)));
-    const wx = (mx - this.state.panX) / z, wy = (my - this.state.panY) / z;
-    this.setState({ zoom: nz, panX: mx - wx * nz, panY: my - wy * nz });
-  };
-  zoomBy(f) {
-    const z = this.state.zoom, nz = Math.min(2.4, Math.max(0.3, z * f));
-    const cx = this.state.vw / 2, cy = this.state.vh / 2;
-    const wx = (cx - this.state.panX) / z, wy = (cy - this.state.panY) / z;
-    this.setState({ zoom: nz, panX: cx - wx * nz, panY: cy - wy * nz });
-  }
-  zoomIn = () => this.zoomBy(1.2);
-  zoomOut = () => this.zoomBy(0.83);
-
-  toggleRun = () => this.setState(s => ({ runOpen: !s.runOpen }));
-  closePanel = () => this.setState({ selectedId: null });
-  togglePrompt = () => this.setState(s => ({ showPrompt: !s.showPrompt }));
-  toggleOutput = () => this.setState(s => ({ showOutput: !s.showOutput }));
-  stop = (e) => e.stopPropagation();
-
-  fmtRun(p) {
-    // real run wall-clock: earliest node start -> latest end (or now if running)
-    const starts = this.base.map(n => n.startedAt || 0).filter(v => v > 0);
-    if (!starts.length) return '-';
-    const minStart = Math.min(...starts);
-    const anyRunning = this.base.some(n => n.state === 'running');
-    const ends = this.base.map(n => n.endedAt || 0).filter(v => v > 0);
-    const end = (!anyRunning && ends.length) ? Math.max(...ends) : Date.now();
-    let s = Math.max(0, Math.floor((end - minStart) / 1000));
-    const h = Math.floor(s / 3600); s -= h * 3600;
-    const m = Math.floor(s / 60); s = s % 60;
-    const mm = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-    return h > 0 ? h + ':' + mm : mm;
-  }
-
-  // ---- Runs column (createElement: data-heavy list with filters, sections, states) ----
-  buildRunsColumn(sim, CO) {
-    if (!this.state.runsOpen || this.state.view !== 'graph') return null;
-    const R = React.createElement;
-    const S = this.state;
-    const mono = 'JetBrains Mono';
-    const HAIR = 'rgba(160,168,220,0.12)';
-    const q = S.runsQuery.trim().toLowerCase();
-
-    // live done-count for the active run reflects the real simulation
-    const liveDone = this.base.filter(n => (sim[n.id] || {}).s === 'succeeded').length;
-    // overlay live counts only when the loaded graph belongs to the selected run,
-    // so a mid-switch row never shows the previous run's counts.
-    const selId = (this.baseRunId && this.baseRunId === this.state.selectedRunId) ? this.baseRunId : null;
-    const runs = this.runs.map(r => (selId && r.runId === selId) ? { ...r, doneCount: liveDone, nodeCount: this.base.length || r.nodeCount } : r);
-
-    // filter: query over title + snippet, facets AND across categories / OR within
-    const facetActive = Object.values(S.facets).some(a => a.length);
-    const filtered = runs.filter(r => {
-      if (q && !(r.title.toLowerCase().includes(q) || r.snippet.toLowerCase().includes(q))) return false;
-      for (const cat of ['status', 'agent', 'repo']) {
-        const sel = S.facets[cat]; if (!sel.length) continue;
-        const val = cat === 'status' ? r.state : r[cat];
-        if (!sel.includes(val)) return false;
-      }
-      return true;
-    });
-    const byNew = (a, b) => a.ago - b.ago;
-    const active = filtered.filter(r => r.state === 'running' || r.state === 'queued').sort(byNew);
-    const activeIds = new Set(active.map(r => r.runId));
-    const orch = filtered.filter(r => !activeIds.has(r.runId) && r.significance === 'orchestration').sort(byNew);
-    const oneShots = filtered.filter(r => !activeIds.has(r.runId) && r.significance === 'one-shot').sort(byNew);
-
-    // ---------- header ----------
-    const header = R('div', { key: 'hd', style: { display: 'flex', alignItems: 'center', padding: '17px 14px 11px', flex: 'none' } }, [
-      R('span', { key: 'l', style: { fontFamily: mono, fontSize: '10.5px', letterSpacing: '0.16em', color: '#868db5', fontWeight: 600 } }, 'RUNS'),
-      R('span', { key: 'c', style: { marginLeft: '8px', fontFamily: mono, fontSize: '10.5px', color: '#5a6088' } }, '(' + filtered.length + ')'),
-      R('div', { key: 'sp', style: { flex: 1 } }),
-      R('button', { key: 'x', onClick: this.toggleRuns, title: 'Collapse', style: { width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(160,168,220,0.06)', border: '1px solid ' + HAIR, borderRadius: '7px', color: '#868db5', fontSize: '15px', cursor: 'pointer', lineHeight: 1, padding: 0 } }, '\u2039')
-    ]);
-
-    // ---------- search ----------
-    const search = R('div', { key: 'sr', style: { padding: '0 14px 11px', flex: 'none', position: 'relative' } },
-      R('div', { style: { position: 'relative', display: 'flex', alignItems: 'center' } }, [
-        R('span', { key: 'ic', style: { position: 'absolute', left: '11px', display: 'flex', pointerEvents: 'none', color: '#5a6088' } },
-          R('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2 }, [
-            R('circle', { key: 'c', cx: 11, cy: 11, r: 7 }), R('path', { key: 'p', d: 'M21 21l-4.3-4.3' })
-          ])),
-        R('input', {
-          key: 'in', value: S.runsQuery, onChange: this.setQuery, placeholder: 'Search runs & prompts\u2026',
-          style: { width: '100%', boxSizing: 'border-box', padding: '9px 30px 9px 32px', background: '#0f1120', border: '1px solid ' + HAIR, borderRadius: '9px', color: '#eef0ff', fontSize: '12.5px', fontFamily: 'Inter', outline: 'none' }
-        }),
-        q ? R('button', { key: 'cl', onClick: this.clearQuery, style: { position: 'absolute', right: '8px', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(160,168,220,0.1)', border: 'none', borderRadius: '5px', color: '#868db5', fontSize: '11px', cursor: 'pointer', padding: 0 } }, '\u2715') : null
-      ]));
-
-    // ---------- facets ----------
-    const catChip = (cat) => {
-      const n = S.facets[cat].length; const open = S.openFacet === cat; const on = n > 0 || open;
-      return R('button', { key: cat, onClick: () => this.toggleFacetPanel(cat), style: {
-        display: 'flex', alignItems: 'center', gap: '6px', padding: '5px 9px', borderRadius: '7px', cursor: 'pointer', fontFamily: 'Inter', fontSize: '11.5px',
-        background: on ? 'rgba(158,206,106,0.12)' : 'rgba(160,168,220,0.05)',
-        border: '1px solid ' + (on ? 'rgba(158,206,106,0.28)' : HAIR),
-        color: on ? '#c5f882' : '#a8aecf'
-      } }, [
-        this.facetLabels[cat],
-        n ? R('span', { key: 'b', style: { fontFamily: mono, fontSize: '9.5px', minWidth: '15px', height: '15px', padding: '0 4px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: '#9ece6a', color: '#07080f', fontWeight: 700 } }, String(n)) : null,
-        R('span', { key: 'ch', style: { fontSize: '8px', color: on ? '#9ece6a' : '#5a6088' } }, open ? '\u25B2' : '\u25BC')
-      ]);
-    };
-    let popover = null;
-    if (S.openFacet) {
-      const cat = S.openFacet;
-      const vals = this.facetDefs[cat].map(v => {
-        const on = S.facets[cat].includes(v);
-        const col = cat === 'status' ? (CO[v] || CO.queued).c : '#7aa2f7';
-        return R('button', { key: v, onClick: () => this.toggleFacet(cat, v), style: {
-          display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', borderRadius: '7px', cursor: 'pointer', fontSize: '11.5px', fontFamily: cat === 'repo' ? mono : 'Inter',
-          background: on ? 'rgba(158,206,106,0.14)' : 'rgba(160,168,220,0.05)',
-          border: '1px solid ' + (on ? 'rgba(158,206,106,0.3)' : HAIR), color: on ? '#eef0ff' : '#a8aecf'
-        } }, [
-          R('span', { key: 'd', style: { width: '7px', height: '7px', borderRadius: '2px', background: col, flex: 'none' } }),
-          v
-        ]);
-      });
-      popover = R('div', { key: 'pop', style: { position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 30, background: 'rgba(15,17,32,0.97)', border: '1px solid rgba(160,168,220,0.18)', borderRadius: '10px', padding: '10px', boxShadow: '0 20px 50px rgba(0,0,0,0.55)', backdropFilter: 'blur(12px)' } }, [
-        R('div', { key: 'h', style: { display: 'flex', alignItems: 'center', marginBottom: '9px' } }, [
-          R('span', { key: 'l', style: { fontFamily: mono, fontSize: '9.5px', letterSpacing: '0.12em', color: '#5a6088', textTransform: 'uppercase' } }, this.facetLabels[cat]),
-          R('div', { key: 's', style: { flex: 1 } }),
-          R('button', { key: 'x', onClick: () => this.setState({ openFacet: null }), style: { background: 'none', border: 'none', color: '#5a6088', fontSize: '12px', cursor: 'pointer', padding: 0 } }, '\u2715')
-        ]),
-        R('div', { key: 'v', style: { display: 'flex', flexWrap: 'wrap', gap: '6px' } }, vals)
-      ]);
-    }
-    const facetBar = R('div', { key: 'fc', style: { padding: '0 14px 12px', flex: 'none', position: 'relative', display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' } }, [
-      catChip('status'), catChip('agent'), catChip('repo'),
-      (facetActive || q) ? R('button', { key: 'clr', onClick: this.clearFacets, style: { marginLeft: 'auto', background: 'none', border: 'none', color: '#7aa2f7', fontSize: '11px', cursor: 'pointer', padding: '4px 2px', fontFamily: 'Inter' } }, 'Clear') : null,
-      popover
-    ]);
-
-    // ---------- a single run row ----------
-    const badge = (content, opts) => R('span', { key: opts.k, style: {
-      display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '2px 7px', borderRadius: '6px', fontFamily: opts.mono ? mono : 'Inter', fontSize: '10px', whiteSpace: 'nowrap',
-      color: opts.color || '#868db5', background: opts.bg || 'rgba(160,168,220,0.06)', border: '1px solid ' + (opts.border || HAIR)
-    } }, content);
-
-    const row = (r) => {
-      const col = (CO[r.state] || CO.queued).c;
-      const glow = (CO[r.state] || CO.queued).g;
-      const sel = S.selectedRunId === r.runId;
-      const hov = S.hoverRun === r.runId;
-      const running = r.state === 'running';
-      const kc = this.kindColors[r.kind] || '#868db5';
-      const meta = [];
-      meta.push(badge(r.kind, { k: 'kind', color: kc, bg: 'color-mix(in srgb,' + kc + ' 12%, transparent)', border: 'color-mix(in srgb,' + kc + ' 26%, transparent)' }));
-      meta.push(badge(r.pr ? 'PR #' + r.pr : r.repo, { k: 'repo', mono: true }));
-      if (r.significance === 'orchestration') meta.push(badge(r.nodeCount + ' nodes \u00B7 d' + r.depth, { k: 'nd', mono: true }));
-      if (running) meta.push(badge(r.doneCount + '/' + r.nodeCount + ' done', { k: 'prog', mono: true, color: '#c5f882', bg: 'rgba(158,206,106,0.12)', border: 'rgba(158,206,106,0.26)' }));
-
-      return R('div', {
-        key: r.runId, onClick: () => this.selectRun(r.runId),
-        onMouseEnter: () => this.setHoverRun(r.runId), onMouseLeave: () => this.setHoverRun(null),
-        style: {
-          position: 'relative', margin: '0 8px 5px', padding: '9px 11px 9px 13px', borderRadius: '9px', cursor: 'pointer',
-          background: sel ? 'rgba(158,206,106,0.09)' : hov ? 'rgba(160,168,220,0.05)' : 'transparent',
-          border: '1px solid ' + (sel ? 'rgba(158,206,106,0.22)' : hov ? HAIR : 'transparent'),
-          transition: 'background .12s ease, border-color .12s ease'
-        }
-      }, [
-        sel ? R('span', { key: 'bar', style: { position: 'absolute', left: '3px', top: '10px', bottom: '10px', width: '3px', borderRadius: '3px', background: col, boxShadow: '0 0 8px ' + glow } }) : null,
-        R('div', { key: 'l1', style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [
-          R('span', { key: 'dot', style: { width: '8px', height: '8px', borderRadius: '50%', flex: 'none', background: col, boxShadow: running ? '0 0 8px ' + glow : 'none', animation: running ? 'dotpulse 1.4s ease-in-out infinite' : 'none' } }),
-          R('span', { key: 't', style: { flex: 1, minWidth: 0, fontSize: '12.5px', fontWeight: 600, color: sel ? '#eef0ff' : '#c7c9e5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, r.title),
-          R('span', { key: 'tm', style: { flex: 'none', fontFamily: mono, fontSize: '10px', color: '#5a6088' } }, this.relTime(r.ago))
-        ]),
-        R('div', { key: 'l2', style: { fontSize: '11px', color: '#7c83a8', margin: '4px 0 7px', lineHeight: 1.35, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, r.snippet),
-        R('div', { key: 'l3', style: { display: 'flex', flexWrap: 'wrap', gap: '5px' } }, meta)
-      ]);
-    };
-
-    // ---------- sections ----------
-    const stickyHeader = (opts) => R('div', { key: opts.key, onClick: opts.onClick, style: {
-      position: 'sticky', top: 0, zIndex: 5, display: 'flex', alignItems: 'center', gap: '7px',
-      padding: '9px 16px 7px', margin: '2px 0 4px', background: '#0a0b16', cursor: opts.onClick ? 'pointer' : 'default',
-      borderBottom: '1px solid ' + HAIR
-    } }, [
-      opts.pulse ? R('span', { key: 'p', style: { width: '7px', height: '7px', borderRadius: '50%', background: '#9ece6a', boxShadow: '0 0 8px rgba(158,206,106,0.7)', animation: 'livedot 1.6s ease-in-out infinite' } }) : null,
-      opts.chevron != null ? R('span', { key: 'ch', style: { fontSize: '9px', color: '#5a6088', width: '10px' } }, opts.chevron) : null,
-      R('span', { key: 'l', style: { fontFamily: mono, fontSize: '10px', letterSpacing: '0.13em', color: opts.color || '#868db5', fontWeight: 600, textTransform: 'uppercase' } }, opts.label),
-      R('span', { key: 'c', style: { fontFamily: mono, fontSize: '10px', color: '#5a6088' } }, '(' + opts.count + ')')
-    ]);
-
-    let body;
-    if (S.listLoading) {
-      body = [0, 1, 2, 3, 4].map(i => R('div', { key: 'sk' + i, style: { margin: '0 8px 6px', padding: '11px 12px', borderRadius: '9px', border: '1px solid ' + HAIR, background: 'rgba(160,168,220,0.03)' } }, [
-        R('div', { key: 'a', style: { height: '9px', width: (55 + (i * 7) % 30) + '%', borderRadius: '4px', background: 'rgba(160,168,220,0.12)' } }),
-        R('div', { key: 'b', style: { height: '7px', width: (72 - (i * 9) % 26) + '%', borderRadius: '4px', background: 'rgba(160,168,220,0.07)', margin: '9px 0 8px' } }),
-        R('div', { key: 'c', style: { height: '13px', width: '46%', borderRadius: '5px', background: 'rgba(160,168,220,0.05)' } })
-      ]));
-    } else if (S.listError) {
-      body = R('div', { key: 'err', style: { margin: '30px 18px', textAlign: 'center', color: '#f7768e', fontSize: '12.5px' } }, [
-        R('div', { key: 'i', style: { fontSize: '22px', marginBottom: '8px' } }, '\u26A0'),
-        R('div', { key: 't' }, 'Failed to load runs'),
-        R('div', { key: 's', style: { color: '#5a6088', fontSize: '11px', marginTop: '6px' } }, 'Check the coordinator connection and retry.')
-      ]);
-    } else if (!filtered.length) {
-      body = R('div', { key: 'empty', style: { margin: '40px 18px', textAlign: 'center', color: '#5a6088', fontSize: '12.5px' } }, [
-        R('div', { key: 'i', style: { fontSize: '20px', marginBottom: '10px', opacity: 0.6 } }, '\u2205'),
-        R('div', { key: 't', style: { color: '#868db5' } }, 'No runs match'),
-        (facetActive || q) ? R('button', { key: 'c', onClick: this.clearFacets, style: { marginTop: '12px', background: 'rgba(160,168,220,0.06)', border: '1px solid ' + HAIR, borderRadius: '8px', color: '#a8aecf', fontSize: '11.5px', padding: '6px 13px', cursor: 'pointer' } }, 'Clear filters') : null
-      ]);
-    } else {
-      const secs = [];
-      if (active.length) {
-        secs.push(stickyHeader({ key: 'ah', label: 'Active', count: active.length, pulse: true, color: '#c5f882' }));
-        active.forEach(r => secs.push(row(r)));
-      }
-      if (orch.length) {
-        secs.push(stickyHeader({ key: 'oh', label: 'Orchestrations', count: orch.length }));
-        orch.forEach(r => secs.push(row(r)));
-      }
-      if (oneShots.length) {
-        // reveal matches even when the section is collapsed, if the user is searching/filtering
-        const osOpen = S.oneShotsExpanded || !!q || facetActive;
-        secs.push(stickyHeader({ key: 'sh', label: 'one-shots', count: oneShots.length, onClick: this.toggleOneShots, chevron: osOpen ? '\u25BE' : '\u25B8' }));
-        if (osOpen) {
-          const shown = oneShots.slice(0, S.oneShotLimit);
-          shown.forEach(r => secs.push(row(r)));
-          if (oneShots.length > shown.length) {
-            secs.push(R('button', { key: 'more', onClick: this.loadMoreOneShots, style: { display: 'block', margin: '4px 8px 8px', width: 'calc(100% - 16px)', padding: '8px', background: 'rgba(160,168,220,0.05)', border: '1px dashed ' + HAIR, borderRadius: '8px', color: '#7aa2f7', fontSize: '11.5px', cursor: 'pointer', fontFamily: 'Inter' } }, 'load more \u00B7 ' + (oneShots.length - shown.length) + ' older'));
-          }
-        }
-      }
-      body = secs;
-    }
-
-    const list = R('div', { key: 'ls', className: 'gm-runs-list', style: { flex: 1, overflowY: 'auto', overflowX: 'hidden', paddingBottom: '12px' } }, body);
-
-    // Desktop: an inline 320px column. Mobile: a full-screen fixed drawer over the
-    // graph that clears the bottom tab bar; its header collapse button (toggleRuns)
-    // closes it, and the floating "Runs" tab (runsTabVisible) reopens it.
-    const colStyle = this.state.isMobile
-      ? { position: 'fixed', left: 0, right: 0, top: 54, bottom: 'calc(60px + env(safe-area-inset-bottom))', zIndex: 55, background: '#0a0b16', display: 'flex', flexDirection: 'column', overflow: 'hidden' }
-      : { width: '320px', flex: 'none', background: '#0a0b16', borderRight: '1px solid rgba(160,168,220,0.08)', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' };
-
-    return R('div', { key: 'runscol', style: colStyle }, [header, search, facetBar, list]);
   }
 
   renderVals() {
@@ -6761,225 +5591,9 @@ class Component extends DCLogic {
       this._appliedView = this.state.view;
       setTimeout(() => this.applyView(), 0);
     }
-    const R = React.createElement;
-    const p = this.state.clock;
-    const sim = this.simulate(p);
-    const CO = this.colors();
-    const pos = this.state.positions;
-    const collapsed = this.state.collapsed;
-    const vis = this.visibleNodes();
-    const curved = this.props.curvedEdges !== false;
-
-    // ---- nodes ----
-    const nodes = vis.map(n => {
-      const st = sim[n.id] || { s: 'queued' };
-      const s = st.s;
-      const col = CO[s] || CO.queued;
-      const P = pos[n.id] || { x: 0, y: 0 };
-      const running = s === 'running';
-      const dim = s === 'queued' || s === 'blocked';
-      let elapsed = '-';
-      if (st.st != null) {
-        const end = st.en != null ? st.en : (running ? p : null);
-        if (end != null) { let e = Math.min(end, p) - st.st; if (e < 0) e = 0; elapsed = e.toFixed(1) + 's'; }
-      }
-      const isSel = this.state.selectedId === n.id;
-      // card visuals only — no positioning (the foreignObject's x/y attrs place it)
-      const cardStyle = {
-        boxSizing: 'border-box', width: '100%', height: '100%', padding: '11px 13px',
-        display: 'flex', flexDirection: 'column', gap: '5px',
-        background: 'linear-gradient(180deg,#14172a,#0f1120)',
-        border: '1px solid rgba(160,168,220,0.12)',
-        borderLeft: '3px solid ' + col.c, borderRadius: '11px',
-        boxShadow: isSel
-          ? '0 0 0 1.5px ' + col.c + ',0 24px 60px rgba(0,0,0,0.55)'
-          : '0 12px 34px rgba(0,0,0,0.45)',
-        cursor: 'pointer', opacity: dim ? 0.62 : 1,
-        transition: 'opacity .5s ease, box-shadow .3s ease',
-        color: '#a8aecf', '--gc': col.g,
-        animation: running ? 'runpulse 1.9s ease-in-out infinite' : 'none'
-      };
-      const dotStyle = {
-        width: '9px', height: '9px', borderRadius: '50%', background: col.c, flex: 'none',
-        boxShadow: dim ? 'none' : '0 0 9px ' + col.g,
-        animation: running ? 'dotpulse 1.4s ease-in-out infinite' : 'none'
-      };
-      const childBadge = collapsed[n.id]
-        ? '+' + this.base.filter(x => x.parentId === n.id).length
-        : '';
-      return {
-        id: n.id, title: n.title, sub: n.runtime + ' · ' + (n.model || '-'),
-        elapsedLabel: elapsed, stateColor: col.c,
-        x: P.x, y: P.y, cardStyle, dotStyle,
-        showWorker: s !== 'queued' && s !== 'blocked', workerLabel: n.workerId,
-        hasChildren: !!n.hasChildren, collapsed: !!collapsed[n.id], childBadge,
-        chev: collapsed[n.id] ? '▸' : '▾',
-        stop: this.stop,
-        onClick: (e) => { e.stopPropagation(); if (this._drag && this._drag.moved) return; this.setState({ selectedId: n.id }); },
-        onToggle: (e) => {
-          e.stopPropagation();
-          this.setState(prev => {
-            const c = { ...prev.collapsed }; c[n.id] = !c[n.id]; return { collapsed: c };
-          }, () => this.initLayout(false));
-        }
-      };
-    });
-
-    // ---- edges (SVG element) ----
-    let maxX = 1200, maxY = 700;
-    Object.values(pos).forEach(P => { maxX = Math.max(maxX, P.x + this.W + 220); maxY = Math.max(maxY, P.y + this.H + 220); });
-    const eBase = 'rgba(160,168,220,0.2)';
-    const paths = this.visibleEdges().map((e, i) => {
-      const a = pos[e.s], b = pos[e.t];
-      if (!a || !b) return null;
-      const sx = a.x + this.W, sy = a.y + this.H / 2;
-      const tx = b.x, ty = b.y + this.H / 2;
-      const cp = Math.max(46, (tx - sx) * 0.5);
-      const d = curved
-        ? `M ${sx} ${sy} C ${sx + cp} ${sy}, ${tx - cp} ${ty}, ${tx} ${ty}`
-        : `M ${sx} ${sy} L ${sx + cp} ${sy} L ${sx + cp} ${ty} L ${tx} ${ty}`;
-      const tRun = (sim[e.t] || {}).s === 'running';
-      return R('path', {
-        key: i, d, fill: 'none',
-        stroke: tRun ? '#7aa2f7' : eBase,
-        strokeWidth: tRun ? 1.9 : 1.3,
-        strokeDasharray: tRun ? '5 7' : undefined,
-        strokeLinecap: 'round',
-        opacity: tRun ? 0.95 : 0.6,
-        style: tRun ? { animation: 'dashflow 0.8s linear infinite' } : undefined
-      });
-    }).filter(Boolean);
-    const edgesEl = R('svg', {
-      width: maxX, height: maxY,
-      style: { position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none' }
-    }, paths);
-
-    // Node cards live inside an SVG as <foreignObject>, positioned by x/y ATTRIBUTES.
-    // The runtime sanitizes CSS position/left/top/margin/transform on rendered elements,
-    // but SVG geometry attributes are untouched — this is the reliable way to place them.
-    const mono = 'JetBrains Mono';
-    const XH = 'http://www.w3.org/1999/xhtml';
-    const nodeFOs = nodes.map(n =>
-      R('foreignObject', { key: n.id, x: n.x, y: n.y, width: this.W, height: this.H, style: { overflow: 'visible' } },
-        R('div', { xmlns: XH, onPointerDown: n.stop, onClick: n.onClick, style: n.cardStyle }, [
-          R('div', { key: 'r1', xmlns: XH, style: { display: 'flex', alignItems: 'center', gap: '8px' } }, [
-            R('span', { key: 'dot', xmlns: XH, style: n.dotStyle }),
-            R('span', { key: 't', xmlns: XH, style: { flex: 1, minWidth: 0, fontSize: '13px', fontWeight: 600, color: '#eef0ff', fontFamily: 'Inter', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, n.title),
-            n.hasChildren ? R('button', { key: 'c', xmlns: XH, onClick: n.onToggle, onPointerDown: n.stop, style: { width: '20px', height: '20px', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(160,168,220,0.08)', border: '1px solid rgba(160,168,220,0.14)', borderRadius: '6px', color: '#868db5', fontSize: '10px', cursor: 'pointer', lineHeight: 1, padding: 0 } }, n.chev) : null
-          ]),
-          R('div', { key: 'r2', xmlns: XH, style: { fontFamily: mono, fontSize: '11px', color: '#868db5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, n.sub),
-          R('div', { key: 'r3', xmlns: XH, style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1px', gap: '6px' } }, [
-            R('span', { key: 'e', xmlns: XH, style: { fontFamily: mono, fontSize: '11px', color: n.stateColor } }, n.elapsedLabel),
-            n.showWorker ? R('span', { key: 'w', xmlns: XH, style: { fontFamily: mono, fontSize: '9.5px', letterSpacing: '0.02em', color: '#7c83a8', background: 'rgba(160,168,220,0.07)', border: '1px solid rgba(160,168,220,0.12)', padding: '2px 6px', borderRadius: '5px', whiteSpace: 'nowrap' } }, '\u25B2 ' + n.workerLabel) : null
-          ]),
-          n.collapsed ? R('div', { key: 'b', xmlns: XH, style: { position: 'absolute', top: '-9px', right: '-9px', background: '#7aa2f7', color: '#050609', fontFamily: mono, fontSize: '10px', fontWeight: 600, padding: '2px 7px', borderRadius: '9px', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' } }, n.childBadge) : null
-        ])
-      )
-    );
-    const nodesEl = R('svg', {
-      width: maxX, height: maxY,
-      style: { position: 'absolute', left: 0, top: 0, overflow: 'visible' }
-    }, nodeFOs);
-
-    // ---- minimap ----
-    let minimapEl = null;
-    if (this.props.showMinimap !== false && Object.keys(pos).length) {
-      const mmW = 178, mmH = 112, pad = 9;
-      let minX = Infinity, minY = Infinity, mxX = -Infinity, mxY = -Infinity;
-      vis.forEach(n => {
-        const P = pos[n.id]; if (!P) return;
-        minX = Math.min(minX, P.x); minY = Math.min(minY, P.y);
-        mxX = Math.max(mxX, P.x + this.W); mxY = Math.max(mxY, P.y + this.H);
-      });
-      const cw = Math.max(1, mxX - minX), ch = Math.max(1, mxY - minY);
-      const sc = Math.min((mmW - pad * 2) / cw, (mmH - pad * 2) / ch);
-      const rects = vis.map(n => {
-        const P = pos[n.id]; if (!P) return null;
-        const st = sim[n.id] || { s: 'queued' };
-        return R('rect', {
-          key: n.id, x: pad + (P.x - minX) * sc, y: pad + (P.y - minY) * sc,
-          width: this.W * sc, height: this.H * sc, rx: 2,
-          fill: (CO[st.s] || CO.queued).c, opacity: 0.85
-        });
-      }).filter(Boolean);
-      const z = this.state.zoom;
-      const vx = -this.state.panX / z, vy = -this.state.panY / z;
-      const vw2 = this.state.vw / z, vh2 = this.state.vh / z;
-      const vpRect = R('rect', {
-        key: 'vp', x: pad + (vx - minX) * sc, y: pad + (vy - minY) * sc,
-        width: vw2 * sc, height: vh2 * sc, rx: 2,
-        fill: 'rgba(158,206,106,0.08)', stroke: '#9ece6a', strokeWidth: 1
-      });
-      minimapEl = R('div', {
-        style: {
-          position: 'absolute', right: 16, bottom: this.state.isMobile ? 'calc(72px + env(safe-area-inset-bottom))' : 16, width: mmW, height: mmH,
-          background: 'rgba(10,11,22,0.85)', border: '1px solid rgba(160,168,220,0.14)',
-          borderRadius: 9, overflow: 'hidden', zIndex: 6, backdropFilter: 'blur(6px)',
-          boxShadow: '0 12px 34px rgba(0,0,0,0.4)'
-        }
-      }, R('svg', { width: mmW, height: mmH }, [...rects, vpRect]));
-    }
-
-    // ---- stats ----
-    const all = this.base.map(n => sim[n.id] || { s: 'queued' });
-    const running = all.filter(x => x.s === 'running').length;
-    const done = all.filter(x => x.s === 'succeeded').length;
-    const failed = all.filter(x => x.s === 'failed').length;
-    const cols = {};
-    vis.forEach(n => { const P = pos[n.id]; if (P) { const k = Math.round(P.x / 20); cols[k] = (cols[k] || 0) + 1; } });
-    const colVals = Object.values(cols);
-    const stat = {
-      total: this.base.length, running, done, failed,
-      depth: colVals.length || 4,
-      width: colVals.length ? Math.max(...colVals) : 3,
-      elapsed: this.fmtRun(p)
-    };
-
-    // ---- detail panel ----
-    const sel = this.state.selectedId ? this.byId[this.state.selectedId] : null;
-    let detail = {};
-    if (sel) {
-      const st = sim[sel.id] || { s: 'queued' };
-      const col = CO[st.s] || CO.queued;
-      const runningNow = st.s === 'running';
-      let elapsed = '-';
-      if (st.st != null) {
-        const end = st.en != null ? st.en : (runningNow ? p : null);
-        if (end != null) { let e = Math.min(end, p) - st.st; if (e < 0) e = 0; elapsed = e.toFixed(1) + 's'; }
-      }
-      const finished = st.s === 'succeeded' || st.s === 'failed';
-      const evEpoch = !!(sel.events[0] && sel.events[0].t > 1e6);   // epoch-seconds vs 1-based index
-      const evBase = evEpoch ? (st.st != null ? st.st : sel.events[0].t) : 0;
-      const evShown = sel.events.filter(ev => ev.t <= p + 0.05).map(ev => ({
-        time: '+' + Math.max(0, ev.t - evBase).toFixed(1) + 's',
-        label: ev.label,
-        color: /fail/i.test(ev.label) ? '#f7768e' : /succeed|opened|complete|passed/i.test(ev.label) ? (this.props.accent || '#9ece6a') : '#7aa2f7'
-      }));
-      detail = {
-        title: sel.title, sub: sel.runtime + ' · ' + (sel.model || '-'),
-        runtime: sel.runtime, worker: sel.workerId,
-        dotStyle: { width: '11px', height: '11px', borderRadius: '50%', background: col.c, flex: 'none', marginTop: '4px', boxShadow: '0 0 10px ' + col.g, animation: runningNow ? 'dotpulse 1.4s ease-in-out infinite' : 'none' },
-        stateLabel: st.s, stateColor: col.c,
-        stateBg: 'color-mix(in srgb,' + col.c + ' 12%, transparent)',
-        stateBorder: 'color-mix(in srgb,' + col.c + ' 30%, transparent)',
-        startedLabel: st.st != null ? new Date(st.st * 1000).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-',
-        elapsedLabel: elapsed,
-        events: evShown.length ? evShown : [{ time: '-', label: 'waiting to start', color: '#5a6088' }],
-        prompt: sel.prompt,
-        output: finished ? sel.output : (runningNow ? '… running …' : '… queued …'),
-        hasPr: !!st.pr, prUrl: st.pr || '#', prLabel: st.pr ? st.pr.replace('https://github.com/', '') : ''
-      };
-    }
-
-    // ---- runs column + header breadcrumb ----
-    const runsColumnEl = this.buildRunsColumn(sim, CO);
-    const activeRun = this.runs.find(r => r.runId === this.state.selectedRunId) || this.runs[0] || { state: 'queued', repo: '', title: this.runTitleLive || 'orchestration' };
-    const crumbCol = (CO[activeRun.state] || CO.queued);
-    const runsOpen = this.state.runsOpen;
     const view = this.state.view;
     const isOverview = view === 'overview';
     const isTasks = view === 'tasks';
-    const isGraph = view === 'graph';
     const isGalaxy = view === 'galaxy';
     const isJobs = view === 'jobs';
     const isAgents = view === 'agents';
@@ -6988,16 +5602,10 @@ class Component extends DCLogic {
     const isHealth = view === 'health';
     const isConfig = view === 'config';
     const isAttention = view === 'attention';
-    const isLearning = view === 'learning';
     const isWorkflows = view === 'workflows';
     // shared nav-item base; active items pick up the green highlight
     const navBase = { display: 'flex', alignItems: 'center', gap: '11px', padding: '9px 11px', borderRadius: '9px', fontSize: '13.5px', fontWeight: 500, cursor: 'pointer', marginTop: '2px' };
     const navActive = (on) => ({ ...navBase, background: on ? 'rgba(187,154,247,0.12)' : 'transparent', color: on ? '#eef0ff' : '#a8aecf', border: '1px solid ' + (on ? 'rgba(187,154,247,0.26)' : 'transparent'), boxShadow: on ? 'inset 0 0 0 1px rgba(187,154,247,0.04)' : 'none' });
-    // The Runs picker lives INSIDE the Graph view (not the nav rail): the column
-    // renders when runsOpen && isGraph, and a floating "Runs" tab in the graph
-    // canvas reopens it after a collapse.
-    const runsTabVisible = isGraph && !runsOpen;
-    const graphNavStyle = { ...navActive(isGraph), marginTop: 0, position: 'relative' };
     const overviewNavStyle = { ...navActive(isOverview), marginTop: 0, position: 'relative' };
     const tasksNavStyle = { ...navActive(isTasks), position: 'relative' };
     const galaxyNavStyle = { ...navActive(isGalaxy), position: 'relative' };
@@ -7009,12 +5617,10 @@ class Component extends DCLogic {
     const healthNavStyle = { ...navActive(isHealth), position: 'relative' };
     const configNavStyle = { ...navActive(isConfig), position: 'relative' };
     const attentionNavStyle = { ...navActive(isAttention), position: 'relative' };
-    const learningNavStyle = { ...navActive(isLearning), position: 'relative' };
     // Nav "needs you" dot: the right-aligned rail dot is now an amber pip that lights
     // when a section needs a human (NOT a you-are-here marker — the active pill shows that).
     const needsDot = (on, color) => { const c=color||'#e0af68'; return { width: '6px', height: '6px', borderRadius: '50%', flex: 'none', background: on ? c : 'transparent', boxShadow: on ? '0 0 8px '+c : 'none' }; };
     const healthAttn = !!this.state.healthAttn;
-    const learningAttn = !!this.state.learningAttn;
     const workflowsAttn = !!this.state.workflowsAttn;
     const tasksAttn = !!this.state.tasksAttn;
     const attnAttn = !!this.state.attnAttn;
@@ -7052,79 +5658,52 @@ class Component extends DCLogic {
     const crumbRepoStyle = { fontFamily: "'JetBrains Mono'", fontSize: '12.5px', color: '#868db5', whiteSpace: 'nowrap', ...hideOnMobile };
     const crumbSepStyle = { color: '#5a6088', fontSize: '12.5px', ...hideOnMobile };
     const liveTextStyle = { fontFamily: "'JetBrains Mono'", fontSize: '11px', letterSpacing: '0.08em', color: dUp ? '#c5f882' : '#868db5', fontWeight: 600 };
-    // Graph node detail aside: mobile full-width sheet; desktop 360px pinned right.
-    const detailAsideStyle = { position: 'absolute', right: 0, top: 0, bottom: 0, width: isMobile ? '100%' : '360px', background: 'rgba(15,17,32,0.9)', borderLeft: isMobile ? 'none' : '1px solid rgba(160,168,220,0.14)', backdropFilter: 'blur(16px)', zIndex: 15, display: 'flex', flexDirection: 'column', boxShadow: '-30px 0 60px rgba(0,0,0,0.5)', animation: 'panelin .28s cubic-bezier(.2,.8,.2,1)' };
-    // Graph zoom controls: lift above the 60px tab bar on mobile.
-    const zoomCtrlStyle = { position: 'absolute', left: '16px', bottom: isMobile ? 'calc(76px + env(safe-area-inset-bottom))' : '16px', display: 'flex', flexDirection: 'column', gap: '6px', zIndex: 6 };
-    // Graph stat footer: hidden on mobile — it is bottom-anchored (z-index 20) and
-    // would otherwise render behind the fixed bottom tab bar (z-index 60).
-    const footerStyle = { height: '42px', flex: 'none', display: 'flex', alignItems: 'center', gap: '20px', padding: '0 22px', borderTop: '1px solid rgba(160,168,220,0.08)', background: '#0a0b16', fontSize: '11.5px', color: '#5a6088', zIndex: 20, ...hideOnMobile };
 
     // ---- top-bar breadcrumb: "section › entity", or "group › section" when no entity ----
-    // Graph keeps its repo › run-title (and the run-state dot); every other view shows
-    // its section + a cheaply-available selected entity (agent / workflow),
-    // falling back to its nav group + section name.
-    const NAV_GROUP = { overview: 'work', tasks: 'work', graph: 'work', jobs: 'work', workflows: 'work', agents: 'fleet', org: 'fleet', galaxy: 'insight', charts: 'insight', learning: 'insight', attention: 'system', health: 'system', config: 'system' };
-    const SECT = { overview: 'overview', tasks: 'tasks', graph: 'graph', jobs: 'jobs', workflows: 'workflows', agents: 'agents', org: 'org', galaxy: 'galaxy', charts: 'charts', learning: 'learning', attention: 'attention', health: 'health', config: 'config' };
-    let crumbRoot, crumbLeaf, crumbShowDot = isOrg;
-    if (isGraph) {
-      crumbRoot = activeRun.repo || 'graph'; crumbLeaf = activeRun.title || 'run'; crumbShowDot = true;
-    } else {
-      let entity = '';
-      if (isAgents && this._agentsSelected) entity = this._agentsSelected;
-      else if (isJobs && this._jobsFacetAgent) entity = this._jobsFacetAgent;
-      else if (isWorkflows && this._workflowLabel) entity = this._workflowLabel;
-      else if (view === 'learning') entity = 'skills';
-      if (entity) { crumbRoot = SECT[view] || view; crumbLeaf = entity; }
-      else { crumbRoot = NAV_GROUP[view] || 'gitmoot'; crumbLeaf = SECT[view] || view; }
-      if (isMobile && isConfig) crumbLeaf = 'Configuration';
-    }
+    // Every view shows its section + a cheaply-available selected entity (agent /
+    // workflow), falling back to its nav group + section name.
+    const NAV_GROUP = { overview: 'work', tasks: 'work', jobs: 'work', workflows: 'work', agents: 'fleet', org: 'fleet', galaxy: 'insight', charts: 'insight', attention: 'system', health: 'system', config: 'system' };
+    const SECT = { overview: 'overview', tasks: 'tasks', jobs: 'jobs', workflows: 'workflows', agents: 'agents', org: 'org', galaxy: 'galaxy', charts: 'charts', attention: 'attention', health: 'health', config: 'config' };
+    let crumbRoot, crumbLeaf;
+    let entity = '';
+    if (isAgents && this._agentsSelected) entity = this._agentsSelected;
+    else if (isJobs && this._jobsFacetAgent) entity = this._jobsFacetAgent;
+    else if (isWorkflows && this._workflowLabel) entity = this._workflowLabel;
+    if (entity) { crumbRoot = SECT[view] || view; crumbLeaf = entity; }
+    else { crumbRoot = NAV_GROUP[view] || 'gitmoot'; crumbLeaf = SECT[view] || view; }
+    if (isMobile && isConfig) crumbLeaf = 'Configuration';
 
     return {
-      edgesEl, nodesEl, minimapEl, stat, detail, runsColumnEl,
-      worldTransform: `translate(${this.state.panX}px,${this.state.panY}px) scale(${this.state.zoom})`,
-      canvasRef: this.canvasRef,
-      onDown: this.onDown, onMove: this.onMove, onUp: this.onUp, onWheel: this.onWheel,
-      zoomIn: this.zoomIn, zoomOut: this.zoomOut, fit: this.fit,
-      toggleRuns: this.toggleRuns, runsTabVisible,
-      showGraph: this.showGraph, showOverview: this.showOverview, showTasks: this.showTasks, showGalaxy: this.showGalaxy,
+      showOverview: this.showOverview, showTasks: this.showTasks, showGalaxy: this.showGalaxy,
       showJobs: this.showJobs, showAgents: this.showAgents, showOrg: this.showOrg,
-      showCharts: this.showCharts, showHealth: this.showHealth, showConfig: this.showConfig, showLearning: this.showLearning,
+      showCharts: this.showCharts, showHealth: this.showHealth, showConfig: this.showConfig,
       showWorkflows: this.showWorkflows, showAttention: this.showAttention,
-      graphNavStyle, overviewNavStyle, tasksNavStyle, galaxyNavStyle, jobsNavStyle, workflowsNavStyle, agentsNavStyle, orgNavStyle, chartsNavStyle, healthNavStyle, configNavStyle, attentionNavStyle, learningNavStyle,
-      graphNavDotStyle: needsDot(false), galaxyNavDotStyle: needsDot(false),
+      overviewNavStyle, tasksNavStyle, galaxyNavStyle, jobsNavStyle, workflowsNavStyle, agentsNavStyle, orgNavStyle, chartsNavStyle, healthNavStyle, configNavStyle, attentionNavStyle,
+      galaxyNavDotStyle: needsDot(false),
       jobsNavDotStyle: needsDot(false), agentsNavDotStyle: needsDot(false), orgNavDotStyle: needsDot(false),
       chartsNavDotStyle: needsDot(false), healthNavDotStyle: needsDot(healthAttn && !isHealth),
       configNavDotStyle: needsDot(false),
       attentionNavDotStyle: needsDot(attnAttn && !isAttention, '#f7768e'),
       tasksNavDotStyle: needsDot(tasksAttn && !isTasks),
-      learningNavDotStyle: needsDot(false),
       workflowsNavDotStyle: needsDot(workflowsAttn && !isWorkflows),
       tabHealthAttnStyle: tabPip(healthAttn),
       tabAttnAttnStyle: tabPip(attnAttn, '#f7768e'), tabTasksAttnStyle: tabPip(tasksAttn && !isTasks), tabWorkflowsAttnStyle: tabPip(workflowsAttn && !isWorkflows),
       tabMoreAttnStyle: tabPip(healthAttn || attnAttn),
       moreSheetVisible, closeMoreSheet: this._navCloseMore, showMore: this._navOpenMore,
       showOverviewFromMore: this._navMoreOverview, showTasksFromMore: this._navMoreTasks, showWorkflowsFromMore: this._navMoreWorkflows, showJobsFromMore: this._navMoreJobs,
-      showGalaxyFromMore: this._navMoreGalaxy, showChartsFromMore: this._navMoreCharts, showLearningFromMore: this._navMoreLearning,
+      showGalaxyFromMore: this._navMoreGalaxy, showChartsFromMore: this._navMoreCharts,
       showConfigFromMore: this._navMoreConfig,
       showAgentsFromMore: this._navMoreAgents, showOrgFromMore: this._navMoreOrg, showAttentionFromMore: this._navMoreAttention, showHealthFromMore: this._navMoreHealth,
-      moreLearnDotStyle: needsDot(learningAttn),
       daemonText, daemonTextStyle, liveWord, liveBadgeStyle, liveDotStyle,
       buildSkewVisible, buildSkewServer, buildSkewDaemon, dismissBuildSkew: this._dismissBuildSkew,
       railStyle, tabBarStyle, tabLabelStyle, mobileMenuStyle,
-      tabGraphStyle: tabStyle(isGraph), tabOverviewStyle: tabStyle(isOverview), tabTasksStyle: { ...tabStyle(isTasks), position: 'relative' }, tabJobsStyle: tabStyle(isJobs), tabWorkflowsStyle: { ...tabStyle(isWorkflows), position: 'relative' }, tabAgentsStyle: tabStyle(isAgents),
+      tabOverviewStyle: tabStyle(isOverview), tabTasksStyle: { ...tabStyle(isTasks), position: 'relative' }, tabJobsStyle: tabStyle(isJobs), tabWorkflowsStyle: { ...tabStyle(isWorkflows), position: 'relative' }, tabAgentsStyle: tabStyle(isAgents),
             tabHealthStyle: { ...tabStyle(isHealth), position: 'relative' },
       tabAttentionStyle: { ...tabStyle(isAttention), position: 'relative' },
-      tabMoreStyle: { ...tabStyle(isGraph || isJobs || isGalaxy || isCharts || isLearning || isConfig || isAgents || isOrg || isAttention || isHealth), position: 'relative' },
-      crumbRepoStyle, crumbSepStyle, liveTextStyle, detailAsideStyle, zoomCtrlStyle, footerStyle,
+      tabMoreStyle: { ...tabStyle(isJobs || isGalaxy || isCharts || isConfig || isAgents || isOrg || isAttention || isHealth), position: 'relative' },
+      crumbRepoStyle, crumbSepStyle, liveTextStyle,
       crumbRepo: crumbRoot, crumbTitle: crumbLeaf,
-      crumbDotStyle: crumbShowDot ? { width: '8px', height: '8px', borderRadius: '50%', flex: 'none', background: isOrg ? '#bb9af7' : crumbCol.c, boxShadow: isOrg ? '0 0 8px rgba(187,154,247,.6)' : (activeRun.state === 'running' ? '0 0 8px ' + crumbCol.g : 'none'), animation: (!isOrg && activeRun.state === 'running') ? 'dotpulse 1.4s ease-in-out infinite' : 'none' } : { display: 'none' },
-      hasSelected: !!sel && isGraph,
-      closePanel: this.closePanel,
-      togglePrompt: this.togglePrompt, toggleOutput: this.toggleOutput,
-      showPrompt: this.state.showPrompt, showOutput: this.state.showOutput,
-      promptChev: this.state.showPrompt ? '▾' : '▸',
-      outputChev: this.state.showOutput ? '▾' : '▸'
+      crumbDotStyle: isOrg ? { width: '8px', height: '8px', borderRadius: '50%', flex: 'none', background: '#bb9af7', boxShadow: '0 0 8px rgba(187,154,247,.6)' } : { display: 'none' }
     };
   }
 }
