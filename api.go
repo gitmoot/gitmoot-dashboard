@@ -268,11 +268,11 @@ func workflowStateRank(state string) int {
 
 func overviewNeedRank(kind string) int {
 	switch kind {
-	case "stalled_workflow":
+	case "stalled_campaign":
 		return 0
 	case "pr_awaiting_merge":
 		return 1
-	case "blocked_job":
+	case "blocked_run":
 		return 2
 	default:
 		return 3
@@ -361,12 +361,12 @@ func (s *server) handleOverview(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, o)
 }
 
-// handleTasks serves GET /api/tasks. Ordering is normalized for byte-stable
+// handleTasks serves GET /api/prs. Ordering is normalized for byte-stable
 // polling: lifecycle columns first, then most-recently-updated within a column.
 func (s *server) handleTasks(w http.ResponseWriter, r *http.Request) {
 	ds, ok := s.ds.(TasksDataSource)
 	if !ok {
-		http.Error(w, "tasks unsupported by data source", http.StatusNotFound)
+		http.Error(w, "prs unsupported by data source", http.StatusNotFound)
 		return
 	}
 	tasks, err := ds.Tasks(r.Context())
@@ -446,13 +446,13 @@ func (s *server) handleOrgRole(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, v)
 }
 
-// handleWorkflows serves GET /api/workflows. The handler normalizes the
+// handleWorkflows serves GET /api/campaigns. The handler normalizes the
 // first-slash label split and ordering so optional data sources share one
 // deterministic wire contract.
 func (s *server) handleWorkflows(w http.ResponseWriter, r *http.Request) {
 	ds, ok := s.ds.(WorkflowDataSource)
 	if !ok {
-		http.Error(w, "workflow index unsupported by data source", http.StatusNotFound)
+		http.Error(w, "campaign index unsupported by data source", http.StatusNotFound)
 		return
 	}
 	entries, err := ds.Workflows(r.Context())
@@ -485,23 +485,23 @@ func (s *server) handleWorkflows(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, entries)
 }
 
-// handleWorkflow serves GET /api/workflow/{label}. Workflows are an optional
+// handleWorkflow serves GET /api/campaign/{label}. Workflows are an optional
 // datasource extension so older bridges remain source-compatible.
 func (s *server) handleWorkflow(w http.ResponseWriter, r *http.Request) {
 	label := r.PathValue("label")
 	if label == "" {
-		http.Error(w, "missing workflow label", http.StatusBadRequest)
+		http.Error(w, "missing campaign label", http.StatusBadRequest)
 		return
 	}
 	ds, ok := s.ds.(WorkflowDataSource)
 	if !ok {
-		http.Error(w, "workflow view unsupported by data source", http.StatusNotFound)
+		http.Error(w, "campaign view unsupported by data source", http.StatusNotFound)
 		return
 	}
 	q := WorkflowQuery{
-		RunCursor:  r.URL.Query().Get("runCursor"),
+		RunCursor:  r.URL.Query().Get("rootCursor"),
 		NoteCursor: r.URL.Query().Get("noteCursor"),
-		MaxRuns:    workflowLimit(r.URL.Query().Get("maxRuns"), workflowMaxRuns),
+		MaxRuns:    workflowLimit(r.URL.Query().Get("maxRoots"), workflowMaxRuns),
 		MaxNotes:   workflowLimit(r.URL.Query().Get("maxNotes"), workflowMaxNotes),
 	}
 	view, err := ds.Workflow(r.Context(), label, q)
@@ -531,7 +531,7 @@ func (s *server) handleWorkflow(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, view)
 }
 
-// handleJobs serves GET /api/jobs -> []JobSummary, every job across all runs
+// handleJobs serves GET /api/runs -> []JobSummary, every job across all runs
 // (the client filters).
 func (s *server) handleJobs(w http.ResponseWriter, r *http.Request) {
 	jobs, err := s.ds.Jobs(r.Context())
@@ -545,7 +545,7 @@ func (s *server) handleJobs(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, jobs)
 }
 
-// handleAgents serves GET /api/agents -> []AgentSummary.
+// handleAgents serves GET /api/reviewers -> []AgentSummary.
 func (s *server) handleAgents(w http.ResponseWriter, r *http.Request) {
 	agents, err := s.ds.Agents(r.Context())
 	if err != nil {
@@ -558,12 +558,12 @@ func (s *server) handleAgents(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, agents)
 }
 
-// handleAgent serves GET /api/agent/{name} -> AgentDetail, the click-through
+// handleAgent serves GET /api/reviewer/{name} -> AgentDetail, the click-through
 // detail for a single agent. Unknown names map to 404 (mirrors handleJob).
 func (s *server) handleAgent(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("name")
 	if name == "" {
-		http.Error(w, "missing agent name", http.StatusBadRequest)
+		http.Error(w, "missing reviewer name", http.StatusBadRequest)
 		return
 	}
 	detail, err := s.ds.Agent(r.Context(), name)
@@ -675,13 +675,13 @@ func (s *server) handleAttention(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, att)
 }
 
-// handleJobChecks serves GET /api/job/{id}/checks -> JobChecks, the job-detail
+// handleJobChecks serves GET /api/run/{id}/checks -> JobChecks, the job-detail
 // failed-check section (gitmoot #711). An unknown job is not a 404 — it returns
 // the resolved policy Mode with an empty Failed list. Failed is coerced non-nil.
 func (s *server) handleJobChecks(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
-		http.Error(w, "missing job id", http.StatusBadRequest)
+		http.Error(w, "missing run id", http.StatusBadRequest)
 		return
 	}
 	checks, err := s.ds.JobChecks(r.Context(), id)
@@ -695,11 +695,11 @@ func (s *server) handleJobChecks(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, checks)
 }
 
-// handleJob serves GET /api/job/{id} -> Node.
+// handleJob serves GET /api/run/{id} -> Node.
 func (s *server) handleJob(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
-		http.Error(w, "missing job id", http.StatusBadRequest)
+		http.Error(w, "missing run id", http.StatusBadRequest)
 		return
 	}
 	node, err := s.ds.Job(r.Context(), id)

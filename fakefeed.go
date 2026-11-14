@@ -15,13 +15,13 @@ import (
 // by the API handlers).
 var (
 	// ErrJobNotFound indicates the requested job/node does not exist.
-	ErrJobNotFound = errors.New("job not found")
+	ErrJobNotFound = errors.New("run not found")
 	// ErrAgentNotFound indicates the requested agent does not exist.
-	ErrAgentNotFound = errors.New("agent not found")
+	ErrAgentNotFound = errors.New("reviewer not found")
 	// ErrOrgRoleNotFound indicates the requested org role does not exist.
 	ErrOrgRoleNotFound = errors.New("org role not found")
 	// ErrWorkflowNotFound indicates the requested workflow label does not exist.
-	ErrWorkflowNotFound = errors.New("workflow not found")
+	ErrWorkflowNotFound = errors.New("campaign not found")
 )
 
 const (
@@ -257,7 +257,7 @@ func (f *FakeDataSource) Graph(ctx context.Context, repo string) (Graph, error) 
 	}
 	agents := map[string]bool{}
 	for _, n := range nodes {
-		g.Nodes = append(g.Nodes, GraphNode{ID: n.ID, Type: "job", Label: n.Title, State: n.State, Agent: n.Agent, Repo: fakeRepo, Run: fakeRunID})
+		g.Nodes = append(g.Nodes, GraphNode{ID: n.ID, Type: "run", Label: n.Title, State: n.State, Agent: n.Agent, Repo: fakeRepo, Run: fakeRunID})
 		if n.ParentID != "" && ids[n.ParentID] {
 			g.Links = append(g.Links, GraphLink{Source: n.ParentID, Target: n.ID, Kind: "parent"})
 		}
@@ -269,35 +269,35 @@ func (f *FakeDataSource) Graph(ctx context.Context, repo string) (Graph, error) 
 		g.Links = append(g.Links, GraphLink{Source: n.ID, Target: "repo::" + fakeRepo, Kind: "repo"})
 		if n.Agent != "" {
 			agents[n.Agent] = true
-			g.Links = append(g.Links, GraphLink{Source: n.ID, Target: "agent::" + n.Agent, Kind: "agent"})
+			g.Links = append(g.Links, GraphLink{Source: n.ID, Target: "agent::" + n.Agent, Kind: "reviewer"})
 		}
 	}
 	unregistered := fakeUnregisteredGalaxyNode(nodes[0].StartedAt)
-	g.Nodes = append(g.Nodes, GraphNode{ID: unregistered.ID, Type: "job", Label: unregistered.Title, State: unregistered.State, Agent: unregistered.Agent, Repo: fakeRepo, Run: fakeRunID})
+	g.Nodes = append(g.Nodes, GraphNode{ID: unregistered.ID, Type: "run", Label: unregistered.Title, State: unregistered.State, Agent: unregistered.Agent, Repo: fakeRepo, Run: fakeRunID})
 	g.Links = append(g.Links,
 		GraphLink{Source: unregistered.ID, Target: "repo::" + fakeRepo, Kind: "repo"},
-		GraphLink{Source: unregistered.ID, Target: "agent::" + unregistered.Agent, Kind: "agent"},
+		GraphLink{Source: unregistered.ID, Target: "agent::" + unregistered.Agent, Kind: "reviewer"},
 	)
 	agents[unregistered.Agent] = true
 	g.Nodes = append(g.Nodes, GraphNode{ID: "repo::" + fakeRepo, Type: "repo", Label: fakeRepo, Repo: fakeRepo})
 	for a := range agents {
-		g.Nodes = append(g.Nodes, GraphNode{ID: "agent::" + a, Type: "agent", Label: a, Agent: a})
+		g.Nodes = append(g.Nodes, GraphNode{ID: "agent::" + a, Type: "reviewer", Label: a, Agent: a})
 	}
 	if workflowsEnabled {
 		extra := fakeWorkflowSingleNode(nodes[0].StartedAt)
-		g.Nodes = append(g.Nodes, GraphNode{ID: extra.ID, Type: "job", Label: extra.Title, State: extra.State, Agent: extra.Agent, Repo: fakeRepo, Run: "run-demo-single"})
+		g.Nodes = append(g.Nodes, GraphNode{ID: extra.ID, Type: "run", Label: extra.Title, State: extra.State, Agent: extra.Agent, Repo: fakeRepo, Run: "run-demo-single"})
 		g.Links = append(g.Links,
 			GraphLink{Source: extra.ID, Target: "repo::" + fakeRepo, Kind: "repo"},
-			GraphLink{Source: extra.ID, Target: "agent::" + extra.Agent, Kind: "agent"},
+			GraphLink{Source: extra.ID, Target: "agent::" + extra.Agent, Kind: "reviewer"},
 		)
 		if !agents[extra.Agent] {
-			g.Nodes = append(g.Nodes, GraphNode{ID: "agent::" + extra.Agent, Type: "agent", Label: extra.Agent, Agent: extra.Agent})
+			g.Nodes = append(g.Nodes, GraphNode{ID: "agent::" + extra.Agent, Type: "reviewer", Label: extra.Agent, Agent: extra.Agent})
 		}
 		for _, n := range append(nodes, extra) {
-			g.Links = append(g.Links, GraphLink{Source: n.ID, Target: "workflow::" + fakeWorkflow, Kind: "workflow"})
+			g.Links = append(g.Links, GraphLink{Source: n.ID, Target: "workflow::" + fakeWorkflow, Kind: "campaign"})
 		}
 		g.Nodes = append(g.Nodes, GraphNode{
-			ID: "workflow::" + fakeWorkflow, Type: "workflow", Label: fakeWorkflow,
+			ID: "workflow::" + fakeWorkflow, Type: "campaign", Label: fakeWorkflow,
 			JobCount: len(nodes) + 1, NoteCount: len(fakeWorkflowNotes(nodes[0].StartedAt)), TokensIn: 1_230_000, TokensOut: 15_300,
 		})
 	}
@@ -537,9 +537,9 @@ func (f *FakeDataSource) Overview(ctx context.Context) (Overview, error) {
 	return Overview{
 		NeedsYou: []OverviewNeedsYou{
 			{Kind: "pr_awaiting_merge", Repo: "jerryfane/vetrina", Ref: "#77", Title: "Charlotte selfimprove pass 3 — layout tokens", AgeS: 11 * 3600, CI: "pending", Link: "https://github.com/jerryfane/vetrina/pull/77"},
-			{Kind: "stalled_workflow", Repo: "jerryfane/arxiv-post-agent", Ref: "40m", Title: "1 run failed · coordinator silent", AgeS: 40 * 60, Link: "/workflows/fable%2Farxiv-retry-hardening", Label: fakeStalledWorkflow, Pane: "fable", SessionID: "a3f19c", LastNote: "synthesized temp JSON + env var; 16KiB caps"},
+			{Kind: "stalled_campaign", Repo: "jerryfane/arxiv-post-agent", Ref: "40m", Title: "1 run failed · coordinator silent", AgeS: 40 * 60, Link: "/campaigns/fable%2Farxiv-retry-hardening", Label: fakeStalledWorkflow, Pane: "fable", SessionID: "a3f19c", LastNote: "synthesized temp JSON + env var; 16KiB caps"},
 			{Kind: "pr_awaiting_merge", Repo: "jerryfane/gitmoot", Ref: "#892", Title: "Require an exact-head review before the merge gate opens", AgeS: 2 * 3600, CI: "green", Link: "https://github.com/jerryfane/gitmoot/pull/892"},
-			{Kind: "blocked_job", Repo: "jerryfane/gitmoot", Ref: "planner", Title: "Job blocked · needs writable /root/.gitmoot", AgeS: 5 * 86400, Link: "/attention"},
+			{Kind: "blocked_run", Repo: "jerryfane/gitmoot", Ref: "planner", Title: "Run blocked · needs writable /root/.gitmoot", AgeS: 5 * 86400, Link: "/attention"},
 			{Kind: "pr_awaiting_merge", Repo: "jerryfane/arxiv-post-agent", Ref: "#418", Title: "Fix arxiv summary retry backoff on 429", AgeS: 6 * 3600, CI: "red", Link: "https://github.com/jerryfane/arxiv-post-agent/pull/418"},
 		},
 		Activity: OverviewActivity{

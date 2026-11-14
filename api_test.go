@@ -257,7 +257,7 @@ func TestHandleWorkflowUnsupportedDataSource(t *testing.T) {
 	srv := httptest.NewServer(Serve(ds))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/workflow/demo-panel")
+	resp, err := http.Get(srv.URL + "/api/campaign/demo-panel")
 	if err != nil {
 		t.Fatalf("GET unsupported workflow: %v", err)
 	}
@@ -276,7 +276,7 @@ func TestHandleWorkflowsUnsupportedDataSource(t *testing.T) {
 	srv := httptest.NewServer(Serve(ds))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/workflows")
+	resp, err := http.Get(srv.URL + "/api/campaigns")
 	if err != nil {
 		t.Fatalf("GET unsupported workflows: %v", err)
 	}
@@ -291,7 +291,7 @@ func TestHandleOverviewAndTasksUnsupportedDataSource(t *testing.T) {
 	srv := httptest.NewServer(Serve(ds))
 	defer srv.Close()
 
-	for _, path := range []string{"/api/overview", "/api/tasks"} {
+	for _, path := range []string{"/api/overview", "/api/prs"} {
 		resp, err := http.Get(srv.URL + path)
 		if err != nil {
 			t.Fatalf("GET %s: %v", path, err)
@@ -316,7 +316,7 @@ func TestFakeOverviewContractOrderingAndDeterminism(t *testing.T) {
 	if err := json.Unmarshal(raw1, &overview); err != nil {
 		t.Fatalf("decode overview: %v", err)
 	}
-	if len(overview.NeedsYou) < 4 || overview.NeedsYou[0].Kind != "stalled_workflow" || overview.NeedsYou[0].Label == "" || overview.NeedsYou[0].Pane == "" || overview.NeedsYou[0].SessionID == "" || overview.NeedsYou[0].LastNote == "" {
+	if len(overview.NeedsYou) < 4 || overview.NeedsYou[0].Kind != "stalled_campaign" || overview.NeedsYou[0].Label == "" || overview.NeedsYou[0].Pane == "" || overview.NeedsYou[0].SessionID == "" || overview.NeedsYou[0].LastNote == "" {
 		t.Fatalf("needs_you stalled-first contract = %+v", overview.NeedsYou)
 	}
 	ciSeen := map[string]bool{}
@@ -347,7 +347,7 @@ func TestFakeOverviewContractOrderingAndDeterminism(t *testing.T) {
 	if len(overview.Fleet) < 4 || !overview.Fleet[0].Running {
 		t.Fatalf("fleet contract = %+v", overview.Fleet)
 	}
-	for _, field := range []string{"\"needs_you\"", "\"session_id\"", "\"per_hour\"", "\"jobs_today\""} {
+	for _, field := range []string{"\"needs_you\"", "\"session_id\"", "\"per_hour\"", "\"runs_today\""} {
 		if !bytes.Contains(raw1, []byte(field)) {
 			t.Fatalf("overview wire payload missing %s: %s", field, raw1)
 		}
@@ -358,8 +358,8 @@ func TestFakeTasksContractOrderingAndDeterminism(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	raw1 := getRaw(t, srv.URL+"/api/tasks")
-	raw2 := getRaw(t, srv.URL+"/api/tasks")
+	raw1 := getRaw(t, srv.URL+"/api/prs")
+	raw2 := getRaw(t, srv.URL+"/api/prs")
 	if !bytes.Equal(raw1, raw2) {
 		t.Fatalf("tasks changed across identical reads\nfirst=%s\nsecond=%s", raw1, raw2)
 	}
@@ -518,7 +518,7 @@ func TestFakeOrgRoleContractAndDeterminism(t *testing.T) {
 	}
 	for _, field := range []string{
 		`"merge_rule"`, `"blocked_since"`, `"last_handoff_at"`,
-		`"recycle_after"`, `"jobs_today"`, `"escalations"`,
+		`"recycle_after"`, `"runs_today"`, `"escalations"`,
 	} {
 		if !bytes.Contains(raw1, []byte(field)) {
 			t.Fatalf("org role wire payload missing %s: %s", field, raw1)
@@ -588,8 +588,8 @@ func TestHandleOrgNormalizesNilCollections(t *testing.T) {
 	if path, ok := identity["path"].([]any); !ok || path == nil {
 		t.Fatalf("sparse role path = %#v, want []", identity["path"])
 	}
-	if jobs, ok := activity["jobs_today"].(map[string]any); !ok || jobs == nil {
-		t.Fatalf("sparse role jobs_today = %#v, want {}", activity["jobs_today"])
+	if jobs, ok := activity["runs_today"].(map[string]any); !ok || jobs == nil {
+		t.Fatalf("sparse role runs_today = %#v, want {}", activity["runs_today"])
 	}
 	if escalations, ok := role["escalations"].([]any); !ok || escalations == nil {
 		t.Fatalf("sparse role escalations = %#v, want []", role["escalations"])
@@ -601,7 +601,7 @@ func TestHandleWorkflowNotFound(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/workflow/unknown")
+	resp, err := http.Get(srv.URL + "/api/campaign/unknown")
 	if err != nil {
 		t.Fatalf("GET unknown workflow: %v", err)
 	}
@@ -616,7 +616,7 @@ func TestHandleWorkflowSlashLabelRoundTrip(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/workflow/fable%2Fdashboard-redesign?maxRuns=50&maxNotes=200")
+	resp, err := http.Get(srv.URL + "/api/campaign/fable%2Fdashboard-redesign?maxRoots=50&maxNotes=200")
 	if err != nil {
 		t.Fatalf("GET namespaced workflow: %v", err)
 	}
@@ -639,7 +639,7 @@ func TestHandleWorkflowClampsCursorsAndLimits(t *testing.T) {
 	srv := httptest.NewServer(Serve(ds))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/workflow/panel?runCursor=run-c&noteCursor=note-c&maxRuns=999&maxNotes=-4")
+	resp, err := http.Get(srv.URL + "/api/campaign/panel?rootCursor=run-c&noteCursor=note-c&maxRoots=999&maxNotes=-4")
 	if err != nil {
 		t.Fatalf("GET workflow: %v", err)
 	}
@@ -670,11 +670,11 @@ func TestFakeWorkflowContractAndPagination(t *testing.T) {
 		}
 	}
 	for _, link := range graph.Links {
-		if link.Kind == "workflow" {
+		if link.Kind == "campaign" {
 			workflowLinks++
 		}
 	}
-	if hub == nil || hub.Type != "workflow" || hub.JobCount != 7 || hub.NoteCount != 33 || workflowLinks != 7 {
+	if hub == nil || hub.Type != "campaign" || hub.JobCount != 7 || hub.NoteCount != 33 || workflowLinks != 7 {
 		t.Fatalf("workflow galaxy fixture hub=%+v links=%d", hub, workflowLinks)
 	}
 
@@ -746,7 +746,7 @@ func TestFakeGalaxyAgentRecordCoverage(t *testing.T) {
 	seenPanelAgent := false
 	seenUnregistered := false
 	for _, node := range graph.Nodes {
-		if node.Type != "agent" {
+		if node.Type != "reviewer" {
 			continue
 		}
 		name := node.Agent
@@ -813,7 +813,7 @@ func TestFakeWorkflowIndexContractOrderingAndDeterminism(t *testing.T) {
 
 	get := func() ([]byte, []WorkflowIndexEntry) {
 		t.Helper()
-		resp, err := http.Get(srv.URL + "/api/workflows")
+		resp, err := http.Get(srv.URL + "/api/campaigns")
 		if err != nil {
 			t.Fatalf("GET workflows: %v", err)
 		}
@@ -904,12 +904,12 @@ func TestFakeWorkflowDisabled(t *testing.T) {
 		t.Fatalf("Graph: %v", err)
 	}
 	for _, node := range graph.Nodes {
-		if node.Type == "workflow" {
+		if node.Type == "campaign" {
 			t.Fatalf("disabled graph contains workflow node: %+v", node)
 		}
 	}
 	for _, link := range graph.Links {
-		if link.Kind == "workflow" {
+		if link.Kind == "campaign" {
 			t.Fatalf("disabled graph contains workflow link: %+v", link)
 		}
 	}
@@ -926,9 +926,9 @@ func TestHandleJobs(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/jobs")
+	resp, err := http.Get(srv.URL + "/api/runs")
 	if err != nil {
-		t.Fatalf("GET /api/jobs: %v", err)
+		t.Fatalf("GET /api/runs: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -968,9 +968,9 @@ func TestHandleAgents(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/agents")
+	resp, err := http.Get(srv.URL + "/api/reviewers")
 	if err != nil {
-		t.Fatalf("GET /api/agents: %v", err)
+		t.Fatalf("GET /api/reviewers: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -1002,7 +1002,7 @@ func TestHandleAgent(t *testing.T) {
 
 	// researcher carries an [agents.<name>] config section.
 	var detail AgentDetail
-	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/agent/researcher"), &detail); err != nil {
+	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/reviewer/researcher"), &detail); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if detail.Name != "researcher" {
@@ -1024,7 +1024,7 @@ func TestHandleAgentWithoutConfig(t *testing.T) {
 	defer srv.Close()
 
 	var detail AgentDetail
-	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/agent/ci-runner"), &detail); err != nil {
+	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/reviewer/ci-runner"), &detail); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if detail.Name != "ci-runner" {
@@ -1040,9 +1040,9 @@ func TestHandleAgentNotFound(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/agent/does-not-exist")
+	resp, err := http.Get(srv.URL + "/api/reviewer/does-not-exist")
 	if err != nil {
-		t.Fatalf("GET /api/agent/does-not-exist: %v", err)
+		t.Fatalf("GET /api/reviewer/does-not-exist: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -1057,7 +1057,7 @@ func TestHandleAgentDeterministic(t *testing.T) {
 
 	// researcher does not appear in the seeded run, so its detail (summary +
 	// config) is byte-stable across calls.
-	url := srv.URL + "/api/agent/researcher"
+	url := srv.URL + "/api/reviewer/researcher"
 	if a, b := getRaw(t, url), getRaw(t, url); !bytes.Equal(a, b) {
 		t.Fatalf("agent detail not byte-stable across calls\nfirst:  %s\nsecond: %s", a, b)
 	}
@@ -1067,9 +1067,9 @@ func TestHandleJob(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/job/job-2")
+	resp, err := http.Get(srv.URL + "/api/run/job-2")
 	if err != nil {
-		t.Fatalf("GET /api/job/job-2: %v", err)
+		t.Fatalf("GET /api/run/job-2: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -1092,9 +1092,9 @@ func TestHandleJobNotFound(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/job/nope")
+	resp, err := http.Get(srv.URL + "/api/run/nope")
 	if err != nil {
-		t.Fatalf("GET /api/job/nope: %v", err)
+		t.Fatalf("GET /api/run/nope: %v", err)
 	}
 	defer resp.Body.Close()
 
@@ -1142,7 +1142,7 @@ func TestHandleJobChecks(t *testing.T) {
 	defer srv.Close()
 
 	var jc JobChecks
-	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/job/job-5/checks"), &jc); err != nil {
+	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/run/job-5/checks"), &jc); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if jc.JobID != "job-5" {
@@ -1168,7 +1168,7 @@ func TestHandleJobChecksUnknownJobNotFound(t *testing.T) {
 	// An unknown job is NOT a 404 — it returns the resolved policy Mode with an
 	// empty (non-nil) Failed list.
 	var jc JobChecks
-	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/job/does-not-exist/checks"), &jc); err != nil {
+	if err := json.Unmarshal(getRaw(t, srv.URL+"/api/run/does-not-exist/checks"), &jc); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
 	if jc.Mode == "" {
@@ -1626,9 +1626,9 @@ func TestJSONResponseIsIndented(t *testing.T) {
 	srv := httptest.NewServer(Serve(NewFakeDataSource()))
 	defer srv.Close()
 
-	resp, err := http.Get(srv.URL + "/api/job/job-1")
+	resp, err := http.Get(srv.URL + "/api/run/job-1")
 	if err != nil {
-		t.Fatalf("GET /api/job/job-1: %v", err)
+		t.Fatalf("GET /api/run/job-1: %v", err)
 	}
 	defer resp.Body.Close()
 
