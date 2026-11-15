@@ -1920,16 +1920,9 @@ class Component extends DCLogic {
   // ?range= on /galaxy: 90d or all; anything else is the 30-day default, the same
   // rule the server applies, so the URL and the request always agree.
   _routeQueryRange(search) {
-    const s = (search || '').replace(/^\?/, '');
-    const parts = s ? s.split('&') : [];
-    for (let i = 0; i < parts.length; i++) {
-      const eq = parts[i].indexOf('=');
-      if ((eq >= 0 ? parts[i].slice(0, eq) : parts[i]) === 'range') {
-        const v = eq >= 0 ? parts[i].slice(eq + 1) : '';
-        return v === '90d' || v === 'all' ? v : '30d';
-      }
-    }
-    return '30d';
+    let v = null;
+    try { v = new URLSearchParams(search || '').get('range'); } catch (e) { v = null; }
+    return v === '90d' || v === 'all' ? v : '30d';
   }
 
   _syncGalaxyRangeSelect() {
@@ -1944,11 +1937,18 @@ class Component extends DCLogic {
     if (range !== '30d') params.push('range=' + range);
     const url = '/api/graph' + (params.length ? '?' + params.join('&') : '');
     // A user-initiated load (not a poll) of a different repo/range shows the loading
-    // veil; 3 months and all time can take a few seconds cold. A late answer for a
-    // superseded selection is dropped, so a slow all-time load cannot overwrite a
-    // newer 1-month view.
+    // veil; 3 months and all time can take a few seconds cold. Every request takes a
+    // new sequence number and only the newest may touch the page, so a superseded
+    // request (including one for the same selection after A → B → A) can neither
+    // overwrite newer data nor show an error after a newer request succeeded. A poll
+    // is skipped while a request is still in flight, so it never supersedes a
+    // user's load and wide ranges don't pile up.
+    if (isPoll && this._galaxyInFlight) return;
     const key = repo + '|' + range;
-    this._galaxyWant = key;
+    const seq = (this._galaxySeq || 0) + 1;
+    this._galaxySeq = seq;
+    this._galaxyInFlight = true;
+    const current = () => this._galaxySeq === seq;
     const l0 = this._galaxyRoot.querySelector('#g-loading');
     if (!isPoll && l0 && key !== this._galaxyShown) {
       l0.textContent = range === '30d' ? 'summoning the galaxy…' : 'summoning ' + (range === 'all' ? 'all of history' : 'three months') + '…';
@@ -1957,7 +1957,8 @@ class Component extends DCLogic {
     fetch(url, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
       .then(json => {
-        if (this._galaxyWant !== key) return;
+        if (!current()) return;
+        this._galaxyInFlight = false;
         this._galaxyRaw = json || { nodes: [], links: [], repos: [] };
         // The repo list depends on the range; refill it when the range changes,
         // keeping the current selection (re-added if it fell outside the range).
@@ -1973,10 +1974,12 @@ class Component extends DCLogic {
         }
         this.renderGalaxy(isPoll);
         const l = this._galaxyRoot.querySelector('#g-loading');
-        if (l) { l.classList.add('hidden'); setTimeout(() => { if (this._galaxyWant === key) l.style.display = 'none'; }, 600); }
+        if (l) { l.classList.add('hidden'); setTimeout(() => { if (current()) l.style.display = 'none'; }, 600); }
       })
       .catch(err => {
-        if (isPoll || this._galaxyWant !== key) return; // keep the current galaxy on a transient poll failure
+        if (!current()) return;
+        this._galaxyInFlight = false;
+        if (isPoll) return; // keep the current galaxy on a transient poll failure
         const l = this._galaxyRoot.querySelector('#g-loading');
         if (l) { l.classList.remove('hidden'); l.style.display = 'flex'; l.textContent = 'could not load /api/graph (' + err.message + ')'; }
       });
