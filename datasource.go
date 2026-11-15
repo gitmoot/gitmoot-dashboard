@@ -127,12 +127,47 @@ type GraphLink struct {
 	Kind   string `json:"kind"`
 }
 
-// Graph is the whole-history galaxy view: every job across every run, plus
-// repo/agent hub nodes, unioned into one force-directed graph.
+// Graph is the galaxy view: the runs created within a GraphRange across every
+// root, plus repo/reviewer hub nodes, unioned into one force-directed graph.
 type Graph struct {
 	Nodes []GraphNode `json:"nodes"`
 	Links []GraphLink `json:"links"`
 	Repos []string    `json:"repos"` // distinct repos, for the filter
+	// Truncated is set when a wide range (90d/all) holds more runs than the UI
+	// can draw without freezing the tab: Nodes then carries the newest Shown of
+	// Total runs, while Repos still lists every repo in the range so a repo
+	// filter reaches its full history. Never set for the 30-day default.
+	Truncated *GraphTruncation `json:"truncated,omitempty"`
+}
+
+// GraphTruncation reports a capped galaxy: Shown of Total runs are present.
+type GraphTruncation struct {
+	Shown int `json:"shown"`
+	Total int `json:"total"`
+}
+
+// GraphRange is the galaxy's time window: runs created within the last 30 or
+// 90 days, or all of history.
+type GraphRange string
+
+const (
+	GraphRange30d GraphRange = "30d"
+	GraphRange90d GraphRange = "90d"
+	GraphRangeAll GraphRange = "all"
+)
+
+// CanonicalGraphRange maps a ?range= value to a GraphRange. Anything missing or
+// unknown is the 30-day default, so clients that never send ?range= keep
+// today's view.
+func CanonicalGraphRange(raw string) GraphRange {
+	switch GraphRange(raw) {
+	case GraphRange90d:
+		return GraphRange90d
+	case GraphRangeAll:
+		return GraphRangeAll
+	default:
+		return GraphRange30d
+	}
 }
 
 // WorkflowSummary is the aggregate header for one workflow label. State counts
@@ -758,9 +793,10 @@ type DataSource interface {
 	// summary plus config section. Unknown names return a not-found sentinel
 	// (mapped to 404 by the API layer).
 	Agent(ctx context.Context, name string) (AgentDetail, error)
-	// Graph returns the whole-history galaxy graph. Empty repo => all runs; a
-	// non-empty repo scopes to that repository's jobs (and their hubs).
-	Graph(ctx context.Context, repo string) (Graph, error)
+	// Graph returns the galaxy graph for the runs created within rng. Empty repo
+	// => all repos; a non-empty repo scopes to that repository's runs (and their
+	// hubs). rng is always canonical (see CanonicalGraphRange).
+	Graph(ctx context.Context, repo string, rng GraphRange) (Graph, error)
 	// Charts returns the per-day time series plus top-agent/top-repo/totals
 	// breakdowns for the Charts page. days selects the window: 7, 30 or 90; a
 	// days of 0 means all history. Days is oldest->newest and zero-filled

@@ -658,7 +658,7 @@ func TestHandleWorkflowClampsCursorsAndLimits(t *testing.T) {
 func TestFakeWorkflowContractAndPagination(t *testing.T) {
 	t.Setenv("FAKEFEED_WORKFLOWS", "1")
 	ds := NewFakeDataSource()
-	graph, err := ds.Graph(context.Background(), "")
+	graph, err := ds.Graph(context.Background(), "", GraphRange30d)
 	if err != nil {
 		t.Fatalf("Graph: %v", err)
 	}
@@ -739,7 +739,7 @@ func TestFakeGalaxyAgentRecordCoverage(t *testing.T) {
 		byName[agent.Name] = agent
 	}
 
-	graph, err := ds.Graph(context.Background(), "")
+	graph, err := ds.Graph(context.Background(), "", GraphRange30d)
 	if err != nil {
 		t.Fatalf("Graph: %v", err)
 	}
@@ -899,7 +899,7 @@ func TestWorkflowSummaryJSONContract(t *testing.T) {
 func TestFakeWorkflowDisabled(t *testing.T) {
 	t.Setenv("FAKEFEED_WORKFLOWS", "0")
 	ds := NewFakeDataSource()
-	graph, err := ds.Graph(context.Background(), "")
+	graph, err := ds.Graph(context.Background(), "", GraphRange30d)
 	if err != nil {
 		t.Fatalf("Graph: %v", err)
 	}

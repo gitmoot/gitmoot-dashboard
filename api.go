@@ -710,10 +710,12 @@ func (s *server) handleJob(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, node)
 }
 
-// handleGraph serves GET /api/graph -> Graph, the whole-history galaxy view.
-// An optional ?repo= scopes the graph to a single repository.
+// handleGraph serves GET /api/graph -> Graph, the galaxy view. An optional
+// ?repo= scopes the graph to a single repository; ?range=30d|90d|all picks the
+// time window, and anything else is the 30-day default.
 func (s *server) handleGraph(w http.ResponseWriter, r *http.Request) {
-	g, err := s.ds.Graph(r.Context(), r.URL.Query().Get("repo"))
+	q := r.URL.Query()
+	g, err := s.ds.Graph(r.Context(), q.Get("repo"), CanonicalGraphRange(q.Get("range")))
 	if err != nil {
 		http.Error(w, err.Error(), statusForError(err))
 		return
