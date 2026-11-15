@@ -239,10 +239,10 @@ func (f *FakeDataSource) ChangeCursor(context.Context) (string, error) {
 	return strconv.Itoa(f.step), nil
 }
 
-// Graph implements DataSource. The fake feed has a single run, so the galaxy is
-// that run's jobs plus a repo hub and per-agent hubs — enough to exercise the
-// Galaxy view standalone.
-func (f *FakeDataSource) Graph(ctx context.Context, repo string) (Graph, error) {
+// Graph implements DataSource. The fake feed has a single current run, so every
+// range returns the same graph: that run's runs plus a repo hub and per-reviewer
+// hubs — enough to exercise the Galaxy view standalone.
+func (f *FakeDataSource) Graph(ctx context.Context, repo string, rng GraphRange) (Graph, error) {
 	f.mu.Lock()
 	nodes := f.cloneNodesLocked()
 	workflowsEnabled := f.workflowsEnabled

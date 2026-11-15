@@ -203,6 +203,7 @@ class Component extends DCLogic {
       const r = this._parseRoute(location.pathname, location.search);
       this.state.view = r.view;
       if (r.view === 'jobs' && r.agent) this._jobsFacetAgent = r.agent;
+      if (r.view === 'galaxy') this._galaxyRange = r.range || '30d';
       if (r.view === 'agents' && r.agent) this._pendingAgentDetail = r.agent;
       if (r.view === 'workflows') this._pendingWorkflowLabel = r.name || null;
       // Normalize unknown paths to '/' (Overview). Also tidy a non-canonical known
@@ -210,7 +211,7 @@ class Component extends DCLogic {
       if (r.unknown) {
         try { history.replaceState(null, '', '/'); } catch (e) {}
       } else {
-        const canon = this._routeUrl(r.view, { agent: r.agent, name: r.name });
+        const canon = this._routeUrl(r.view, { agent: r.agent, name: r.name, range: r.range });
         if ((location.pathname + location.search) !== canon) {
           try { history.replaceState(null, '', canon); } catch (e) {}
         }
@@ -231,7 +232,7 @@ class Component extends DCLogic {
     if (p.length > 1) p = p.replace(/\/+$/, '') || '/'; // drop trailing slash(es)
     if (p === '/' || p === '') return { view: 'overview' };
     if (p === '/prs' || p === '/tasks') return { view: 'tasks' };
-    if (p === '/galaxy') return { view: 'galaxy' };
+    if (p === '/galaxy') { const rg = this._routeQueryRange(search); return rg === '30d' ? { view: 'galaxy' } : { view: 'galaxy', range: rg }; }
     if (p === '/charts') return { view: 'charts' };
     if (p === '/health') return { view: 'health' };
     if (p === '/config') return { view: 'config' };
@@ -277,7 +278,7 @@ class Component extends DCLogic {
     switch (view) {
       case 'overview': return '/';
       case 'tasks': return '/prs';
-      case 'galaxy': return '/galaxy';
+      case 'galaxy': return opts.range && opts.range !== '30d' ? '/galaxy?range=' + opts.range : '/galaxy';
       case 'jobs':   return opts.agent ? '/runs?reviewer=' + encodeURIComponent(opts.agent) : '/runs';
       case 'workflows': return opts.name ? '/campaigns/' + encodeURIComponent(opts.name) : '/campaigns';
       case 'agents': return opts.agent ? '/reviewers/' + encodeURIComponent(opts.agent) : '/reviewers';
@@ -353,6 +354,12 @@ class Component extends DCLogic {
       } else if (r.view === 'jobs') {
         this._jobsFacetAgent = r.agent || '';
         if (this._jobsRoot) this.renderJobs(false);
+      } else if (r.view === 'galaxy') {
+        const rg = r.range || '30d';
+        if (rg !== (this._galaxyRange || '30d')) {
+          this._galaxyRange = rg;
+          if (this._galaxyRoot) { this._syncGalaxyRangeSelect(); this.fetchGalaxy(this._galaxyRepo || ''); }
+        }
       }
       if (this.state.view !== r.view) this.setState({ view: r.view });
     } finally {
@@ -767,7 +774,7 @@ class Component extends DCLogic {
   // ============================================================
   showOverview = () => { this.setState({ view: 'overview' }); this._navRoute('overview'); };
   showTasks = () => { this.setState({ view: 'tasks' }); this._navRoute('tasks'); };
-  showGalaxy = () => { this.setState({ view: 'galaxy' }); this._navRoute('galaxy'); };
+  showGalaxy = () => { this.setState({ view: 'galaxy' }); this._navRoute('galaxy', { range: this._galaxyRange }); };
   showWorkflows = () => {
     this._workflowLabel = '';
     this._pendingWorkflowLabel = null;
@@ -1334,8 +1341,14 @@ class Component extends DCLogic {
       "#galaxy-root #g-count b{color:#7dcfff;font-weight:500}",
       "#galaxy-root #g-filterWrap{top:18px;right:18px;padding:10px 12px}",
       "#galaxy-root #g-filterWrap label{display:block;font-family:'JetBrains Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:1.2px;color:#7f86ad;margin-bottom:6px}",
-      "#galaxy-root #g-repoFilter{appearance:none;-webkit-appearance:none;background:rgba(7,8,15,.85);color:#c8cce6;border:1px solid rgba(125,207,255,.18);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 30px 7px 11px;min-width:210px;cursor:pointer;outline:none;background-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%237dcfff' stroke-width='1.4' fill='none'/></svg>\");background-repeat:no-repeat;background-position:right 11px center}",
-      "#galaxy-root #g-repoFilter:hover{border-color:rgba(125,207,255,.4)}",
+      "#galaxy-root #g-repoFilter,#galaxy-root #g-rangeFilter{appearance:none;-webkit-appearance:none;background:rgba(7,8,15,.85);color:#c8cce6;border:1px solid rgba(125,207,255,.18);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;padding:7px 30px 7px 11px;min-width:210px;cursor:pointer;outline:none;background-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M1 3l4 4 4-4' stroke='%237dcfff' stroke-width='1.4' fill='none'/></svg>\");background-repeat:no-repeat;background-position:right 11px center}",
+      "#galaxy-root #g-repoFilter:hover,#galaxy-root #g-rangeFilter:hover{border-color:rgba(125,207,255,.4)}",
+      "#galaxy-root #g-rangeFilter{min-width:0;width:100%}",
+      "#galaxy-root #g-repoFilter{width:100%;max-width:260px;text-overflow:ellipsis}",
+      "#galaxy-root #g-filterWrap{max-width:284px}",
+      "#galaxy-root #g-filterWrap .g-field+.g-field{margin-top:10px}",
+      "#galaxy-root #g-rangeNote{font-family:'JetBrains Mono',monospace;font-size:10px;color:#7f86ad;margin-top:6px;max-width:210px;line-height:1.5}",
+      "#galaxy-root #g-rangeNote:empty{display:none}",
       "#galaxy-root #g-legend{bottom:18px;left:18px;padding:13px 15px;max-width:230px}",
       "#galaxy-root #g-legend .grp{margin-bottom:11px}",
       "#galaxy-root #g-legend .grp:last-child{margin-bottom:0}",
@@ -1423,8 +1436,15 @@ class Component extends DCLogic {
       '  <div id="g-count">showing <b id="g-nCount">0</b> nodes / <b id="g-lCount">0</b> links</div>',
       '</div>',
       '<div id="g-filterWrap" class="g-chip">',
-      '  <label for="g-repoFilter">repository</label>',
-      '  <select id="g-repoFilter"><option value="">All repos</option></select>',
+      '  <div class="g-field">',
+      '    <label for="g-repoFilter">repository</label>',
+      '    <select id="g-repoFilter"><option value="">All repos</option></select>',
+      '  </div>',
+      '  <div class="g-field">',
+      '    <label for="g-rangeFilter">range</label>',
+      '    <select id="g-rangeFilter"><option value="30d">1 month</option><option value="90d">3 months</option><option value="all">All time</option></select>',
+      '    <div id="g-rangeNote"></div>',
+      '  </div>',
       '</div>',
       '<div id="g-legend" class="g-chip">',
       '  <div class="grp"><div class="h">nodes</div>',
@@ -1446,6 +1466,16 @@ class Component extends DCLogic {
     this._galaxyGraphEl = root.querySelector('#g-graph');
     const sel = root.querySelector('#g-repoFilter');
     sel.addEventListener('change', () => { this._galaxyRepo = sel.value; this.fetchGalaxy(sel.value); });
+    const rangeSel = root.querySelector('#g-rangeFilter');
+    rangeSel.value = this._galaxyRange || '30d';
+    // A range change keeps the repo filter and replaces (not pushes) the URL, like
+    // the Runs page's ?reviewer= facet, so reload keeps the choice without
+    // stacking history.
+    rangeSel.addEventListener('change', () => {
+      this._galaxyRange = rangeSel.value;
+      this._navRoute('galaxy', { range: this._galaxyRange }, true);
+      this.fetchGalaxy(this._galaxyRepo || '');
+    });
     this._galaxyKeydown = (e) => {
       if (e.key === 'Escape' && this.state.view === 'galaxy' && this._galaxyDetailEl) this.closeGalaxyDetail();
     };
@@ -1887,32 +1917,88 @@ class Component extends DCLogic {
     } catch (e) {}
   }
 
+  // ?range= on /galaxy: 90d or all; anything else is the 30-day default, the same
+  // rule the server applies, so the URL and the request always agree.
+  _routeQueryRange(search) {
+    let v = null;
+    try { v = new URLSearchParams(search || '').get('range'); } catch (e) { v = null; }
+    return v === '90d' || v === 'all' ? v : '30d';
+  }
+
+  _syncGalaxyRangeSelect() {
+    const rs = this._galaxyRoot && this._galaxyRoot.querySelector('#g-rangeFilter');
+    if (rs) rs.value = this._galaxyRange || '30d';
+  }
+
   fetchGalaxy(repo, isPoll) {
-    const url = '/api/graph' + (repo ? '?repo=' + encodeURIComponent(repo) : '');
+    const range = this._galaxyRange || '30d';
+    const params = [];
+    if (repo) params.push('repo=' + encodeURIComponent(repo));
+    if (range !== '30d') params.push('range=' + range);
+    const url = '/api/graph' + (params.length ? '?' + params.join('&') : '');
+    // A user-initiated load (not a poll) of a different repo/range shows the loading
+    // veil; 3 months and all time can take a few seconds cold. Every request takes a
+    // new sequence number and only the newest may touch the page, so a superseded
+    // request (including one for the same selection after A → B → A) can neither
+    // overwrite newer data nor show an error after a newer request succeeded. A poll
+    // is skipped while a request is still in flight, so it never supersedes a
+    // user's load and wide ranges don't pile up.
+    if (isPoll && this._galaxyInFlight) return;
+    const key = repo + '|' + range;
+    const seq = (this._galaxySeq || 0) + 1;
+    this._galaxySeq = seq;
+    this._galaxyInFlight = true;
+    const current = () => this._galaxySeq === seq;
+    const l0 = this._galaxyRoot.querySelector('#g-loading');
+    if (!isPoll && l0 && key !== this._galaxyShown) {
+      l0.textContent = range === '30d' ? 'summoning the galaxy…' : 'summoning ' + (range === 'all' ? 'all of history' : 'three months') + '…';
+      l0.style.display = 'flex'; l0.classList.remove('hidden');
+    }
     fetch(url, { cache: 'no-store' })
       .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
       .then(json => {
+        if (!current()) return;
+        this._galaxyInFlight = false;
         this._galaxyRaw = json || { nodes: [], links: [], repos: [] };
-        if (!this._galaxyFilterFilled) this.fillGalaxyFilter(this._galaxyRaw.repos || []);
+        // The repo list depends on the range; refill it when the range changes,
+        // keeping the current selection (re-added if it fell outside the range).
+        if (!this._galaxyFilterFilled || this._galaxyFilterRange !== range) this.fillGalaxyFilter(this._galaxyRaw.repos || [], range);
+        this._galaxyShown = key;
+        // Wide ranges: say when the server drew only the newest runs (and how to
+        // see a repo's whole history), else that they refresh every few minutes.
+        const note = this._galaxyRoot.querySelector('#g-rangeNote');
+        if (note) {
+          const tr = this._galaxyRaw.truncated;
+          note.textContent = tr ? 'newest ' + tr.shown.toLocaleString() + ' of ' + tr.total.toLocaleString() + ' runs · pick a repository for its full history'
+            : (range !== '30d' ? 'updated every few minutes' : '');
+        }
         this.renderGalaxy(isPoll);
         const l = this._galaxyRoot.querySelector('#g-loading');
-        if (l) { l.classList.add('hidden'); setTimeout(() => { l.style.display = 'none'; }, 600); }
+        if (l) { l.classList.add('hidden'); setTimeout(() => { if (current()) l.style.display = 'none'; }, 600); }
       })
       .catch(err => {
+        if (!current()) return;
+        this._galaxyInFlight = false;
         if (isPoll) return; // keep the current galaxy on a transient poll failure
         const l = this._galaxyRoot.querySelector('#g-loading');
         if (l) { l.classList.remove('hidden'); l.style.display = 'flex'; l.textContent = 'could not load /api/graph (' + err.message + ')'; }
       });
   }
 
-  fillGalaxyFilter(repos) {
+  fillGalaxyFilter(repos, range) {
     const sel = this._galaxyRoot.querySelector('#g-repoFilter');
-    (repos || []).forEach(rp => {
+    const keep = sel.value;
+    while (sel.options.length > 1) sel.remove(1);
+    const list = (repos || []).slice();
+    if (keep && list.indexOf(keep) < 0) list.push(keep);
+    list.forEach(rp => {
       const o = document.createElement('option');
       o.value = rp; o.textContent = rp.split('/').pop() + '  ·  ' + rp;
       sel.appendChild(o);
     });
+    sel.value = keep;
     this._galaxyFilterFilled = true;
+    this._galaxyFilterRange = range || '30d';
   }
 
   renderGalaxy(isPoll) {
